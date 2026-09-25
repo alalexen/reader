@@ -12,9 +12,35 @@ const stopButton = document.querySelector("#stopButton");
 const speechRate = document.querySelector("#speechRate");
 const wordPanel = document.querySelector("#wordPanel");
 const selectedWord = document.querySelector("#selectedWord");
+const selectedSentence = document.querySelector("#selectedSentence");
 const speakWordButton = document.querySelector("#speakWordButton");
+const translateWordButton = document.querySelector("#translateWordButton");
+const translateSentenceButton = document.querySelector("#translateSentenceButton");
+const translationStatus = document.querySelector("#translationStatus");
+
+const translationElements = {
+  word: {
+    uk: document.querySelector("#wordTranslationUk"),
+    en: document.querySelector("#wordTranslationEn"),
+    ru: document.querySelector("#wordTranslationRu"),
+  },
+  sentence: {
+    uk: document.querySelector("#sentenceTranslationUk"),
+    en: document.querySelector("#sentenceTranslationEn"),
+    ru: document.querySelector("#sentenceTranslationRu"),
+  },
+};
+
+const targetLanguages = {
+  uk: "Ukrainian",
+  en: "English",
+  ru: "Russian",
+};
+
+const translationCache = new Map();
 
 let selectedImage = null;
+let activeSentence = "";
 
 /**
  * Returns true when the token contains at least one Hebrew character.
@@ -28,6 +54,22 @@ function containsHebrew(token) {
  */
 function normalizeHebrewWord(token) {
   return token.replace(/^[^\u0590-\u05FF]+|[^\u0590-\u05FF]+$/gu, "");
+}
+
+/**
+ * Splits Hebrew text into sentence-like chunks while keeping punctuation.
+ */
+function splitIntoSentences(text) {
+  return text.match(/[^.!?…\n]+[.!?…]?|\n+/gu) || [text];
+}
+
+/**
+ * Resets translation result fields to their empty state.
+ */
+function resetTranslations(scope) {
+  Object.values(translationElements[scope]).forEach((element) => {
+    element.textContent = "—";
+  });
 }
 
 /**
@@ -78,6 +120,145 @@ function speakHebrew(text) {
 }
 
 /**
+ * Reads a translation from the cache or requests it from MyMemory.
+ */
+async function translateHebrew(text, targetLanguage) {
+  const cleanText = text.trim();
+
+  if (!cleanText) {
+    return "";
+  }
+
+  const cacheKey = `he:${targetLanguage}:${cleanText}`;
+
+  if (translationCache.has(cacheKey)) {
+    return translationCache.get(cacheKey);
+  }
+
+  const byteLength = new TextEncoder().encode(cleanText).length;
+
+  if (byteLength > 500) {
+    throw new Error("The selected text is too long for the free translation request.");
+  }
+
+  const url = new URL("https://api.mymemory.translated.net/get");
+  url.searchParams.set("q", cleanText);
+  url.searchParams.set("langpair", `he|${targetLanguage}`);
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Translation request failed with status ${response.status}.`);
+  }
+
+  const data = await response.json();
+  const translatedText = data?.responseData?.translatedText?.trim();
+
+  if (!translatedText) {
+    throw new Error("The translation service returned an empty result.");
+  }
+
+  translationCache.set(cacheKey, translatedText);
+  return translatedText;
+}
+
+/**
+ * Translates one text value into every language shown in the UI.
+ */
+async function translateIntoAllLanguages(text, scope) {
+  if (!text.trim()) {
+    return;
+  }
+
+  translationStatus.textContent = "Translating...";
+
+  const buttons = [translateWordButton, translateSentenceButton];
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    const entries = Object.keys(targetLanguages);
+
+    const translations = await Promise.all(
+      entries.map(async (languageCode) => {
+        const translatedText = await translateHebrew(text, languageCode);
+        return [languageCode, translatedText];
+      }),
+    );
+
+    translations.forEach(([languageCode, translatedText]) => {
+      translationElements[scope][languageCode].textContent = translatedText;
+    });
+
+    translationStatus.textContent = "Translation complete.";
+  } catch (error) {
+    console.error("Translation failed:", error);
+    translationStatus.textContent =
+      "Translation failed. Please try again in a moment.";
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
+}
+
+/**
+ * Activates one clicked Hebrew word and stores its containing sentence.
+ */
+function activateWord(token, sentence) {
+  const word = normalizeHebrewWord(token);
+
+  if (!word) {
+    return;
+  }
+
+  selectedWord.textContent = word;
+  activeSentence = sentence.trim();
+  selectedSentence.textContent = activeSentence;
+
+  resetTranslations("word");
+  resetTranslations("sentence");
+  translationStatus.textContent = "";
+
+  wordPanel.classList.remove("hidden");
+}
+
+/**
+ * Appends one sentence chunk and makes every Hebrew word inside it clickable.
+ */
+function appendSentence(sentence) {
+  const tokens = sentence.split(/(\s+)/u);
+
+  tokens.forEach((token) => {
+    if (/^\s+$/u.test(token) || !containsHebrew(token)) {
+      reader.append(document.createTextNode(token));
+      return;
+    }
+
+    const wordElement = document.createElement("span");
+    wordElement.className = "word-token";
+    wordElement.tabIndex = 0;
+    wordElement.setAttribute("role", "button");
+    wordElement.textContent = token;
+
+    const activate = () => {
+      activateWord(token, sentence);
+    };
+
+    wordElement.addEventListener("click", activate);
+    wordElement.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        activate();
+      }
+    });
+
+    reader.append(wordElement);
+  });
+}
+
+/**
  * Converts plain Hebrew text into clickable word spans.
  */
 function renderClickableText() {
@@ -95,47 +276,7 @@ function renderClickableText() {
     return;
   }
 
-  const tokens = text.split(/(\s+)/u);
-
-  tokens.forEach((token) => {
-    if (/^\s+$/u.test(token)) {
-      reader.append(document.createTextNode(token));
-      return;
-    }
-
-    if (!containsHebrew(token)) {
-      reader.append(document.createTextNode(token));
-      return;
-    }
-
-    const button = document.createElement("span");
-    button.className = "word-token";
-    button.tabIndex = 0;
-    button.setAttribute("role", "button");
-    button.textContent = token;
-
-    const activateWord = () => {
-      const word = normalizeHebrewWord(token);
-
-      if (!word) {
-        return;
-      }
-
-      selectedWord.textContent = word;
-      wordPanel.classList.remove("hidden");
-    };
-
-    button.addEventListener("click", activateWord);
-    button.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        activateWord();
-      }
-    });
-
-    reader.append(button);
-  });
-
+  splitIntoSentences(text).forEach(appendSentence);
   updateSpeechButtons();
 }
 
@@ -172,7 +313,8 @@ async function recognizeHebrewText() {
 
     editableText.value = result.data.text.trim();
     renderClickableText();
-    ocrStatus.textContent = "Hebrew text recognized. You can correct it manually if needed.";
+    ocrStatus.textContent =
+      "Hebrew text recognized. You can correct it manually if needed.";
   } catch (error) {
     console.error("Hebrew OCR failed:", error);
     ocrStatus.textContent =
@@ -198,9 +340,7 @@ imageInput.addEventListener("change", () => {
 });
 
 recognizeButton.addEventListener("click", recognizeHebrewText);
-
 renderButton.addEventListener("click", renderClickableText);
-
 editableText.addEventListener("input", updateSpeechButtons);
 
 speakButton.addEventListener("click", () => {
@@ -215,6 +355,14 @@ speakWordButton.addEventListener("click", () => {
   speakHebrew(selectedWord.textContent);
 });
 
+translateWordButton.addEventListener("click", () => {
+  translateIntoAllLanguages(selectedWord.textContent, "word");
+});
+
+translateSentenceButton.addEventListener("click", () => {
+  translateIntoAllLanguages(activeSentence, "sentence");
+});
+
 clearButton.addEventListener("click", () => {
   window.speechSynthesis.cancel();
 
@@ -223,6 +371,7 @@ clearButton.addEventListener("click", () => {
   }
 
   selectedImage = null;
+  activeSentence = "";
   imageInput.value = "";
   imagePreview.removeAttribute("src");
   imagePreview.classList.add("hidden");
@@ -232,6 +381,8 @@ clearButton.addEventListener("click", () => {
   ocrProgress.value = 0;
   ocrProgress.classList.add("hidden");
   wordPanel.classList.add("hidden");
+  resetTranslations("word");
+  resetTranslations("sentence");
   renderClickableText();
 });
 
