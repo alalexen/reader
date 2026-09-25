@@ -607,6 +607,58 @@ function clearApp() {
   renderClickableText();
 }
 
+
+function initializeMonsterEyes() {
+  const eyes = [...document.querySelectorAll(".monster-eye")];
+
+  if (!eyes.length) {
+    return;
+  }
+
+  const updateEyes = (clientX, clientY) => {
+    eyes.forEach((eye) => {
+      const pupil = eye.querySelector(".monster-pupil");
+
+      if (!pupil) {
+        return;
+      }
+
+      const rect = eye.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const deltaX = clientX - centerX;
+      const deltaY = clientY - centerY;
+      const distance = Math.hypot(deltaX, deltaY) || 1;
+      const maxX = Math.max(2, rect.width * 0.17);
+      const maxY = Math.max(2, rect.height * 0.16);
+      const normalizedX = deltaX / distance;
+      const normalizedY = deltaY / distance;
+      const strength = Math.min(distance / 180, 1);
+
+      pupil.style.setProperty(
+        "--eye-x",
+        `${normalizedX * maxX * strength}px`,
+      );
+      pupil.style.setProperty(
+        "--eye-y",
+        `${normalizedY * maxY * strength}px`,
+      );
+    });
+  };
+
+  window.addEventListener("pointermove", (event) => {
+    updateEyes(event.clientX, event.clientY);
+  });
+
+  window.addEventListener("pointerleave", () => {
+    eyes.forEach((eye) => {
+      const pupil = eye.querySelector(".monster-pupil");
+      pupil?.style.setProperty("--eye-x", "0px");
+      pupil?.style.setProperty("--eye-y", "0px");
+    });
+  });
+}
+
 elements.imageInput.addEventListener("change", () => {
   const [file] = elements.imageInput.files;
 
@@ -664,5 +716,6 @@ document.addEventListener("keydown", (event) => {
 
 onVoicesChanged(initializeVoiceSelector);
 initializeVoiceSelector();
+initializeMonsterEyes();
 renderFlashcards();
 renderClickableText();
