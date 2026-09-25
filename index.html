@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=wonderland-clean-3" />
+  <link rel="stylesheet" href="styles.css?v=crop-hero-20260926-1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -31,13 +31,6 @@
         </div>
       </div>
 
-      <div class="wonderland-stage" aria-hidden="true">
-        <img
-          class="wonderland-monsters"
-          src="assets/wonderland-monsters.webp?v=wonderland-fix-2"
-          alt=""
-        />
-      </div>
     </header>
 
     <section class="card upload-card">
@@ -54,7 +47,36 @@
         <span class="upload-help">JPG, PNG, WEBP or a phone photo of a book page</span>
       </label>
       <input id="imageInput" type="file" accept="image/*" />
-      <img id="imagePreview" class="image-preview hidden" alt="Uploaded page preview" />
+
+      <div id="imageWorkspace" class="image-workspace hidden">
+        <div id="imagePreviewFrame" class="image-preview-frame">
+          <img
+            id="imagePreview"
+            class="image-preview"
+            alt="Uploaded page preview"
+            draggable="false"
+          />
+          <div id="cropSelection" class="crop-selection hidden" aria-hidden="true"></div>
+        </div>
+
+        <div class="image-choice-actions">
+          <button id="useFullImageButton" type="button" class="secondary">
+            Use full image
+          </button>
+          <button id="cropImageButton" type="button" class="secondary">
+            Crop image
+          </button>
+        </div>
+
+        <div id="cropControls" class="crop-controls hidden">
+          <p>Drag across the image to select the area you want to recognize.</p>
+          <div class="actions">
+            <button id="applyCropButton" type="button" disabled>Apply crop</button>
+            <button id="resetCropButton" type="button" class="secondary">Reset selection</button>
+            <button id="cancelCropButton" type="button" class="secondary">Cancel crop</button>
+          </div>
+        </div>
+      </div>
 
       <div class="actions">
         <button id="recognizeButton" type="button" disabled>Recognize Hebrew text</button>
@@ -246,6 +268,6 @@
   </main>
 
 
-  <script type="module" src="app.js?v=wonderland-clean-3"></script>
+  <script type="module" src="app.js?v=crop-hero-20260926-1"></script>
 </body>
 </html>
