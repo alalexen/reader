@@ -752,7 +752,6 @@ progress::-webkit-progress-value {
   box-shadow: 0 6px 0 rgba(6, 8, 20, 0.4);
 }
 
-.analysis-section,
 .translation-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
@@ -773,8 +772,7 @@ progress::-webkit-progress-value {
   text-align: right;
 }
 
-.translation-grid,
-.morphology-grid {
+.translation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.8rem;
@@ -877,8 +875,7 @@ progress::-webkit-progress-value {
     left: 8%;
   }
 
-  .translation-grid,
-  .morphology-grid {
+  .translation-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1080,4 +1077,120 @@ progress::-webkit-progress-value {
   font-size: 0.92rem;
   line-height: 1.5;
   text-align: left;
+}
+
+
+.flashcard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.flashcards-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.saved-flashcard {
+  padding: 1.15rem;
+  border: 2px solid #374079;
+  border-radius: 20px;
+  background: #12172f;
+}
+
+.saved-flashcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.saved-flashcard-word {
+  font-family: "Arial Hebrew", Arial, sans-serif;
+  font-size: 2rem;
+}
+
+.saved-translations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+
+.saved-translations span {
+  padding: 0.7rem;
+  border: 1px solid #384176;
+  border-radius: 13px;
+  background: #171c39;
+}
+
+.saved-translations b {
+  margin-right: 0.35rem;
+  color: var(--cyan);
+  font-size: 0.75rem;
+}
+
+.saved-example {
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid #384176;
+  border-radius: 14px;
+  background: #151a37;
+}
+
+.saved-example p {
+  margin: 0.35rem 0 0;
+}
+
+.saved-example p + p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.saved-label {
+  color: #919bca;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.remember-button {
+  background: linear-gradient(180deg, #8af0ad, #55c97d);
+  color: #102719;
+  box-shadow: 0 7px 0 rgba(30, 101, 54, 0.48);
+}
+
+.danger-button {
+  color: #ffd7e7 !important;
+  background: #5a2846 !important;
+}
+
+.compact-button {
+  margin-top: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .saved-flashcard-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saved-translations {
+    grid-template-columns: 1fr;
+  }
+
+  .flashcard-toolbar {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .flashcard-toolbar > * {
+    flex: 1 1 auto;
+  }
 }
