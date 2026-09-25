@@ -148,7 +148,9 @@ Selected text is sent to the configured translation service only when the user r
 ## Word reference sources
 
 - MyMemory provides automatic Ukrainian, English, and Russian translations.
-- Reverso Context is the only usage-example source. The app opens the selected Hebrew word directly in Reverso Context because Reverso does not publish a documented public Context API for browser integrations.
+- Reverso Context is the only usage-example source.
+- Inline examples are loaded from Reverso's undocumented `bst-query-service` endpoint.
+- The normal Reverso Context page link remains available as a fallback when the inline request fails or changes.
 - The project does not use Tatoeba or Wiktionary in the selected-word panel.
 
-The Reverso integration is isolated in `services/examplesService.js` so it can be replaced cleanly if Reverso publishes an official API later.
+The Reverso integration is isolated in `services/examplesService.js` because the endpoint is undocumented and may change without notice.
