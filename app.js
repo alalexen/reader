@@ -208,7 +208,7 @@ async function loadReversoExamples(word, selectionId) {
     }
 
     renderExamplesPlaceholder(
-      "Inline Reverso examples are unavailable. Make sure you started the app with python3 server.py.",
+      "Could not load Reverso examples. Check the local server console for the proxy error.",
     );
     updateRememberButton();
     return [];
