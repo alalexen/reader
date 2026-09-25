@@ -1012,209 +1012,6 @@ body,
 }
 
 
-/* Original cursor-following hero monsters. */
-.monster-stage {
-  position: relative;
-  min-height: 280px;
-  align-self: end;
-}
-
-.monster {
-  position: absolute;
-  border: 4px solid rgba(255, 255, 255, 0.09);
-  box-shadow:
-    inset 0 -12px 0 rgba(0, 0, 0, 0.1),
-    0 18px 35px rgba(0, 0, 0, 0.22);
-}
-
-.monster-purple {
-  right: 118px;
-  bottom: 12px;
-  width: 170px;
-  height: 190px;
-  border-radius: 46% 46% 34% 34% / 42% 42% 28% 28%;
-  background: linear-gradient(180deg, #a38cff, #7257e4);
-  transform: rotate(-3deg);
-}
-
-.monster-pink {
-  right: 4px;
-  bottom: 10px;
-  width: 122px;
-  height: 138px;
-  border-radius: 46% 46% 38% 38%;
-  background: linear-gradient(180deg, #ff92cf, #e757a5);
-  transform: rotate(6deg);
-}
-
-.monster-yellow {
-  right: 245px;
-  bottom: 8px;
-  width: 108px;
-  height: 122px;
-  border-radius: 44% 44% 36% 36%;
-  background: linear-gradient(180deg, #ffe773, #f3bd3f);
-  transform: rotate(-8deg);
-}
-
-.monster-eye {
-  position: absolute;
-  top: 58px;
-  width: 38px;
-  height: 45px;
-  overflow: hidden;
-  border: 3px solid rgba(25, 27, 54, 0.1);
-  border-radius: 50%;
-  background: #ffffff;
-}
-
-.monster-pink .monster-eye {
-  top: 43px;
-  width: 30px;
-  height: 36px;
-}
-
-.monster-yellow .monster-eye {
-  top: 38px;
-  width: 28px;
-  height: 34px;
-}
-
-.eye-left {
-  left: 37px;
-}
-
-.eye-right {
-  right: 37px;
-}
-
-.monster-pink .eye-left,
-.monster-yellow .eye-left {
-  left: 25px;
-}
-
-.monster-pink .eye-right,
-.monster-yellow .eye-right {
-  right: 25px;
-}
-
-.monster-pupil {
-  --eye-x: 0px;
-  --eye-y: 0px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 14px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--ink);
-  transform: translate(
-    calc(-50% + var(--eye-x)),
-    calc(-50% + var(--eye-y))
-  );
-  transition: transform 55ms linear;
-}
-
-.monster-pupil::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 4px;
-  height: 5px;
-  border-radius: 50%;
-  background: #ffffff;
-}
-
-.monster-mouth {
-  position: absolute;
-  left: 50%;
-  bottom: 38px;
-  width: 46px;
-  height: 22px;
-  border-bottom: 7px solid var(--ink);
-  border-radius: 0 0 50% 50%;
-  transform: translateX(-50%);
-}
-
-.monster-mouth-smile {
-  bottom: 27px;
-  width: 34px;
-  height: 18px;
-  border-width: 5px;
-}
-
-.monster-mouth-small {
-  bottom: 23px;
-  width: 28px;
-  height: 14px;
-  border-width: 4px;
-}
-
-.monster-horn,
-.monster-ear,
-.monster-spike {
-  position: absolute;
-}
-
-.monster-horn {
-  top: -20px;
-  width: 30px;
-  height: 38px;
-  background: #c3b6ff;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-
-.horn-left {
-  left: 30px;
-  transform: rotate(-18deg);
-}
-
-.horn-right {
-  right: 30px;
-  transform: rotate(18deg);
-}
-
-.monster-ear {
-  top: 22px;
-  width: 26px;
-  height: 40px;
-  border-radius: 50%;
-  background: #ff92cf;
-}
-
-.ear-left {
-  left: -18px;
-  transform: rotate(-22deg);
-}
-
-.ear-right {
-  right: -18px;
-  transform: rotate(22deg);
-}
-
-.monster-spike {
-  top: -16px;
-  width: 24px;
-  height: 32px;
-  background: #ffe773;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-
-.spike-one {
-  left: 15px;
-  transform: rotate(-18deg);
-}
-
-.spike-two {
-  left: 42px;
-}
-
-.spike-three {
-  right: 15px;
-  transform: rotate(18deg);
-}
-
 /* Match the numbered section headings to Upload a page. */
 .section-copy {
   min-width: 0;
@@ -1688,12 +1485,6 @@ progress::-webkit-progress-value {
   color: #5a1914;
 }
 
-.monster {
-  border-color: rgba(255, 248, 241, 0.18);
-  box-shadow:
-    inset 0 -12px 0 rgba(0, 0, 0, 0.08),
-    0 18px 35px rgba(40, 10, 8, 0.14);
-}
 
 @media (max-width: 820px) {
   .hero-card {
@@ -1785,31 +1576,6 @@ progress::-webkit-progress-value {
   letter-spacing: 0.035em;
 }
 
-.wonderland-stage {
-  position: relative;
-  align-self: end;
-  width: min(540px, 100%);
-  min-height: 270px;
-  margin-left: auto;
-}
-
-.wonderland-monsters {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 18px 22px rgba(22, 7, 7, 0.2));
-}
-
-
-@media (max-width: 820px) {
-  .wonderland-stage {
-    width: min(560px, 100%);
-    min-height: 0;
-    margin: 0 auto;
-  }
-}
-
 @media (max-width: 720px) {
   .hero-activity-row {
     align-items: center;
@@ -1839,27 +1605,171 @@ progress::-webkit-progress-value {
 }
 
 
-/* Keep the Wonderland trio compact so the original raster stays crisp. */
-.wonderland-stage {
-  width: min(410px, 38vw);
+
+
+/* Compact single-column hero. */
+.hero-card {
+  display: block;
   min-height: 0;
+  padding: 1.55rem 2rem 1.35rem;
 }
 
-.wonderland-monsters {
+.hero-copy {
   width: 100%;
-  height: auto;
-  image-rendering: auto;
-  filter: drop-shadow(0 13px 16px rgba(22, 7, 7, 0.16));
 }
 
-@media (max-width: 820px) {
-  .wonderland-stage {
-    width: min(390px, 76vw);
+.hero h1 {
+  max-width: none;
+  margin: 0.08rem 0 0.45rem;
+  white-space: nowrap;
+  font-size: clamp(2.6rem, 7vw, 4.9rem);
+  line-height: 0.92;
+}
+
+.hero-activity-row {
+  width: min(700px, 100%);
+  margin-top: 0.9rem;
+}
+
+.monster-walk-track {
+  height: 68px;
+}
+
+.walking-rabbit {
+  width: 66px;
+  height: 66px;
+}
+
+@keyframes monster-walk {
+  0% {
+    left: 0;
+    transform: scaleX(1) translateY(0) rotate(-2deg);
+  }
+
+  8% {
+    transform: scaleX(1) translateY(-3px) rotate(2deg);
+  }
+
+  46% {
+    left: calc(100% - 66px);
+    transform: scaleX(1) translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    left: calc(100% - 66px);
+    transform: scaleX(-1) translateY(0) rotate(2deg);
+  }
+
+  58% {
+    transform: scaleX(-1) translateY(-3px) rotate(-2deg);
+  }
+
+  96% {
+    left: 0;
+    transform: scaleX(-1) translateY(0) rotate(2deg);
+  }
+
+  100% {
+    left: 0;
+    transform: scaleX(1) translateY(0) rotate(-2deg);
   }
 }
 
-@media (max-width: 520px) {
-  .wonderland-stage {
-    width: min(330px, 86vw);
+/* Image cropping before OCR. */
+.image-workspace {
+  margin-top: 1rem;
+}
+
+.image-preview-frame {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 16px;
+  user-select: none;
+  touch-action: none;
+}
+
+.image-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 520px;
+  margin: 0;
+  border: 1px solid rgba(90, 25, 20, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(76, 42, 32, 0.08);
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.image-preview-frame.is-cropping {
+  cursor: crosshair;
+}
+
+.image-preview-frame.is-cropping::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(22, 9, 9, 0.1);
+}
+
+.crop-selection {
+  position: absolute;
+  z-index: 2;
+  border: 2px solid #fff8f1;
+  outline: 1px solid #5a1914;
+  border-radius: 5px;
+  pointer-events: none;
+  background: rgba(250, 203, 153, 0.11);
+  box-shadow: 0 0 0 9999px rgba(43, 17, 13, 0.34);
+}
+
+.image-choice-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.crop-controls {
+  margin-top: 0.85rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(90, 25, 20, 0.14);
+  border-radius: 14px;
+  background: #fffaf4;
+}
+
+.crop-controls p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.crop-controls .actions {
+  margin-top: 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .hero-card {
+    padding: 1.2rem 1.35rem 1.05rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.05rem, 11vw, 3.6rem);
+  }
+
+  .hero-activity-row {
+    margin-top: 0.65rem;
+  }
+
+  .monster-walk-track {
+    height: 62px;
+  }
+
+  .walking-rabbit {
+    width: 60px;
+    height: 60px;
   }
 }
