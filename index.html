@@ -14,7 +14,7 @@
       <p class="eyebrow">Hebrew learning tool</p>
       <h1>Hebrew Reader</h1>
       <p class="subtitle">
-        Upload a photo, extract Hebrew text, click words, listen, and translate.
+        Upload a photo, extract Hebrew text, inspect words, listen, and translate.
       </p>
     </header>
 
@@ -25,7 +25,6 @@
         <span class="upload-help">JPG, PNG, WEBP or a phone photo of a book page</span>
       </label>
       <input id="imageInput" type="file" accept="image/*" />
-
       <img id="imagePreview" class="image-preview hidden" alt="Uploaded page preview" />
 
       <div class="actions">
@@ -81,7 +80,28 @@
         <button id="speakWordButton" type="button">Speak word</button>
       </div>
 
-      <div class="translation-section">
+      <section class="analysis-section">
+        <div class="translation-heading">
+          <h3>Hebrew morphology</h3>
+          <span id="morphologySource" class="source-badge">Local analysis</span>
+        </div>
+
+        <div id="morphologyGrid" class="morphology-grid">
+          <div class="analysis-item"><span class="analysis-label">Dictionary form</span><span id="morphologyLemma">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Infinitive</span><span id="morphologyInfinitive">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Root</span><span id="morphologyRoot">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Part of speech</span><span id="morphologyPartOfSpeech">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Binyan</span><span id="morphologyBinyan">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Tense</span><span id="morphologyTense">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Person</span><span id="morphologyPerson">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Gender</span><span id="morphologyGender">—</span></div>
+          <div class="analysis-item"><span class="analysis-label">Number</span><span id="morphologyNumber">—</span></div>
+        </div>
+
+        <p id="morphologyNote" class="info-note"></p>
+      </section>
+
+      <section class="translation-section">
         <div class="translation-heading">
           <h3>Word translation</h3>
           <button id="translateWordButton" type="button">Translate word</button>
@@ -101,9 +121,9 @@
             <span id="wordTranslationRu" class="translation-value">—</span>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="translation-section">
+      <section class="translation-section">
         <div class="translation-heading">
           <div>
             <h3>Sentence translation</h3>
@@ -126,12 +146,12 @@
             <span id="sentenceTranslationRu" class="translation-value">—</span>
           </div>
         </div>
-      </div>
+      </section>
 
       <p id="translationStatus" class="status" aria-live="polite"></p>
     </aside>
   </main>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
