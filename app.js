@@ -8,11 +8,7 @@ import {
   stopSpeech,
 } from "./services/speechService.js";
 import { translateIntoLanguages } from "./services/translationService.js";
-import {
-  buildReversoContextUrl,
-  findHebrewExamples,
-} from "./services/examplesService.js";
-import { lookupHebrewDictionary } from "./services/dictionaryService.js";
+import { buildReversoContextUrl } from "./services/examplesService.js";
 import {
   containsHebrew,
   normalizeHebrewWord,
@@ -38,14 +34,12 @@ const elements = {
   selectedWord: document.querySelector("#selectedWord"),
   selectedSentence: document.querySelector("#selectedSentence"),
   speakWordButton: document.querySelector("#speakWordButton"),
+  speakSentenceButton: document.querySelector("#speakSentenceButton"),
   translateWordButton: document.querySelector("#translateWordButton"),
   translateSentenceButton: document.querySelector("#translateSentenceButton"),
   translationStatus: document.querySelector("#translationStatus"),
   morphologySource: document.querySelector("#morphologySource"),
   morphologyNote: document.querySelector("#morphologyNote"),
-  dictionaryResults: document.querySelector("#dictionaryResults"),
-  wiktionaryLink: document.querySelector("#wiktionaryLink"),
-  examplesResults: document.querySelector("#examplesResults"),
   reversoLink: document.querySelector("#reversoLink"),
 };
 
@@ -140,106 +134,6 @@ function renderMorphology(word) {
   elements.morphologyNote.textContent = analysis.note || "";
 }
 
-function renderReferencePlaceholder(container, message) {
-  container.replaceChildren();
-
-  const placeholder = document.createElement("p");
-  placeholder.className = "reference-placeholder";
-  placeholder.textContent = message;
-  container.append(placeholder);
-}
-
-function renderDictionaryResult(result) {
-  elements.dictionaryResults.replaceChildren();
-
-  if (!result.definitions.length) {
-    renderReferencePlaceholder(
-      elements.dictionaryResults,
-      "No English Wiktionary definition was found for this form.",
-    );
-  } else {
-    const list = document.createElement("ol");
-    list.className = "dictionary-list";
-
-    result.definitions.forEach((definition) => {
-      const item = document.createElement("li");
-      item.textContent = definition;
-      list.append(item);
-    });
-
-    elements.dictionaryResults.append(list);
-  }
-
-  if (result.url) {
-    elements.wiktionaryLink.href = result.url;
-    elements.wiktionaryLink.classList.remove("hidden");
-  } else {
-    elements.wiktionaryLink.classList.add("hidden");
-  }
-}
-
-function renderExamples(examples) {
-  elements.examplesResults.replaceChildren();
-
-  if (!examples.length) {
-    renderReferencePlaceholder(
-      elements.examplesResults,
-      "No Tatoeba examples were found for this exact form.",
-    );
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "example-list";
-
-  examples.forEach((example) => {
-    const item = document.createElement("div");
-    item.className = "example-item";
-    item.dir = "rtl";
-    item.lang = "he";
-    item.textContent = example.text;
-    list.append(item);
-  });
-
-  elements.examplesResults.append(list);
-}
-
-async function loadWordReferences(word, selectionId) {
-  elements.reversoLink.href = buildReversoContextUrl(word);
-  renderReferencePlaceholder(elements.dictionaryResults, "Looking up Wiktionary...");
-  renderReferencePlaceholder(elements.examplesResults, "Finding usage examples...");
-
-  const [dictionaryResult, examplesResult] = await Promise.allSettled([
-    lookupHebrewDictionary(word),
-    findHebrewExamples(word, 5),
-  ]);
-
-  if (selectionId !== state.wordSelectionId) {
-    return;
-  }
-
-  if (dictionaryResult.status === "fulfilled") {
-    renderDictionaryResult(dictionaryResult.value);
-  } else {
-    console.error("Dictionary lookup failed:", dictionaryResult.reason);
-    renderReferencePlaceholder(
-      elements.dictionaryResults,
-      "Dictionary lookup is temporarily unavailable.",
-    );
-    elements.wiktionaryLink.classList.add("hidden");
-  }
-
-  if (examplesResult.status === "fulfilled") {
-    renderExamples(examplesResult.value);
-  } else {
-    console.error("Example lookup failed:", examplesResult.reason);
-    renderReferencePlaceholder(
-      elements.examplesResults,
-      "Usage examples are temporarily unavailable. You can still open Reverso Context.",
-    );
-  }
-}
-
 function closeWordPanel() {
   state.wordSelectionId += 1;
   state.activeSentence = "";
@@ -265,12 +159,10 @@ async function activateWord(token, sentence) {
   elements.translationStatus.textContent = "Translating selected word...";
   renderMorphology(word);
 
+  elements.reversoLink.href = buildReversoContextUrl(word);
   elements.wordPanel.classList.remove("hidden");
 
-  await Promise.allSettled([
-    translate(word, "word", selectionId),
-    loadWordReferences(word, selectionId),
-  ]);
+  await translate(word, "word", selectionId);
 }
 
 function appendSentence(sentence) {
@@ -518,6 +410,14 @@ elements.stopButton.addEventListener("click", stopSpeech);
 elements.speakWordButton.addEventListener("click", () => {
   speakHebrew(
     elements.selectedWord.textContent,
+    Number(elements.speechRate.value),
+    elements.voiceSelect.value,
+  );
+});
+
+elements.speakSentenceButton.addEventListener("click", () => {
+  speakHebrew(
+    state.activeSentence,
     Number(elements.speechRate.value),
     elements.voiceSelect.value,
   );
