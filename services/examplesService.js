@@ -1,26 +1,9 @@
-const REVERSO_QUERY_ENDPOINT =
-  "https://context.reverso.net/bst-query-service";
-
 const examplesCache = new Map();
 
 /**
- * Removes Reverso's HTML highlighting and returns plain text only.
- *
- * Reverso returns example fragments such as <em>word</em>. We intentionally
- * convert that markup to text instead of inserting remote HTML into the page.
- */
-function htmlToPlainText(html) {
-  const template = document.createElement("template");
-  template.innerHTML = html || "";
-  return template.content.textContent?.trim() || "";
-}
-
-/**
- * Loads Hebrew-English contextual examples from Reverso's undocumented
- * bst-query-service endpoint.
- *
- * This endpoint is unofficial and may change without notice. Callers should
- * always provide a graceful fallback to the normal Reverso Context page.
+ * Loads Hebrew-English contextual examples through the local development
+ * server. The local proxy is needed because Reverso's undocumented endpoint
+ * does not reliably allow browser cross-origin requests.
  */
 export async function fetchReversoExamples(word, limit = 6) {
   const cleanWord = word.trim();
@@ -33,37 +16,20 @@ export async function fetchReversoExamples(word, limit = 6) {
     return examplesCache.get(cleanWord);
   }
 
-  const response = await fetch(REVERSO_QUERY_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=UTF-8",
-    },
-    body: JSON.stringify({
-      source_text: cleanWord,
-      target_text: "",
-      source_lang: "he",
-      target_lang: "en",
-      npage: 1,
-      mode: 0,
-    }),
-  });
+  const url = new URL("/api/reverso", window.location.origin);
+  url.searchParams.set("word", cleanWord);
+  url.searchParams.set("limit", String(limit));
+
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(
-      `Reverso example request failed with status ${response.status}.`,
+      `Reverso proxy request failed with status ${response.status}.`,
     );
   }
 
   const payload = await response.json();
-  const rows = Array.isArray(payload?.list) ? payload.list : [];
-
-  const examples = rows
-    .map((row) => ({
-      source: htmlToPlainText(row?.s_text),
-      target: htmlToPlainText(row?.t_text),
-    }))
-    .filter((example) => example.source && example.target)
-    .slice(0, limit);
+  const examples = Array.isArray(payload?.examples) ? payload.examples : [];
 
   examplesCache.set(cleanWord, examples);
   return examples;
