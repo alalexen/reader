@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A playful browser-based Hebrew reading assistant." />
+  <title>Hebrew Reader</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero card hero-card">
+      <div class="hero-copy">
+        <p class="eyebrow">Hebrew learning tool</p>
+        <h1>Hebrew Reader</h1>
+        <div class="monster-walk-track" aria-label="A playful monster walking back and forth">
+          <span class="monster-track-line" aria-hidden="true"></span>
+          <img
+            class="walking-monster"
+            src="https://ouch-prod-var-cdn.icons8.com/pv/illustrations/previews/5xD6OPoctEHEghiw.webp"
+            alt=""
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+
+      <div class="monster-stage" aria-hidden="true">
+        <div class="monster monster-purple" data-monster>
+          <div class="monster-horn horn-left"></div>
+          <div class="monster-horn horn-right"></div>
+          <div class="monster-eye eye-left">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-eye eye-right">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-mouth"></div>
+        </div>
+
+        <div class="monster monster-pink" data-monster>
+          <div class="monster-ear ear-left"></div>
+          <div class="monster-ear ear-right"></div>
+          <div class="monster-eye eye-left">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-eye eye-right">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-mouth monster-mouth-smile"></div>
+        </div>
+
+        <div class="monster monster-yellow" data-monster>
+          <div class="monster-spike spike-one"></div>
+          <div class="monster-spike spike-two"></div>
+          <div class="monster-spike spike-three"></div>
+          <div class="monster-eye eye-left">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-eye eye-right">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-mouth monster-mouth-small"></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="card upload-card">
+      <div class="section-title-row">
+        <div>
+          <span class="step-badge">1</span>
+          <h2>Upload a page</h2>
+        </div>
+      </div>
+
+      <label class="upload-zone" for="imageInput">
+        <span class="upload-icon" aria-hidden="true">📷</span>
+        <span class="upload-title">Choose an image</span>
+        <span class="upload-help">JPG, PNG, WEBP or a phone photo of a book page</span>
+      </label>
+      <input id="imageInput" type="file" accept="image/*" />
+      <img id="imagePreview" class="image-preview hidden" alt="Uploaded page preview" />
+
+      <div class="actions">
+        <button id="recognizeButton" type="button" disabled>Recognize Hebrew text</button>
+        <button id="clearButton" type="button" class="secondary">Clear</button>
+      </div>
+
+      <div id="ocrStatus" class="status" aria-live="polite"></div>
+      <progress id="ocrProgress" class="hidden" max="1" value="0"></progress>
+    </section>
+
+    <section class="card reader-card">
+      <div class="section-heading">
+        <div class="section-copy">
+          <div class="section-title-row">
+            <div>
+              <span class="step-badge">2</span>
+              <h2>Read the text</h2>
+            </div>
+          </div>
+          <p>Every Hebrew word is clickable.</p>
+        </div>
+
+        <div class="speech-controls">
+          <label for="voiceSelect">Voice</label>
+          <select id="voiceSelect" class="voice-select">
+            <option value="">Loading Hebrew voices...</option>
+          </select>
+
+          <label for="speechRate">Speed</label>
+          <select id="speechRate">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <button id="speakButton" type="button" disabled>Speak</button>
+          <button id="stopButton" type="button" class="secondary" disabled>Stop</button>
+        </div>
+      </div>
+
+      <textarea
+        id="editableText"
+        class="editable-text"
+        dir="rtl"
+        lang="he"
+        placeholder="Recognized Hebrew text will appear here. You can also type or correct the text manually."
+      ></textarea>
+
+      <div class="actions">
+        <button id="renderButton" type="button">Make words clickable</button>
+      </div>
+
+      <div id="reader" class="reader" dir="rtl" lang="he">
+        <p class="empty-state">Your Hebrew text will appear here.</p>
+      </div>
+    </section>
+
+
+    <section class="card flashcards-card">
+      <div class="section-heading">
+        <div class="section-copy">
+          <div class="section-title-row">
+            <div>
+              <span class="step-badge">3</span>
+              <h2>My flashcards</h2>
+            </div>
+          </div>
+          <p>Words you choose to remember stay saved in this browser.</p>
+        </div>
+
+        <div class="flashcard-toolbar">
+          <button id="copyQuizletButton" type="button" class="secondary">
+            Copy for Quizlet
+          </button>
+          <a
+            class="context-button"
+            href="https://quizlet.new"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Quizlet
+          </a>
+        </div>
+      </div>
+
+      <p id="flashcardsStatus" class="status" aria-live="polite"></p>
+
+      <div id="flashcardsList" class="flashcards-list">
+        <p class="empty-state">No saved words yet.</p>
+      </div>
+    </section>
+
+    <aside id="wordPanel" class="card word-panel hidden">
+      <div class="word-panel-header">
+        <div>
+          <p class="eyebrow">Selected word</p>
+          <strong id="selectedWord" class="selected-word" dir="rtl" lang="he"></strong>
+        </div>
+
+        <button
+          id="closeWordPanelButton"
+          type="button"
+          class="icon-button"
+          aria-label="Close word panel"
+          title="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="selected-word-actions">
+        <button id="speakWordButton" type="button">Speak word</button>
+        <button id="rememberWordButton" type="button" class="remember-button" disabled>
+          Remember word
+        </button>
+      </div>
+
+      <section class="translation-section word-translation-section">
+        <div class="translation-heading">
+          <h3>Word translation</h3>
+          <button id="translateWordButton" type="button">Retry translation</button>
+        </div>
+
+        <div class="translation-grid">
+          <div class="translation-item accent-pink">
+            <span class="translation-label">Ukrainian</span>
+            <span id="wordTranslationUk" class="translation-value" dir="ltr" lang="uk">—</span>
+          </div>
+          <div class="translation-item accent-cyan">
+            <span class="translation-label">English</span>
+            <span id="wordTranslationEn" class="translation-value" dir="ltr" lang="en">—</span>
+          </div>
+          <div class="translation-item accent-yellow">
+            <span class="translation-label">Russian</span>
+            <span id="wordTranslationRu" class="translation-value" dir="ltr" lang="ru">—</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="translation-section">
+        <div class="translation-heading">
+          <div>
+            <h3>Sentence translation</h3>
+            <p id="selectedSentence" class="selected-sentence" dir="rtl" lang="he"></p>
+          </div>
+
+          <div class="inline-actions">
+            <button id="speakSentenceButton" type="button" class="secondary">Speak sentence</button>
+            <button id="translateSentenceButton" type="button">Translate sentence</button>
+          </div>
+        </div>
+
+        <div class="translation-grid">
+          <div class="translation-item accent-pink">
+            <span class="translation-label">Ukrainian</span>
+            <span id="sentenceTranslationUk" class="translation-value" dir="ltr" lang="uk">—</span>
+          </div>
+          <div class="translation-item accent-cyan">
+            <span class="translation-label">English</span>
+            <span id="sentenceTranslationEn" class="translation-value" dir="ltr" lang="en">—</span>
+          </div>
+          <div class="translation-item accent-yellow">
+            <span class="translation-label">Russian</span>
+            <span id="sentenceTranslationRu" class="translation-value" dir="ltr" lang="ru">—</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="reference-section">
+        <div class="translation-heading">
+          <div>
+            <h3>Reverso Context</h3>
+            <p class="section-help">Open this word on the Reverso Context website.</p>
+          </div>
+
+          <a
+            id="reversoLink"
+            class="context-button"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open in Reverso
+          </a>
+        </div>
+      </section>
+
+      <p id="translationStatus" class="status" aria-live="polite"></p>
+    </aside>
+  </main>
+
+  <footer class="art-credit">
+    Illustration by
+    <a href="https://icons8.com" target="_blank" rel="noopener noreferrer">Icons8</a>
+    ·
+    <a
+      href="https://icons8.com/illustrations/illustration/jelly-green-character-in-red-hat"
+      target="_blank"
+      rel="noopener noreferrer"
+    >walking monster</a>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
