@@ -498,54 +498,6 @@ function clearApp() {
 }
 
 
-function initializeMonsterEyes() {
-  const eyes = [...document.querySelectorAll(".art-eye")];
-
-  if (!eyes.length) {
-    return;
-  }
-
-  const updateEyes = (clientX, clientY) => {
-    eyes.forEach((eye) => {
-      const pupil = eye.querySelector(".art-pupil");
-
-      if (!pupil) {
-        return;
-      }
-
-      const rect = eye.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const deltaX = clientX - centerX;
-      const deltaY = clientY - centerY;
-      const distance = Math.hypot(deltaX, deltaY) || 1;
-      const maxTravel = Math.max(2, rect.width * 0.18);
-      const strength = Math.min(distance / 190, 1);
-
-      pupil.style.setProperty(
-        "--eye-x",
-        `${(deltaX / distance) * maxTravel * strength}px`,
-      );
-      pupil.style.setProperty(
-        "--eye-y",
-        `${(deltaY / distance) * maxTravel * strength}px`,
-      );
-    });
-  };
-
-  window.addEventListener("pointermove", (event) => {
-    updateEyes(event.clientX, event.clientY);
-  });
-
-  window.addEventListener("pointerleave", () => {
-    eyes.forEach((eye) => {
-      const pupil = eye.querySelector(".art-pupil");
-      pupil?.style.setProperty("--eye-x", "0px");
-      pupil?.style.setProperty("--eye-y", "0px");
-    });
-  });
-}
-
 function initializeSessionTimer() {
   if (!elements.sessionTimer) {
     return;
@@ -630,7 +582,6 @@ document.addEventListener("keydown", (event) => {
 
 onVoicesChanged(initializeVoiceSelector);
 initializeVoiceSelector();
-initializeMonsterEyes();
 initializeSessionTimer();
 renderFlashcards();
 renderClickableText();
