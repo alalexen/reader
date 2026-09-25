@@ -1,31 +1,29 @@
 const translationCache = new Map();
 const TRANSLATION_ENDPOINT = "https://api.mymemory.translated.net/get";
 
+function containsHebrew(text) {
+  return /[\u0590-\u05FF]/u.test(text);
+}
+
 /**
- * Translates Hebrew text into one target language.
+ * Requests one translation pair from MyMemory.
  */
-async function translateHebrew(text, targetLanguage) {
-  const cleanText = text.trim();
-
-  if (!cleanText) {
-    return "";
-  }
-
-  const cacheKey = `he:${targetLanguage}:${cleanText}`;
+async function requestTranslation(text, sourceLanguage, targetLanguage) {
+  const cacheKey = `${sourceLanguage}:${targetLanguage}:${text}`;
 
   if (translationCache.has(cacheKey)) {
     return translationCache.get(cacheKey);
   }
 
-  const byteLength = new TextEncoder().encode(cleanText).length;
+  const byteLength = new TextEncoder().encode(text).length;
 
   if (byteLength > 500) {
     throw new Error("The selected text is too long for the free translation request.");
   }
 
   const url = new URL(TRANSLATION_ENDPOINT);
-  url.searchParams.set("q", cleanText);
-  url.searchParams.set("langpair", `he|${targetLanguage}`);
+  url.searchParams.set("q", text);
+  url.searchParams.set("langpair", `${sourceLanguage}|${targetLanguage}`);
 
   const response = await fetch(url);
 
@@ -42,6 +40,41 @@ async function translateHebrew(text, targetLanguage) {
 
   translationCache.set(cacheKey, translatedText);
   return translatedText;
+}
+
+/**
+ * Translates Hebrew text into one target language.
+ *
+ * Ukrainian and Russian first use a direct translation. If the free service
+ * leaves Hebrew text untranslated, the service retries through English.
+ */
+async function translateHebrew(text, targetLanguage) {
+  const cleanText = text.trim();
+
+  if (!cleanText) {
+    return "";
+  }
+
+  if (targetLanguage === "en") {
+    return requestTranslation(cleanText, "he", "en");
+  }
+
+  try {
+    const directTranslation = await requestTranslation(
+      cleanText,
+      "he",
+      targetLanguage,
+    );
+
+    if (!containsHebrew(directTranslation)) {
+      return directTranslation;
+    }
+  } catch (error) {
+    console.warn("Direct translation failed, trying English fallback:", error);
+  }
+
+  const englishTranslation = await requestTranslation(cleanText, "he", "en");
+  return requestTranslation(englishTranslation, "en", targetLanguage);
 }
 
 /**
