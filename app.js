@@ -60,6 +60,7 @@ const morphologyElements = {
 const state = {
   selectedImage: null,
   activeSentence: "",
+  wordSelectionId: 0,
 };
 
 function setTranslationPlaceholders(scope) {
@@ -87,12 +88,14 @@ function renderMorphology(word) {
   elements.morphologyNote.textContent = analysis.note || "";
 }
 
-function activateWord(token, sentence) {
+async function activateWord(token, sentence) {
   const word = normalizeHebrewWord(token);
 
   if (!word) {
     return;
   }
+
+  const selectionId = ++state.wordSelectionId;
 
   elements.selectedWord.textContent = word;
   state.activeSentence = sentence.trim();
@@ -100,10 +103,11 @@ function activateWord(token, sentence) {
 
   setTranslationPlaceholders("word");
   setTranslationPlaceholders("sentence");
-  elements.translationStatus.textContent = "";
+  elements.translationStatus.textContent = "Translating selected word...";
   renderMorphology(word);
 
   elements.wordPanel.classList.remove("hidden");
+  await translate(word, "word", selectionId);
 }
 
 function appendSentence(sentence) {
@@ -188,23 +192,37 @@ async function runOcr() {
   }
 }
 
-async function translate(text, scope) {
+async function translate(text, scope, selectionId = null) {
   if (!text.trim()) {
     return;
   }
 
-  elements.translationStatus.textContent = "Translating...";
+  const isWordTranslation = scope === "word";
+
+  elements.translationStatus.textContent = isWordTranslation
+    ? "Translating selected word..."
+    : "Translating sentence...";
   elements.translateWordButton.disabled = true;
   elements.translateSentenceButton.disabled = true;
 
   try {
     const translations = await translateIntoLanguages(text, ["uk", "en", "ru"]);
 
+    if (
+      isWordTranslation &&
+      selectionId !== null &&
+      selectionId !== state.wordSelectionId
+    ) {
+      return;
+    }
+
     Object.entries(translations).forEach(([languageCode, translatedText]) => {
       translationElements[scope][languageCode].textContent = translatedText;
     });
 
-    elements.translationStatus.textContent = "Translation complete.";
+    elements.translationStatus.textContent = isWordTranslation
+      ? "Word translated."
+      : "Sentence translated.";
   } catch (error) {
     console.error("Translation failed:", error);
     elements.translationStatus.textContent =
@@ -269,7 +287,11 @@ elements.speakWordButton.addEventListener("click", () => {
 });
 
 elements.translateWordButton.addEventListener("click", () => {
-  translate(elements.selectedWord.textContent, "word");
+  translate(
+    elements.selectedWord.textContent,
+    "word",
+    state.wordSelectionId,
+  );
 });
 
 elements.translateSentenceButton.addEventListener("click", () => {
