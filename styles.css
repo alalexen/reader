@@ -1010,3 +1010,49 @@ progress::-webkit-progress-value {
     max-width: none !important;
   }
 }
+
+
+.word-translation-section {
+  margin-top: 1rem;
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.context-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  color: #ffffff;
+  background: linear-gradient(180deg, #9d85ff, var(--purple));
+  box-shadow: 0 6px 0 rgba(72, 54, 144, 0.4);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.context-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.word-panel {
+  margin-inline: auto;
+}
+
+@media (max-width: 720px) {
+  .inline-actions {
+    justify-content: stretch;
+  }
+
+  .inline-actions > * {
+    flex: 1 1 auto;
+  }
+}
