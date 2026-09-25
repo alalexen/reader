@@ -2,28 +2,88 @@
 """
 Local development server for Hebrew Reader.
 
-It serves the static app and proxies Reverso Context example requests. The
-proxy keeps Reverso's cross-origin restrictions away from browser JavaScript.
+It serves the static app and proxies Reverso Context example requests. Reverso
+does not reliably allow direct browser requests, so the proxy fetches the
+public Context page and extracts example pairs server-side.
 """
 
+from html.parser import HTMLParser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 from urllib.request import Request, urlopen
 import html
 import json
-import re
 
 HOST = "127.0.0.1"
 PORT = 8000
-REVERSO_ENDPOINT = "https://context.reverso.net/bst-query-service"
+REVERSO_CONTEXT_BASE = (
+    "https://context.reverso.net/translation/hebrew-english/"
+)
 
 
-def html_to_text(value):
-    """Converts simple Reverso highlight markup to plain text."""
-    value = value or ""
-    value = re.sub(r"<[^>]+>", "", value)
-    return html.unescape(value).strip()
+class ReversoExamplesParser(HTMLParser):
+    """Extracts Hebrew-English example pairs from Reverso Context HTML."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.examples = []
+        self.in_example = False
+        self.capture_source = False
+        self.capture_target = False
+        self.source_parts = []
+        self.target_parts = []
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        classes = set(attributes.get("class", "").split())
+
+        if tag == "div" and "example" in classes:
+            self.in_example = True
+            self.source_parts = []
+            self.target_parts = []
+            return
+
+        if not self.in_example:
+            return
+
+        if tag == "div" and "src" in classes:
+            self.capture_source = True
+        elif tag == "div" and "trg" in classes:
+            self.capture_target = True
+
+    def handle_endtag(self, tag):
+        if tag != "div" or not self.in_example:
+            return
+
+        if self.capture_source:
+            self.capture_source = False
+            return
+
+        if self.capture_target:
+            self.capture_target = False
+            return
+
+        source = " ".join(" ".join(self.source_parts).split()).strip()
+        target = " ".join(" ".join(self.target_parts).split()).strip()
+
+        if source and target:
+            self.examples.append(
+                {
+                    "source": html.unescape(source),
+                    "target": html.unescape(target),
+                }
+            )
+
+        self.in_example = False
+        self.source_parts = []
+        self.target_parts = []
+
+    def handle_data(self, data):
+        if self.capture_source:
+            self.source_parts.append(data)
+        elif self.capture_target:
+            self.target_parts.append(data)
 
 
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
@@ -51,52 +111,30 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             self.send_json({"error": "Missing word parameter."}, status=400)
             return
 
-        payload = json.dumps(
-            {
-                "source_text": word,
-                "target_text": "",
-                "source_lang": "he",
-                "target_lang": "en",
-                "npage": 1,
-                "mode": 0,
-            }
-        ).encode("utf-8")
+        url = REVERSO_CONTEXT_BASE + quote(word, safe="")
 
         request = Request(
-            REVERSO_ENDPOINT,
-            data=payload,
-            method="POST",
+            url,
+            method="GET",
             headers={
-                "Content-Type": "application/json; charset=UTF-8",
-                "Accept": "application/json",
+                "Accept": "text/html,application/xhtml+xml",
+                "Accept-Language": "en-US,en;q=0.9,he;q=0.8",
                 "User-Agent": (
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                     "AppleWebKit/537.36 Chrome/138 Safari/537.36"
                 ),
-                "Origin": "https://context.reverso.net",
-                "Referer": "https://context.reverso.net/",
             },
         )
 
         try:
             with urlopen(request, timeout=12) as response:
-                data = json.loads(response.read().decode("utf-8"))
+                charset = response.headers.get_content_charset() or "utf-8"
+                page = response.read().decode(charset, errors="replace")
 
-            rows = data.get("list") if isinstance(data, dict) else []
-            rows = rows if isinstance(rows, list) else []
+            parser = ReversoExamplesParser()
+            parser.feed(page)
 
-            examples = []
-            for row in rows:
-                source = html_to_text(row.get("s_text"))
-                target = html_to_text(row.get("t_text"))
-
-                if source and target:
-                    examples.append({"source": source, "target": target})
-
-                if len(examples) >= limit:
-                    break
-
-            self.send_json({"examples": examples})
+            self.send_json({"examples": parser.examples[:limit]})
         except HTTPError as error:
             self.send_json(
                 {
@@ -105,7 +143,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                 },
                 status=502,
             )
-        except (URLError, TimeoutError, json.JSONDecodeError) as error:
+        except (URLError, TimeoutError, UnicodeError) as error:
             self.send_json(
                 {
                     "error": "Could not load Reverso examples.",
@@ -118,6 +156,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -126,5 +165,6 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), HebrewReaderHandler)
     print(f"Hebrew Reader is running at http://{HOST}:{PORT}")
+    print("Reverso examples proxy is enabled at /api/reverso")
     print("Press Control + C to stop.")
     server.serve_forever()
