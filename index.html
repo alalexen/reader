@@ -14,7 +14,7 @@
       <p class="eyebrow">Hebrew learning tool</p>
       <h1>Hebrew Reader</h1>
       <p class="subtitle">
-        Upload a photo, extract Hebrew text, click words, and listen to the text.
+        Upload a photo, extract Hebrew text, click words, listen, and translate.
       </p>
     </header>
 
@@ -75,13 +75,60 @@
 
     <aside id="wordPanel" class="card word-panel hidden">
       <p class="eyebrow">Selected word</p>
+
       <div class="selected-word-row">
         <strong id="selectedWord" class="selected-word" dir="rtl" lang="he"></strong>
         <button id="speakWordButton" type="button">Speak word</button>
       </div>
-      <p class="word-note">
-        Ukrainian translation and Hebrew morphology will be added in the next version.
-      </p>
+
+      <div class="translation-section">
+        <div class="translation-heading">
+          <h3>Word translation</h3>
+          <button id="translateWordButton" type="button">Translate word</button>
+        </div>
+
+        <div class="translation-grid">
+          <div class="translation-item">
+            <span class="translation-label">Ukrainian</span>
+            <span id="wordTranslationUk" class="translation-value">—</span>
+          </div>
+          <div class="translation-item">
+            <span class="translation-label">English</span>
+            <span id="wordTranslationEn" class="translation-value">—</span>
+          </div>
+          <div class="translation-item">
+            <span class="translation-label">Russian</span>
+            <span id="wordTranslationRu" class="translation-value">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="translation-section">
+        <div class="translation-heading">
+          <div>
+            <h3>Sentence translation</h3>
+            <p id="selectedSentence" class="selected-sentence" dir="rtl" lang="he"></p>
+          </div>
+          <button id="translateSentenceButton" type="button">Translate sentence</button>
+        </div>
+
+        <div class="translation-grid">
+          <div class="translation-item">
+            <span class="translation-label">Ukrainian</span>
+            <span id="sentenceTranslationUk" class="translation-value">—</span>
+          </div>
+          <div class="translation-item">
+            <span class="translation-label">English</span>
+            <span id="sentenceTranslationEn" class="translation-value">—</span>
+          </div>
+          <div class="translation-item">
+            <span class="translation-label">Russian</span>
+            <span id="sentenceTranslationRu" class="translation-value">—</span>
+          </div>
+        </div>
+      </div>
+
+      <p id="translationStatus" class="status" aria-live="polite"></p>
     </aside>
   </main>
 
