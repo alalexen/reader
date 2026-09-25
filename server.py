@@ -23,14 +23,14 @@ REVERSO_CONTEXT_BASE = (
 
 
 class ReversoExamplesParser(HTMLParser):
-    """Extracts Hebrew-English example pairs from Reverso Context HTML."""
+    """Extracts Hebrew-English example pairs from nested Reverso markup."""
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.examples = []
-        self.in_example = False
-        self.capture_source = False
-        self.capture_target = False
+        self.example_depth = 0
+        self.source_depth = 0
+        self.target_depth = 0
         self.source_parts = []
         self.target_parts = []
 
@@ -38,30 +38,41 @@ class ReversoExamplesParser(HTMLParser):
         attributes = dict(attrs)
         classes = set(attributes.get("class", "").split())
 
-        if tag == "div" and "example" in classes:
-            self.in_example = True
+        # A Reverso result is wrapped in a div with class "example".
+        if tag == "div" and "example" in classes and self.example_depth == 0:
+            self.example_depth = 1
             self.source_parts = []
             self.target_parts = []
             return
 
-        if not self.in_example:
+        if self.example_depth == 0:
             return
 
-        if tag == "div" and "src" in classes:
-            self.capture_source = True
-        elif tag == "div" and "trg" in classes:
-            self.capture_target = True
+        # Track every nested div so an inner closing tag cannot end the whole
+        # example prematurely.
+        if tag == "div":
+            self.example_depth += 1
+
+        if tag == "div" and "src" in classes and self.source_depth == 0:
+            self.source_depth = self.example_depth
+        elif tag == "div" and "trg" in classes and self.target_depth == 0:
+            self.target_depth = self.example_depth
 
     def handle_endtag(self, tag):
-        if tag != "div" or not self.in_example:
+        if tag != "div" or self.example_depth == 0:
             return
 
-        if self.capture_source:
-            self.capture_source = False
-            return
+        closing_depth = self.example_depth
 
-        if self.capture_target:
-            self.capture_target = False
+        if self.source_depth == closing_depth:
+            self.source_depth = 0
+
+        if self.target_depth == closing_depth:
+            self.target_depth = 0
+
+        self.example_depth -= 1
+
+        if self.example_depth != 0:
             return
 
         source = " ".join(" ".join(self.source_parts).split()).strip()
@@ -75,14 +86,13 @@ class ReversoExamplesParser(HTMLParser):
                 }
             )
 
-        self.in_example = False
         self.source_parts = []
         self.target_parts = []
 
     def handle_data(self, data):
-        if self.capture_source:
+        if self.source_depth:
             self.source_parts.append(data)
-        elif self.capture_target:
+        elif self.target_depth:
             self.target_parts.append(data)
 
 
