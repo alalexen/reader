@@ -9,61 +9,129 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Edit OCR output manually
 - Render Hebrew text right-to-left
 - Click individual Hebrew words
-- Detect the sentence that contains the selected word
-- Translate a selected word into Ukrainian, English, and Russian
-- Translate the selected sentence into Ukrainian, English, and Russian
-- Speak the full text or one selected word with the browser Web Speech API
-- Change speech speed
+- Speak the full text or one selected word
+- Translate words and sentences into Ukrainian, English, and Russian
+- Show morphology for words covered by the local morphology lexicon
+
+The morphology card can display:
+
+- dictionary form
+- infinitive
+- root
+- part of speech
+- binyan
+- tense
+- person
+- gender
+- number
+
+## Project structure
+
+```text
+reader/
+├── index.html
+├── styles.css
+├── app.js
+├── data/
+│   └── morphologyLexicon.js
+├── services/
+│   ├── morphologyService.js
+│   ├── ocrService.js
+│   ├── speechService.js
+│   └── translationService.js
+└── utils/
+    └── hebrew.js
+```
+
+The architecture intentionally separates responsibilities:
+
+- `app.js` manages page state and connects UI events to services.
+- `services/` contains integrations and application capabilities.
+- `utils/` contains small reusable Hebrew text helpers.
+- `data/` contains local data that can later be replaced by a real morphology provider.
+
+This means a future DictaBERT or other morphology backend can replace `morphologyService.js` without rewriting the reader UI.
+
+## Run locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/alalexen/reader.git
+cd reader
+```
+
+### 2. Switch to the current feature branch
+
+Until Pull Request #1 is merged:
+
+```bash
+git switch feature/mvp-reader
+```
+
+After the pull request is merged, you can use:
+
+```bash
+git switch main
+git pull
+```
+
+### 3. Start a local web server
+
+Do not open `index.html` directly from Finder because the project now uses JavaScript modules.
+
+If Python 3 is installed:
+
+```bash
+python3 -m http.server 8000
+```
+
+### 4. Open the app
+
+Open this address in your browser:
+
+```text
+http://localhost:8000
+```
+
+Stop the server with `Control + C` in the terminal.
+
+## Development workflow
+
+A simple workflow for local changes is:
+
+```bash
+git switch feature/mvp-reader
+git pull
+python3 -m http.server 8000
+```
+
+Edit the files in VS Code or another editor and refresh `http://localhost:8000` to see your changes.
 
 ## Technology
 
-The current version is intentionally static:
-
 - HTML
 - CSS
-- Vanilla JavaScript
+- Vanilla JavaScript with ES modules
 - Tesseract.js
 - Web Speech API
 - MyMemory Translation API
 
 No paid backend or private API key is required for the current MVP.
 
+## Morphology limitations
+
+The current morphology provider is intentionally conservative.
+
+It uses a small local lexicon for known forms such as `הלכתי`. If the word is unknown, the application does not invent a root or infinitive. Hebrew morphology contains irregular and ambiguous forms, so guessing would produce misleading study material.
+
+The next production-grade step is to connect the existing `morphologyService.js` interface to a full Hebrew NLP model such as DictaBERT or another suitable backend.
+
 ## Translation behavior
 
-Translations are requested from the browser only when the user clicks a translation button.
-
-The app currently translates from Hebrew into:
-
-- Ukrainian
-- English
-- Russian
-
-Translation results are cached in memory for the current browser session to avoid repeating identical requests.
+Translations are requested only when the user clicks a translation button and are cached in memory for the current browser session.
 
 The free translation service has usage limits, so translation quality and availability may vary.
-
-## Run locally
-
-For the most reliable behavior, run a simple local web server:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then open:
-
-```text
-http://localhost:8000
-```
-
-## Planned next steps
-
-1. Hebrew morphology and dictionary forms
-2. Personal vocabulary list
-3. Review mode and spaced repetition
-4. Better OCR preprocessing for book photos
-5. Improved translation fallback behavior
-6. GitHub Pages deployment
 
 ## Privacy
 
