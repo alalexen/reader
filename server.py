@@ -144,7 +144,18 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             parser = ReversoExamplesParser()
             parser.feed(page)
 
-            self.send_json({"examples": parser.examples[:limit]})
+            examples = parser.examples[:limit]
+
+            if not examples:
+                self.send_json(
+                    {
+                        "examples": [],
+                        "warning": "Reverso returned a page but no example pairs were parsed.",
+                    }
+                )
+                return
+
+            self.send_json({"examples": examples})
         except HTTPError as error:
             self.send_json(
                 {
