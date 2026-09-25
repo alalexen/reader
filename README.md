@@ -128,11 +128,11 @@ Selected text is sent to the configured translation service only when the user r
 
 - MyMemory provides automatic Ukrainian, English, and Russian translations.
 - Reverso Context is the only usage-example source.
-- Inline examples are loaded from Reverso's undocumented `bst-query-service` endpoint.
+- Inline examples are loaded by the local Python proxy from the public Reverso Context page.
 - The normal Reverso Context page link remains available as a fallback when the inline request fails or changes.
 - The project does not use Tatoeba or Wiktionary in the selected-word panel.
 
-The Reverso integration is isolated in `services/examplesService.js` because the endpoint is undocumented and may change without notice.
+The browser calls the local `/api/reverso` endpoint. `server.py` fetches the public Reverso Context page and extracts Hebrew-English example pairs, avoiding browser CORS restrictions.
 
 
 ## Flashcards and Quizlet
@@ -143,4 +143,4 @@ Quizlet does not currently expose a self-service public API for independent apps
 
 ## Reverso local proxy
 
-Run the project with `python3 server.py`. The Python server serves the static files and proxies requests to Reverso's undocumented `bst-query-service` endpoint. This avoids browser CORS restrictions while keeping the integration local and free.
+Run the project with `python3 server.py`. The Python server serves the static files and proxies Reverso requests. It fetches the public Context page and extracts example pairs server-side, which avoids browser CORS restrictions while keeping the integration local and free.
