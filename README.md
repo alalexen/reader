@@ -13,20 +13,11 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Select from Hebrew voices exposed by the browser or operating system
 - Use speech speeds of 0.5×, 1×, 1.5×, and 2×
 - Translate words and sentences into Ukrainian, English, and Russian
+- Show inline Reverso Context examples through the local proxy
 - Open the selected word directly in Reverso Context
-- Show morphology for words covered by the local morphology lexicon
-
-The morphology card can display:
-
-- dictionary form
-- infinitive
-- root
-- part of speech
-- binyan
-- tense
-- person
-- gender
-- number
+- Save selected words to local flashcards
+- Speak saved words and their original source sentences
+- Copy saved cards in Quizlet's tab-separated import format
 
 ## Project structure
 
@@ -35,12 +26,11 @@ reader/
 ├── index.html
 ├── styles.css
 ├── app.js
-├── data/
-│   └── morphologyLexicon.js
+├── server.py
 ├── services/
 │   ├── examplesService.js
+│   ├── flashcardsService.js
 │   ├── imageProcessingService.js
-│   ├── morphologyService.js
 │   ├── ocrService.js
 │   ├── speechService.js
 │   └── translationService.js
@@ -53,9 +43,6 @@ The architecture intentionally separates responsibilities:
 - `app.js` manages page state and connects UI events to services.
 - `services/` contains integrations and application capabilities.
 - `utils/` contains small reusable Hebrew text helpers.
-- `data/` contains local data that can later be replaced by a real morphology provider.
-
-This means a future DictaBERT or other morphology backend can replace `morphologyService.js` without rewriting the reader UI.
 
 ## Run locally
 
@@ -88,7 +75,7 @@ Do not open `index.html` directly from Finder because the project now uses JavaS
 If Python 3 is installed:
 
 ```bash
-python3 -m http.server 8000
+python3 server.py
 ```
 
 ### 4. Open the app
@@ -108,7 +95,7 @@ A simple workflow for local changes is:
 ```bash
 git switch feature/mvp-reader
 git pull
-python3 -m http.server 8000
+python3 server.py
 ```
 
 Edit the files in VS Code or another editor and refresh `http://localhost:8000` to see your changes.
@@ -123,14 +110,6 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - MyMemory Translation API
 
 No paid backend or private API key is required for the current MVP.
-
-## Morphology limitations
-
-The current morphology provider is intentionally conservative.
-
-It uses a small local lexicon for known forms such as `הלכתי`. If the word is unknown, the application does not invent a root or infinitive. Hebrew morphology contains irregular and ambiguous forms, so guessing would produce misleading study material.
-
-The next production-grade step is to connect the existing `morphologyService.js` interface to a full Hebrew NLP model such as DictaBERT or another suitable backend.
 
 ## Translation behavior
 
@@ -154,3 +133,14 @@ Selected text is sent to the configured translation service only when the user r
 - The project does not use Tatoeba or Wiktionary in the selected-word panel.
 
 The Reverso integration is isolated in `services/examplesService.js` because the endpoint is undocumented and may change without notice.
+
+
+## Flashcards and Quizlet
+
+Flashcards are stored in the browser with `localStorage`. Each saved card contains the Hebrew word, Ukrainian/English/Russian translations, one Reverso example, and the original sentence from the uploaded text.
+
+Quizlet does not currently expose a self-service public API for independent apps to create sets. Hebrew Reader therefore uses Quizlet's supported text-import workflow: click **Copy for Quizlet**, open Quizlet, create a flashcard set, choose **Import**, and paste the copied text.
+
+## Reverso local proxy
+
+Run the project with `python3 server.py`. The Python server serves the static files and proxies requests to Reverso's undocumented `bst-query-service` endpoint. This avoids browser CORS restrictions while keeping the integration local and free.
