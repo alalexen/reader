@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=bookora-20260926-1" />
+  <link rel="stylesheet" href="styles.css?v=wonderland-20260926-1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -14,54 +14,34 @@
       <div class="hero-copy">
         <p class="eyebrow">Hebrew learning tool</p>
         <h1>Hebrew Reader</h1>
-        <div class="monster-walk-track" aria-label="A playful monster walking back and forth">
-          <span class="monster-track-line" aria-hidden="true"></span>
-          <img
-            class="walking-monster"
-            src="https://ouch-prod-var-cdn.icons8.com/pv/illustrations/previews/5xD6OPoctEHEghiw.webp"
-            alt=""
-            aria-hidden="true"
-          />
+        <div class="hero-activity-row">
+          <div class="monster-walk-track" aria-label="A white rabbit walking back and forth">
+            <span class="monster-track-line" aria-hidden="true"></span>
+            <img
+              class="walking-monster walking-rabbit"
+              src="assets/white-rabbit.webp"
+              alt=""
+              aria-hidden="true"
+            />
+          </div>
+          <div class="session-timer" aria-label="Time spent on this page">
+            <span class="session-timer-label">TIME HERE</span>
+            <time id="sessionTimer" datetime="PT0S">00:00:00</time>
+          </div>
         </div>
       </div>
 
-      <div class="monster-stage" aria-hidden="true">
-        <div class="monster monster-purple" data-monster>
-          <div class="monster-horn horn-left"></div>
-          <div class="monster-horn horn-right"></div>
-          <div class="monster-eye eye-left">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-eye eye-right">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-mouth"></div>
-        </div>
-
-        <div class="monster monster-pink" data-monster>
-          <div class="monster-ear ear-left"></div>
-          <div class="monster-ear ear-right"></div>
-          <div class="monster-eye eye-left">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-eye eye-right">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-mouth monster-mouth-smile"></div>
-        </div>
-
-        <div class="monster monster-yellow" data-monster>
-          <div class="monster-spike spike-one"></div>
-          <div class="monster-spike spike-two"></div>
-          <div class="monster-spike spike-three"></div>
-          <div class="monster-eye eye-left">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-eye eye-right">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-mouth monster-mouth-small"></div>
-        </div>
+      <div class="wonderland-stage" aria-hidden="true">
+        <img
+          class="wonderland-monsters"
+          src="assets/wonderland-monsters.webp"
+          alt=""
+        />
+        <span class="art-eye art-eye-left-a"><span class="art-pupil"></span></span>
+        <span class="art-eye art-eye-left-b"><span class="art-pupil"></span></span>
+        <span class="art-eye art-eye-center"><span class="art-pupil"></span></span>
+        <span class="art-eye art-eye-right-a"><span class="art-pupil"></span></span>
+        <span class="art-eye art-eye-right-b"><span class="art-pupil"></span></span>
       </div>
     </header>
 
@@ -270,16 +250,6 @@
     </aside>
   </main>
 
-  <footer class="art-credit">
-    Illustration by
-    <a href="https://icons8.com" target="_blank" rel="noopener noreferrer">Icons8</a>
-    ·
-    <a
-      href="https://icons8.com/illustrations/illustration/jelly-green-character-in-red-hat"
-      target="_blank"
-      rel="noopener noreferrer"
-    >walking monster</a>
-  </footer>
 
   <script type="module" src="app.js"></script>
 </body>
