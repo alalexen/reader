@@ -1050,3 +1050,51 @@ progress::-webkit-progress-value {
 }
 
 
+
+
+/* Keep interface text LTR while Hebrew content remains explicitly RTL. */
+body,
+.card,
+.word-panel,
+.translation-item,
+.saved-flashcard,
+.saved-translations,
+.reference-placeholder,
+.status {
+  direction: ltr;
+  text-align: left;
+}
+
+.translation-label,
+.translation-value,
+.section-help,
+.example-target,
+.saved-label,
+.saved-translations span {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
+.selected-word,
+.selected-sentence,
+.example-source,
+.saved-flashcard-word,
+.saved-example p[dir="rtl"],
+.reader,
+.editable-text {
+  direction: rtl;
+  text-align: right;
+}
+
+.example-target,
+.saved-example p:not([dir="rtl"]) {
+  direction: ltr;
+  text-align: left;
+}
+
+.editable-text::placeholder {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: plaintext;
+}
