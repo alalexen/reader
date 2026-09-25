@@ -172,36 +172,6 @@ button.secondary {
   font-size: 1.1rem;
 }
 
-.background-doodle {
-  position: fixed;
-  z-index: 1;
-  color: rgba(255, 255, 255, 0.05);
-  font-weight: 900;
-  pointer-events: none;
-  user-select: none;
-}
-
-.doodle-one {
-  left: 3vw;
-  top: 16vh;
-  font-size: 5rem;
-  transform: rotate(-18deg);
-}
-
-.doodle-two {
-  right: 2vw;
-  top: 55vh;
-  font-size: 7rem;
-  transform: rotate(13deg);
-}
-
-.doodle-three {
-  left: 5vw;
-  bottom: 4vh;
-  font-size: 5rem;
-  transform: rotate(22deg);
-}
-
 .section-title-row {
   display: flex;
   align-items: center;
@@ -231,11 +201,6 @@ button.secondary {
   background: var(--yellow);
   font-weight: 950;
   box-shadow: 0 5px 0 #b58a24;
-}
-
-.tiny-doodle {
-  color: var(--pink);
-  font-size: 1.8rem;
 }
 
 .upload-zone {
@@ -1138,5 +1103,23 @@ progress::-webkit-progress-value {
   .walking-monster {
     animation: none;
     left: calc(50% - 36px);
+  }
+}
+
+
+.section-monster-word-panel {
+  top: -52px;
+  right: 76px;
+  width: 96px;
+  height: 96px;
+  transform: rotate(8deg);
+}
+
+@media (max-width: 720px) {
+  .section-monster-word-panel {
+    top: -38px;
+    right: 64px;
+    width: 76px;
+    height: 76px;
   }
 }
