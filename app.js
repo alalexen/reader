@@ -1,7 +1,18 @@
 import { recognizeHebrewText } from "./services/ocrService.js";
 import { analyzeHebrewWord } from "./services/morphologyService.js";
-import { speakHebrew, stopSpeech } from "./services/speechService.js";
+import {
+  getHebrewVoices,
+  getPreferredHebrewVoice,
+  onVoicesChanged,
+  speakHebrew,
+  stopSpeech,
+} from "./services/speechService.js";
 import { translateIntoLanguages } from "./services/translationService.js";
+import {
+  buildReversoContextUrl,
+  findHebrewExamples,
+} from "./services/examplesService.js";
+import { lookupHebrewDictionary } from "./services/dictionaryService.js";
 import {
   containsHebrew,
   normalizeHebrewWord,
@@ -21,6 +32,7 @@ const elements = {
   speakButton: document.querySelector("#speakButton"),
   stopButton: document.querySelector("#stopButton"),
   speechRate: document.querySelector("#speechRate"),
+  voiceSelect: document.querySelector("#voiceSelect"),
   wordPanel: document.querySelector("#wordPanel"),
   closeWordPanelButton: document.querySelector("#closeWordPanelButton"),
   selectedWord: document.querySelector("#selectedWord"),
@@ -31,6 +43,10 @@ const elements = {
   translationStatus: document.querySelector("#translationStatus"),
   morphologySource: document.querySelector("#morphologySource"),
   morphologyNote: document.querySelector("#morphologyNote"),
+  dictionaryResults: document.querySelector("#dictionaryResults"),
+  wiktionaryLink: document.querySelector("#wiktionaryLink"),
+  examplesResults: document.querySelector("#examplesResults"),
+  reversoLink: document.querySelector("#reversoLink"),
 };
 
 const translationElements = {
@@ -62,6 +78,7 @@ const state = {
   selectedImage: null,
   activeSentence: "",
   wordSelectionId: 0,
+  preferredVoiceURI: localStorage.getItem("hebrewReaderVoiceURI") || "",
 };
 
 function setTranslationPlaceholders(scope) {
@@ -76,6 +93,40 @@ function updateSpeechButtons() {
   elements.stopButton.disabled = !hasText;
 }
 
+function initializeVoiceSelector() {
+  const voices = getHebrewVoices();
+  const preferredVoice = getPreferredHebrewVoice();
+  const previousSelection =
+    state.preferredVoiceURI || preferredVoice?.voiceURI || "";
+
+  elements.voiceSelect.replaceChildren();
+
+  if (!voices.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "System Hebrew voice";
+    elements.voiceSelect.append(option);
+    return;
+  }
+
+  voices.forEach((voice, index) => {
+    const option = document.createElement("option");
+    option.value = voice.voiceURI;
+    option.textContent =
+      index === 0 ? `${voice.name} · recommended` : voice.name;
+    elements.voiceSelect.append(option);
+  });
+
+  const matchingVoice = voices.find(
+    (voice) => voice.voiceURI === previousSelection,
+  );
+
+  elements.voiceSelect.value =
+    matchingVoice?.voiceURI || preferredVoice?.voiceURI || voices[0].voiceURI;
+
+  state.preferredVoiceURI = elements.voiceSelect.value;
+}
+
 function renderMorphology(word) {
   const analysis = analyzeHebrewWord(word);
 
@@ -87,6 +138,106 @@ function renderMorphology(word) {
     analysis.source === "lexicon" ? "Local lexicon" : "Limited analysis";
 
   elements.morphologyNote.textContent = analysis.note || "";
+}
+
+function renderReferencePlaceholder(container, message) {
+  container.replaceChildren();
+
+  const placeholder = document.createElement("p");
+  placeholder.className = "reference-placeholder";
+  placeholder.textContent = message;
+  container.append(placeholder);
+}
+
+function renderDictionaryResult(result) {
+  elements.dictionaryResults.replaceChildren();
+
+  if (!result.definitions.length) {
+    renderReferencePlaceholder(
+      elements.dictionaryResults,
+      "No English Wiktionary definition was found for this form.",
+    );
+  } else {
+    const list = document.createElement("ol");
+    list.className = "dictionary-list";
+
+    result.definitions.forEach((definition) => {
+      const item = document.createElement("li");
+      item.textContent = definition;
+      list.append(item);
+    });
+
+    elements.dictionaryResults.append(list);
+  }
+
+  if (result.url) {
+    elements.wiktionaryLink.href = result.url;
+    elements.wiktionaryLink.classList.remove("hidden");
+  } else {
+    elements.wiktionaryLink.classList.add("hidden");
+  }
+}
+
+function renderExamples(examples) {
+  elements.examplesResults.replaceChildren();
+
+  if (!examples.length) {
+    renderReferencePlaceholder(
+      elements.examplesResults,
+      "No Tatoeba examples were found for this exact form.",
+    );
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "example-list";
+
+  examples.forEach((example) => {
+    const item = document.createElement("div");
+    item.className = "example-item";
+    item.dir = "rtl";
+    item.lang = "he";
+    item.textContent = example.text;
+    list.append(item);
+  });
+
+  elements.examplesResults.append(list);
+}
+
+async function loadWordReferences(word, selectionId) {
+  elements.reversoLink.href = buildReversoContextUrl(word);
+  renderReferencePlaceholder(elements.dictionaryResults, "Looking up Wiktionary...");
+  renderReferencePlaceholder(elements.examplesResults, "Finding usage examples...");
+
+  const [dictionaryResult, examplesResult] = await Promise.allSettled([
+    lookupHebrewDictionary(word),
+    findHebrewExamples(word, 5),
+  ]);
+
+  if (selectionId !== state.wordSelectionId) {
+    return;
+  }
+
+  if (dictionaryResult.status === "fulfilled") {
+    renderDictionaryResult(dictionaryResult.value);
+  } else {
+    console.error("Dictionary lookup failed:", dictionaryResult.reason);
+    renderReferencePlaceholder(
+      elements.dictionaryResults,
+      "Dictionary lookup is temporarily unavailable.",
+    );
+    elements.wiktionaryLink.classList.add("hidden");
+  }
+
+  if (examplesResult.status === "fulfilled") {
+    renderExamples(examplesResult.value);
+  } else {
+    console.error("Example lookup failed:", examplesResult.reason);
+    renderReferencePlaceholder(
+      elements.examplesResults,
+      "Usage examples are temporarily unavailable. You can still open Reverso Context.",
+    );
+  }
 }
 
 function closeWordPanel() {
@@ -115,7 +266,11 @@ async function activateWord(token, sentence) {
   renderMorphology(word);
 
   elements.wordPanel.classList.remove("hidden");
-  await translate(word, "word", selectionId);
+
+  await Promise.allSettled([
+    translate(word, "word", selectionId),
+    loadWordReferences(word, selectionId),
+  ]);
 }
 
 function appendSentence(sentence) {
@@ -351,13 +506,21 @@ elements.renderButton.addEventListener("click", renderClickableText);
 elements.editableText.addEventListener("input", updateSpeechButtons);
 
 elements.speakButton.addEventListener("click", () => {
-  speakHebrew(elements.editableText.value, Number(elements.speechRate.value));
+  speakHebrew(
+    elements.editableText.value,
+    Number(elements.speechRate.value),
+    elements.voiceSelect.value,
+  );
 });
 
 elements.stopButton.addEventListener("click", stopSpeech);
 
 elements.speakWordButton.addEventListener("click", () => {
-  speakHebrew(elements.selectedWord.textContent, Number(elements.speechRate.value));
+  speakHebrew(
+    elements.selectedWord.textContent,
+    Number(elements.speechRate.value),
+    elements.voiceSelect.value,
+  );
 });
 
 elements.translateWordButton.addEventListener("click", () => {
@@ -372,6 +535,11 @@ elements.translateSentenceButton.addEventListener("click", () => {
   translate(state.activeSentence, "sentence");
 });
 
+elements.voiceSelect.addEventListener("change", () => {
+  state.preferredVoiceURI = elements.voiceSelect.value;
+  localStorage.setItem("hebrewReaderVoiceURI", state.preferredVoiceURI);
+});
+
 elements.closeWordPanelButton.addEventListener("click", closeWordPanel);
 elements.clearButton.addEventListener("click", clearApp);
 
@@ -381,5 +549,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+onVoicesChanged(initializeVoiceSelector);
+initializeVoiceSelector();
 initializeMonsterEyes();
 renderClickableText();
