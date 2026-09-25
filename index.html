@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A free browser-based Hebrew reading assistant." />
+  <title>Hebrew Reader</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">Hebrew learning tool</p>
+      <h1>Hebrew Reader</h1>
+      <p class="subtitle">
+        Upload a photo, extract Hebrew text, click words, and listen to the text.
+      </p>
+    </header>
+
+    <section class="card">
+      <h2>1. Upload a page</h2>
+      <label class="upload-zone" for="imageInput">
+        <span class="upload-title">Choose an image</span>
+        <span class="upload-help">JPG, PNG, WEBP or a phone photo of a book page</span>
+      </label>
+      <input id="imageInput" type="file" accept="image/*" />
+
+      <img id="imagePreview" class="image-preview hidden" alt="Uploaded page preview" />
+
+      <div class="actions">
+        <button id="recognizeButton" type="button" disabled>Recognize Hebrew text</button>
+        <button id="clearButton" type="button" class="secondary">Clear</button>
+      </div>
+
+      <div id="ocrStatus" class="status" aria-live="polite"></div>
+      <progress id="ocrProgress" class="hidden" max="1" value="0"></progress>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div>
+          <h2>2. Read the text</h2>
+          <p>Every Hebrew word is clickable.</p>
+        </div>
+
+        <div class="speech-controls">
+          <label for="speechRate">Speed</label>
+          <select id="speechRate">
+            <option value="0.6">0.6×</option>
+            <option value="0.8">0.8×</option>
+            <option value="1" selected>1×</option>
+          </select>
+          <button id="speakButton" type="button" disabled>Speak</button>
+          <button id="stopButton" type="button" class="secondary" disabled>Stop</button>
+        </div>
+      </div>
+
+      <textarea
+        id="editableText"
+        class="editable-text"
+        dir="rtl"
+        lang="he"
+        placeholder="Recognized Hebrew text will appear here. You can also type or correct the text manually."
+      ></textarea>
+
+      <div class="actions">
+        <button id="renderButton" type="button">Make words clickable</button>
+      </div>
+
+      <div id="reader" class="reader" dir="rtl" lang="he">
+        <p class="empty-state">Your Hebrew text will appear here.</p>
+      </div>
+    </section>
+
+    <aside id="wordPanel" class="card word-panel hidden">
+      <p class="eyebrow">Selected word</p>
+      <div class="selected-word-row">
+        <strong id="selectedWord" class="selected-word" dir="rtl" lang="he"></strong>
+        <button id="speakWordButton" type="button">Speak word</button>
+      </div>
+      <p class="word-note">
+        Ukrainian translation and Hebrew morphology will be added in the next version.
+      </p>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
