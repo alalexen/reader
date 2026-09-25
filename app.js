@@ -8,10 +8,6 @@ import {
 } from "./services/speechService.js";
 import { translateIntoLanguages } from "./services/translationService.js";
 import {
-  buildReversoContextUrl,
-  fetchReversoExamples,
-} from "./services/examplesService.js";
-import {
   buildQuizletImportText,
   loadFlashcards,
   removeFlashcard,
@@ -48,7 +44,6 @@ const elements = {
   translateSentenceButton: document.querySelector("#translateSentenceButton"),
   translationStatus: document.querySelector("#translationStatus"),
   reversoLink: document.querySelector("#reversoLink"),
-  examplesResults: document.querySelector("#examplesResults"),
   flashcardsList: document.querySelector("#flashcardsList"),
   flashcardsStatus: document.querySelector("#flashcardsStatus"),
   copyQuizletButton: document.querySelector("#copyQuizletButton"),
@@ -130,50 +125,6 @@ function speak(text) {
   );
 }
 
-function renderExamplesPlaceholder(message) {
-  elements.examplesResults.replaceChildren();
-
-  const placeholder = document.createElement("p");
-  placeholder.className = "reference-placeholder";
-  placeholder.textContent = message;
-  elements.examplesResults.append(placeholder);
-}
-
-function renderReversoExamples(examples) {
-  elements.examplesResults.replaceChildren();
-
-  if (!examples.length) {
-    renderExamplesPlaceholder(
-      "No inline examples were returned. Open Reverso Context to see more.",
-    );
-    return;
-  }
-
-  const list = document.createElement("div");
-  list.className = "example-list";
-
-  examples.forEach((example) => {
-    const item = document.createElement("article");
-    item.className = "example-item";
-
-    const source = document.createElement("p");
-    source.className = "example-source";
-    source.dir = "rtl";
-    source.lang = "he";
-    source.textContent = example.source;
-
-    const target = document.createElement("p");
-    target.className = "example-target";
-    target.lang = "en";
-    target.textContent = example.target;
-
-    item.append(source, target);
-    list.append(item);
-  });
-
-  elements.examplesResults.append(list);
-}
-
 function updateRememberButton() {
   const hasSelectedWord = Boolean(state.activeWordData?.word);
 
@@ -181,38 +132,6 @@ function updateRememberButton() {
   elements.rememberWordButton.title = hasSelectedWord
     ? "Save this word to My flashcards"
     : "Select a Hebrew word first";
-}
-
-async function loadReversoExamples(word, selectionId) {
-  renderExamplesPlaceholder("Loading Reverso examples...");
-
-  try {
-    const examples = await fetchReversoExamples(word, 6);
-
-    if (selectionId !== state.wordSelectionId) {
-      return [];
-    }
-
-    if (state.activeWordData?.word === word) {
-      state.activeWordData.examples = examples;
-    }
-
-    renderReversoExamples(examples);
-    updateRememberButton();
-    return examples;
-  } catch (error) {
-    console.error("Reverso examples failed:", error);
-
-    if (selectionId !== state.wordSelectionId) {
-      return [];
-    }
-
-    renderExamplesPlaceholder(
-      "Could not load Reverso examples. Check the local server console for the proxy error.",
-    );
-    updateRememberButton();
-    return [];
-  }
 }
 
 function closeWordPanel() {
@@ -238,11 +157,11 @@ async function activateWord(token, sentence) {
     word,
     sentence: state.activeSentence,
     translations: null,
-    examples: [],
   };
 
   elements.selectedSentence.textContent = state.activeSentence;
-  elements.reversoLink.href = buildReversoContextUrl(word);
+  elements.reversoLink.href =
+    `https://context.reverso.net/translation/hebrew-english/${encodeURIComponent(word)}`;
   updateRememberButton();
 
   setTranslationPlaceholders("word");
@@ -250,11 +169,7 @@ async function activateWord(token, sentence) {
   elements.translationStatus.textContent = "Loading word details...";
   elements.wordPanel.classList.remove("hidden");
 
-  await Promise.allSettled([
-    translate(word, "word", selectionId),
-    loadReversoExamples(word, selectionId),
-  ]);
-
+  await translate(word, "word", selectionId);
   updateRememberButton();
 }
 
@@ -441,19 +356,6 @@ function createFlashcardElement(card) {
     <span><b>UK</b> ${escapeText(card.translations?.uk || "—")}</span>
   `;
 
-  const example = document.createElement("div");
-  example.className = "saved-example";
-  const exampleLabel = document.createElement("span");
-  exampleLabel.className = "saved-label";
-  exampleLabel.textContent = "Reverso example";
-  const exampleSource = document.createElement("p");
-  exampleSource.dir = "rtl";
-  exampleSource.lang = "he";
-  exampleSource.textContent = card.example?.source || "—";
-  const exampleTarget = document.createElement("p");
-  exampleTarget.textContent = card.example?.target || "";
-  example.append(exampleLabel, exampleSource, exampleTarget);
-
   const sourceSentence = document.createElement("div");
   sourceSentence.className = "saved-example";
   const sentenceLabel = document.createElement("span");
@@ -471,7 +373,7 @@ function createFlashcardElement(card) {
   speakSentenceButton.addEventListener("click", () => speak(card.sentence));
 
   sourceSentence.append(sentenceLabel, sentenceText, speakSentenceButton);
-  article.append(header, translations, example, sourceSentence);
+  article.append(header, translations, sourceSentence);
 
   return article;
 }
@@ -527,15 +429,6 @@ async function rememberActiveWord() {
       }
     }
 
-    if (!data.examples?.length) {
-      try {
-        data.examples = await fetchReversoExamples(data.word, 6);
-        renderReversoExamples(data.examples);
-      } catch (error) {
-        console.error("Could not add a Reverso example to flashcard:", error);
-      }
-    }
-
     state.flashcards = saveFlashcard({
       word: data.word,
       translations: data.translations || {
@@ -543,16 +436,12 @@ async function rememberActiveWord() {
         en: "—",
         ru: "—",
       },
-      example: data.examples?.[0] || null,
       sentence: data.sentence,
     });
 
     renderFlashcards();
 
-    const savedWithExample = Boolean(data.examples?.length);
-    elements.translationStatus.textContent = savedWithExample
-      ? "Word saved to My flashcards."
-      : "Word saved. Reverso example could not be added right now.";
+    elements.translationStatus.textContent = "Word saved to My flashcards.";
 
     elements.flashcardsStatus.textContent = `Saved ${data.word}.`;
   } finally {
