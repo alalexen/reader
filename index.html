@@ -18,65 +18,32 @@
       <div class="hero-copy">
         <p class="eyebrow">Hebrew learning tool</p>
         <h1>Hebrew Reader</h1>
-        <div class="hero-word-animation" aria-label="Animated Hebrew learning line">
-          <span class="animated-word" dir="rtl" lang="he">
-            <span style="--i:0">ל</span>
-            <span style="--i:1">ו</span>
-            <span style="--i:2">מ</span>
-            <span style="--i:3">ד</span>
-            <span style="--i:4">י</span>
-            <span style="--i:5">ם</span>
-          </span>
-          <span class="animated-arrow" aria-hidden="true">→</span>
-          <span class="animated-spark" aria-hidden="true">✦</span>
+        <div class="monster-walk-track" aria-label="A playful monster walking back and forth">
+          <span class="monster-track-line" aria-hidden="true"></span>
+          <img
+            class="walking-monster"
+            src="https://ouch-prod-var-cdn.icons8.com/pv/illustrations/previews/5xD6OPoctEHEghiw.webp"
+            alt=""
+            aria-hidden="true"
+          />
         </div>
       </div>
 
-      <div class="monster-stage" aria-hidden="true">
-        <span class="floating-symbol symbol-one">א</span>
-        <span class="floating-symbol symbol-two">ב</span>
-        <span class="floating-symbol symbol-three">✦</span>
-
-        <div class="monster monster-purple" data-monster>
-          <div class="monster-horn horn-left"></div>
-          <div class="monster-horn horn-right"></div>
-          <div class="monster-eye eye-left">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-eye eye-right">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-mouth"></div>
-        </div>
-
-        <div class="monster monster-pink" data-monster>
-          <div class="monster-ear ear-left"></div>
-          <div class="monster-ear ear-right"></div>
-          <div class="monster-eye eye-left">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-eye eye-right">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-mouth monster-mouth-smile"></div>
-        </div>
-
-        <div class="monster monster-yellow" data-monster>
-          <div class="monster-spike spike-one"></div>
-          <div class="monster-spike spike-two"></div>
-          <div class="monster-spike spike-three"></div>
-          <div class="monster-eye eye-left">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-eye eye-right">
-            <span class="monster-pupil"></span>
-          </div>
-          <div class="monster-mouth monster-mouth-small"></div>
-        </div>
+      <div class="hero-mascot" aria-hidden="true">
+        <img
+          src="https://ouch-prod-var-cdn.icons8.com/ty/illustrations/previews/94d53XaoS4o1j-OQ.webp"
+          alt=""
+        />
       </div>
     </header>
 
-    <section class="card upload-card">
+    <section class="card upload-card mascot-card">
+      <img
+        class="section-monster section-monster-upload"
+        src="https://ouch-prod-var-cdn.icons8.com/pv/illustrations/previews/5xD6OPoctEHEghiw.webp"
+        alt=""
+        aria-hidden="true"
+      />
       <div class="section-title-row">
         <div>
           <span class="step-badge">1</span>
@@ -102,7 +69,13 @@
       <progress id="ocrProgress" class="hidden" max="1" value="0"></progress>
     </section>
 
-    <section class="card reader-card">
+    <section class="card reader-card mascot-card">
+      <img
+        class="section-monster section-monster-reader"
+        src="https://ouch-prod-var-cdn.icons8.com/ty/illustrations/previews/94d53XaoS4o1j-OQ.webp"
+        alt=""
+        aria-hidden="true"
+      />
       <div class="section-heading">
         <div>
           <div class="section-title-row compact">
@@ -148,7 +121,13 @@
     </section>
 
 
-    <section class="card flashcards-card">
+    <section class="card flashcards-card mascot-card">
+      <img
+        class="section-monster section-monster-flashcards"
+        src="https://ouch-prod-var-cdn.icons8.com/pv/illustrations/previews/5xD6OPoctEHEghiw.webp"
+        alt=""
+        aria-hidden="true"
+      />
       <div class="section-heading">
         <div>
           <div class="section-title-row compact">
@@ -281,6 +260,23 @@
       <p id="translationStatus" class="status" aria-live="polite"></p>
     </aside>
   </main>
+
+  <footer class="art-credit">
+    Illustrations by
+    <a href="https://icons8.com" target="_blank" rel="noopener noreferrer">Icons8</a>
+    ·
+    <a
+      href="https://icons8.com/illustrations/illustration/jelly-green-character-in-red-hat"
+      target="_blank"
+      rel="noopener noreferrer"
+    >walking monster</a>
+    ·
+    <a
+      href="https://icons8.com/illustrations/illustration/jelly-monster-in-hat-reading-a-book"
+      target="_blank"
+      rel="noopener noreferrer"
+    >reading monster</a>
+  </footer>
 
   <script type="module" src="app.js"></script>
 </body>
