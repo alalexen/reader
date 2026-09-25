@@ -7,7 +7,12 @@ export function loadFlashcards() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const cards = raw ? JSON.parse(raw) : [];
-    return Array.isArray(cards) ? cards : [];
+
+    if (!Array.isArray(cards)) {
+      return [];
+    }
+
+    return cards.map(({ example, ...card }) => card);
   } catch (error) {
     console.error("Failed to read saved flashcards:", error);
     return [];
@@ -22,8 +27,9 @@ export function saveFlashcard(card) {
   const cards = loadFlashcards();
   const existingIndex = cards.findIndex((item) => item.word === card.word);
 
+  const { example, ...cardWithoutExample } = card;
   const normalizedCard = {
-    ...card,
+    ...cardWithoutExample,
     id: card.id || crypto.randomUUID(),
     savedAt: new Date().toISOString(),
   };
@@ -64,9 +70,6 @@ export function buildQuizletImportText(cards) {
         `English: ${card.translations?.en || "—"}`,
         `Russian: ${card.translations?.ru || "—"}`,
         `Ukrainian: ${card.translations?.uk || "—"}`,
-        card.example?.source
-          ? `Example: ${card.example.source} — ${card.example.target || ""}`
-          : "",
         card.sentence ? `From text: ${card.sentence}` : "",
       ].filter(Boolean);
 
