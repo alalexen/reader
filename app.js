@@ -47,6 +47,7 @@ const elements = {
   flashcardsList: document.querySelector("#flashcardsList"),
   flashcardsStatus: document.querySelector("#flashcardsStatus"),
   copyQuizletButton: document.querySelector("#copyQuizletButton"),
+  sessionTimer: document.querySelector("#sessionTimer"),
 };
 
 const translationElements = {
@@ -498,7 +499,7 @@ function clearApp() {
 
 
 function initializeMonsterEyes() {
-  const eyes = [...document.querySelectorAll(".monster-eye")];
+  const eyes = [...document.querySelectorAll(".art-eye")];
 
   if (!eyes.length) {
     return;
@@ -506,7 +507,7 @@ function initializeMonsterEyes() {
 
   const updateEyes = (clientX, clientY) => {
     eyes.forEach((eye) => {
-      const pupil = eye.querySelector(".monster-pupil");
+      const pupil = eye.querySelector(".art-pupil");
 
       if (!pupil) {
         return;
@@ -518,19 +519,16 @@ function initializeMonsterEyes() {
       const deltaX = clientX - centerX;
       const deltaY = clientY - centerY;
       const distance = Math.hypot(deltaX, deltaY) || 1;
-      const maxX = Math.max(2, rect.width * 0.17);
-      const maxY = Math.max(2, rect.height * 0.16);
-      const normalizedX = deltaX / distance;
-      const normalizedY = deltaY / distance;
-      const strength = Math.min(distance / 180, 1);
+      const maxTravel = Math.max(2, rect.width * 0.18);
+      const strength = Math.min(distance / 190, 1);
 
       pupil.style.setProperty(
         "--eye-x",
-        `${normalizedX * maxX * strength}px`,
+        `${(deltaX / distance) * maxTravel * strength}px`,
       );
       pupil.style.setProperty(
         "--eye-y",
-        `${normalizedY * maxY * strength}px`,
+        `${(deltaY / distance) * maxTravel * strength}px`,
       );
     });
   };
@@ -541,11 +539,38 @@ function initializeMonsterEyes() {
 
   window.addEventListener("pointerleave", () => {
     eyes.forEach((eye) => {
-      const pupil = eye.querySelector(".monster-pupil");
+      const pupil = eye.querySelector(".art-pupil");
       pupil?.style.setProperty("--eye-x", "0px");
       pupil?.style.setProperty("--eye-y", "0px");
     });
   });
+}
+
+function initializeSessionTimer() {
+  if (!elements.sessionTimer) {
+    return;
+  }
+
+  const startedAt = Date.now();
+
+  const updateTimer = () => {
+    const elapsedSeconds = Math.max(
+      0,
+      Math.floor((Date.now() - startedAt) / 1000),
+    );
+    const hours = Math.floor(elapsedSeconds / 3600) % 24;
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+    const seconds = elapsedSeconds % 60;
+    const value = [hours, minutes, seconds]
+      .map((part) => String(part).padStart(2, "0"))
+      .join(":");
+
+    elements.sessionTimer.textContent = value;
+    elements.sessionTimer.dateTime = `PT${elapsedSeconds}S`;
+  };
+
+  updateTimer();
+  window.setInterval(updateTimer, 1000);
 }
 
 elements.imageInput.addEventListener("change", () => {
@@ -606,5 +631,6 @@ document.addEventListener("keydown", (event) => {
 onVoicesChanged(initializeVoiceSelector);
 initializeVoiceSelector();
 initializeMonsterEyes();
+initializeSessionTimer();
 renderFlashcards();
 renderClickableText();
