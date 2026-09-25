@@ -1009,41 +1009,6 @@ progress::-webkit-progress-value {
   }
 }
 
-.mascot-card {
-  position: relative;
-  overflow: visible;
-}
-
-.section-monster {
-  position: absolute;
-  z-index: 3;
-  width: 112px;
-  height: 112px;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.24));
-}
-
-.section-monster-upload {
-  top: -48px;
-  right: 30px;
-  transform: rotate(7deg);
-}
-
-.section-monster-reader {
-  top: -56px;
-  left: 28px;
-  width: 128px;
-  height: 128px;
-  transform: rotate(-4deg);
-}
-
-.section-monster-flashcards {
-  right: 26px;
-  bottom: -48px;
-  transform: rotate(-8deg);
-}
-
 .art-credit {
   width: min(1040px, calc(100% - 2rem));
   margin: 0 auto 1.4rem;
@@ -1077,29 +1042,7 @@ progress::-webkit-progress-value {
     height: 62px;
   }
 
-  .section-monster {
-    width: 82px;
-    height: 82px;
-  }
-
-  .section-monster-reader {
-    left: auto;
-    right: 22px;
-    width: 94px;
-    height: 94px;
-  }
-
-  .section-monster-upload,
-  .section-monster-reader {
-    top: -38px;
-  }
-
-  .section-monster-flashcards {
-    bottom: -34px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
+  @media (prefers-reduced-motion: reduce) {
   .walking-monster {
     animation: none;
     left: calc(50% - 36px);
@@ -1107,19 +1050,3 @@ progress::-webkit-progress-value {
 }
 
 
-.section-monster-word-panel {
-  top: -52px;
-  right: 76px;
-  width: 96px;
-  height: 96px;
-  transform: rotate(8deg);
-}
-
-@media (max-width: 720px) {
-  .section-monster-word-panel {
-    top: -38px;
-    right: 64px;
-    width: 76px;
-    height: 76px;
-  }
-}
