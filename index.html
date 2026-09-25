@@ -3,24 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A free browser-based Hebrew reading assistant." />
+  <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
+  <div class="background-doodle doodle-one" aria-hidden="true">✦</div>
+  <div class="background-doodle doodle-two" aria-hidden="true">א</div>
+  <div class="background-doodle doodle-three" aria-hidden="true">✎</div>
+
   <main class="app-shell">
-    <header class="hero">
-      <p class="eyebrow">Hebrew learning tool</p>
-      <h1>Hebrew Reader</h1>
-      <p class="subtitle">
-        Upload a photo, extract Hebrew text, inspect words, listen, and translate.
-      </p>
+    <header class="hero card hero-card">
+      <div class="hero-copy">
+        <p class="eyebrow">Hebrew learning tool</p>
+        <h1>Hebrew Reader</h1>
+        <p class="subtitle">
+          Turn a photo of Hebrew text into a playful reading lesson.
+        </p>
+      </div>
+
+      <div class="monster-stage" aria-hidden="true">
+        <span class="floating-symbol symbol-one">א</span>
+        <span class="floating-symbol symbol-two">ב</span>
+        <span class="floating-symbol symbol-three">✦</span>
+
+        <div class="monster monster-purple" data-monster>
+          <div class="monster-horn horn-left"></div>
+          <div class="monster-horn horn-right"></div>
+          <div class="monster-eye eye-left">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-eye eye-right">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-mouth"></div>
+        </div>
+
+        <div class="monster monster-pink" data-monster>
+          <div class="monster-ear ear-left"></div>
+          <div class="monster-ear ear-right"></div>
+          <div class="monster-eye eye-left">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-eye eye-right">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-mouth monster-mouth-smile"></div>
+        </div>
+
+        <div class="monster monster-yellow" data-monster>
+          <div class="monster-spike spike-one"></div>
+          <div class="monster-spike spike-two"></div>
+          <div class="monster-spike spike-three"></div>
+          <div class="monster-eye eye-left">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-eye eye-right">
+            <span class="monster-pupil"></span>
+          </div>
+          <div class="monster-mouth monster-mouth-small"></div>
+        </div>
+      </div>
     </header>
 
-    <section class="card">
-      <h2>1. Upload a page</h2>
+    <section class="card upload-card">
+      <div class="section-title-row">
+        <div>
+          <span class="step-badge">1</span>
+          <h2>Upload a page</h2>
+        </div>
+        <span class="tiny-doodle" aria-hidden="true">✦</span>
+      </div>
+
       <label class="upload-zone" for="imageInput">
+        <span class="upload-icon" aria-hidden="true">📷</span>
         <span class="upload-title">Choose an image</span>
         <span class="upload-help">JPG, PNG, WEBP or a phone photo of a book page</span>
       </label>
@@ -36,10 +93,13 @@
       <progress id="ocrProgress" class="hidden" max="1" value="0"></progress>
     </section>
 
-    <section class="card">
+    <section class="card reader-card">
       <div class="section-heading">
         <div>
-          <h2>2. Read the text</h2>
+          <div class="section-title-row compact">
+            <span class="step-badge">2</span>
+            <h2>Read the text</h2>
+          </div>
           <p>Every Hebrew word is clickable.</p>
         </div>
 
@@ -73,10 +133,24 @@
     </section>
 
     <aside id="wordPanel" class="card word-panel hidden">
-      <p class="eyebrow">Selected word</p>
+      <div class="word-panel-header">
+        <div>
+          <p class="eyebrow">Selected word</p>
+          <strong id="selectedWord" class="selected-word" dir="rtl" lang="he"></strong>
+        </div>
 
-      <div class="selected-word-row">
-        <strong id="selectedWord" class="selected-word" dir="rtl" lang="he"></strong>
+        <button
+          id="closeWordPanelButton"
+          type="button"
+          class="icon-button"
+          aria-label="Close word panel"
+          title="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="selected-word-actions">
         <button id="speakWordButton" type="button">Speak word</button>
       </div>
 
@@ -108,15 +182,15 @@
         </div>
 
         <div class="translation-grid">
-          <div class="translation-item">
+          <div class="translation-item accent-pink">
             <span class="translation-label">Ukrainian</span>
             <span id="wordTranslationUk" class="translation-value">—</span>
           </div>
-          <div class="translation-item">
+          <div class="translation-item accent-cyan">
             <span class="translation-label">English</span>
             <span id="wordTranslationEn" class="translation-value">—</span>
           </div>
-          <div class="translation-item">
+          <div class="translation-item accent-yellow">
             <span class="translation-label">Russian</span>
             <span id="wordTranslationRu" class="translation-value">—</span>
           </div>
@@ -133,15 +207,15 @@
         </div>
 
         <div class="translation-grid">
-          <div class="translation-item">
+          <div class="translation-item accent-pink">
             <span class="translation-label">Ukrainian</span>
             <span id="sentenceTranslationUk" class="translation-value">—</span>
           </div>
-          <div class="translation-item">
+          <div class="translation-item accent-cyan">
             <span class="translation-label">English</span>
             <span id="sentenceTranslationEn" class="translation-value">—</span>
           </div>
-          <div class="translation-item">
+          <div class="translation-item accent-yellow">
             <span class="translation-label">Russian</span>
             <span id="sentenceTranslationRu" class="translation-value">—</span>
           </div>
