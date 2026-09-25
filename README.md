@@ -13,8 +13,7 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Select from Hebrew voices exposed by the browser or operating system
 - Use speech speeds of 0.5×, 1×, 1.5×, and 2×
 - Translate words and sentences into Ukrainian, English, and Russian
-- Show inline Reverso Context examples through the local proxy
-- Open the selected word directly in Reverso Context
+- Open the selected word directly on the Reverso Context website
 - Save selected words to local flashcards
 - Speak saved words and their original source sentences
 - Copy saved cards in Quizlet's tab-separated import format
@@ -28,7 +27,6 @@ reader/
 ├── app.js
 ├── server.py
 ├── services/
-│   ├── examplesService.js
 │   ├── flashcardsService.js
 │   ├── imageProcessingService.js
 │   ├── ocrService.js
@@ -124,23 +122,16 @@ OCR runs in the browser. The uploaded image is not intentionally stored by this 
 Selected text is sent to the configured translation service only when the user requests a translation.
 
 
-## Word reference sources
+## Word reference
 
 - MyMemory provides automatic Ukrainian, English, and Russian translations.
-- Reverso Context is the only usage-example source.
-- Inline examples are loaded by the local Python proxy from the public Reverso Context page.
-- The normal Reverso Context page link remains available as a fallback when the inline request fails or changes.
-- The project does not use Tatoeba or Wiktionary in the selected-word panel.
-
-The browser calls the local `/api/reverso` endpoint. `server.py` fetches the public Reverso Context page and extracts Hebrew-English example pairs, avoiding browser CORS restrictions.
+- Reverso Context is available only as an external website link for the selected word.
+- Hebrew Reader does not fetch, parse, proxy, or display Reverso example text inside the app.
 
 
 ## Flashcards and Quizlet
 
-Flashcards are stored in the browser with `localStorage`. Each saved card contains the Hebrew word, Ukrainian/English/Russian translations, one Reverso example, and the original sentence from the uploaded text.
+Flashcards are stored in the browser with `localStorage`. Each saved card contains the Hebrew word, Ukrainian/English/Russian translations, and the original sentence from the uploaded text.
 
 Quizlet does not currently expose a self-service public API for independent apps to create sets. Hebrew Reader therefore uses Quizlet's supported text-import workflow: click **Copy for Quizlet**, open Quizlet, create a flashcard set, choose **Import**, and paste the copied text.
 
-## Reverso local proxy
-
-Run the project with `python3 server.py`. The Python server serves the static files and proxies Reverso requests. It fetches the public Context page and extracts example pairs server-side, which avoids browser CORS restrictions while keeping the integration local and free.
