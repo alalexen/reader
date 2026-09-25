@@ -104,6 +104,11 @@
         </div>
 
         <div class="speech-controls">
+          <label for="voiceSelect">Voice</label>
+          <select id="voiceSelect" class="voice-select">
+            <option value="">Loading Hebrew voices...</option>
+          </select>
+
           <label for="speechRate">Speed</label>
           <select id="speechRate">
             <option value="0.5">0.5×</option>
@@ -195,6 +200,46 @@
             <span class="translation-label">Russian</span>
             <span id="wordTranslationRu" class="translation-value">—</span>
           </div>
+        </div>
+      </section>
+
+      <section class="reference-section">
+        <div class="translation-heading">
+          <div>
+            <h3>Dictionary</h3>
+            <p class="section-help">English definitions from Wiktionary.</p>
+          </div>
+          <a
+            id="wiktionaryLink"
+            class="text-link hidden"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Wiktionary
+          </a>
+        </div>
+        <div id="dictionaryResults" class="reference-results">
+          <p class="reference-placeholder">Looking up the selected word...</p>
+        </div>
+      </section>
+
+      <section class="reference-section">
+        <div class="translation-heading">
+          <div>
+            <h3>Usage examples</h3>
+            <p class="section-help">Hebrew example sentences from Tatoeba.</p>
+          </div>
+          <a
+            id="reversoLink"
+            class="text-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open in Reverso Context
+          </a>
+        </div>
+        <div id="examplesResults" class="reference-results">
+          <p class="reference-placeholder">Finding examples...</p>
         </div>
       </section>
 
