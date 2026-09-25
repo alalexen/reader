@@ -8,7 +8,10 @@ import {
   stopSpeech,
 } from "./services/speechService.js";
 import { translateIntoLanguages } from "./services/translationService.js";
-import { buildReversoContextUrl } from "./services/examplesService.js";
+import {
+  buildReversoContextUrl,
+  fetchReversoExamples,
+} from "./services/examplesService.js";
 import {
   containsHebrew,
   normalizeHebrewWord,
@@ -41,6 +44,7 @@ const elements = {
   morphologySource: document.querySelector("#morphologySource"),
   morphologyNote: document.querySelector("#morphologyNote"),
   reversoLink: document.querySelector("#reversoLink"),
+  examplesResults: document.querySelector("#examplesResults"),
 };
 
 const translationElements = {
@@ -134,6 +138,74 @@ function renderMorphology(word) {
   elements.morphologyNote.textContent = analysis.note || "";
 }
 
+function renderExamplesPlaceholder(message) {
+  elements.examplesResults.replaceChildren();
+
+  const placeholder = document.createElement("p");
+  placeholder.className = "reference-placeholder";
+  placeholder.textContent = message;
+  elements.examplesResults.append(placeholder);
+}
+
+function renderReversoExamples(examples) {
+  elements.examplesResults.replaceChildren();
+
+  if (!examples.length) {
+    renderExamplesPlaceholder(
+      "No inline examples were returned. Open Reverso Context to see more.",
+    );
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "example-list";
+
+  examples.forEach((example) => {
+    const item = document.createElement("article");
+    item.className = "example-item";
+
+    const source = document.createElement("p");
+    source.className = "example-source";
+    source.dir = "rtl";
+    source.lang = "he";
+    source.textContent = example.source;
+
+    const target = document.createElement("p");
+    target.className = "example-target";
+    target.lang = "en";
+    target.textContent = example.target;
+
+    item.append(source, target);
+    list.append(item);
+  });
+
+  elements.examplesResults.append(list);
+}
+
+async function loadReversoExamples(word, selectionId) {
+  renderExamplesPlaceholder("Loading Reverso examples...");
+
+  try {
+    const examples = await fetchReversoExamples(word, 6);
+
+    if (selectionId !== state.wordSelectionId) {
+      return;
+    }
+
+    renderReversoExamples(examples);
+  } catch (error) {
+    console.error("Reverso examples failed:", error);
+
+    if (selectionId !== state.wordSelectionId) {
+      return;
+    }
+
+    renderExamplesPlaceholder(
+      "Inline Reverso examples are unavailable right now. Use the Reverso button above.",
+    );
+  }
+}
+
 function closeWordPanel() {
   state.wordSelectionId += 1;
   state.activeSentence = "";
@@ -162,7 +234,10 @@ async function activateWord(token, sentence) {
   elements.reversoLink.href = buildReversoContextUrl(word);
   elements.wordPanel.classList.remove("hidden");
 
-  await translate(word, "word", selectionId);
+  await Promise.allSettled([
+    translate(word, "word", selectionId),
+    loadReversoExamples(word, selectionId),
+  ]);
 }
 
 function appendSentence(sentence) {
