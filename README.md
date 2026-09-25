@@ -10,7 +10,12 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Render Hebrew text right-to-left
 - Click individual Hebrew words
 - Speak the full text or one selected word
+- Select from Hebrew voices exposed by the browser or operating system
+- Use speech speeds of 0.5×, 1×, 1.5×, and 2×
 - Translate words and sentences into Ukrainian, English, and Russian
+- Show Hebrew usage examples from Tatoeba
+- Open the selected word directly in Reverso Context
+- Show English dictionary definitions from Wiktionary
 - Show morphology for words covered by the local morphology lexicon
 
 The morphology card can display:
@@ -35,6 +40,9 @@ reader/
 ├── data/
 │   └── morphologyLexicon.js
 ├── services/
+│   ├── dictionaryService.js
+│   ├── examplesService.js
+│   ├── imageProcessingService.js
 │   ├── morphologyService.js
 │   ├── ocrService.js
 │   ├── speechService.js
@@ -116,6 +124,8 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - Tesseract.js
 - Web Speech API
 - MyMemory Translation API
+- Tatoeba API
+- Wikimedia / Wiktionary API
 
 No paid backend or private API key is required for the current MVP.
 
@@ -138,3 +148,15 @@ The free translation service has usage limits, so translation quality and availa
 OCR runs in the browser. The uploaded image is not intentionally stored by this application.
 
 Selected text is sent to the configured translation service only when the user requests a translation.
+
+
+## Word reference sources
+
+The selected-word panel currently uses separate sources for separate jobs:
+
+- MyMemory provides automatic Ukrainian, English, and Russian translations.
+- Wiktionary provides dictionary definitions when an English Wiktionary entry exists for the Hebrew form.
+- Tatoeba provides Hebrew usage examples through its public API.
+- Reverso Context is linked as an external contextual reference. The project does not scrape or call an undocumented Reverso endpoint.
+
+Keeping these integrations in separate services makes them easy to replace later.
