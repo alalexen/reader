@@ -22,6 +22,7 @@ const elements = {
   stopButton: document.querySelector("#stopButton"),
   speechRate: document.querySelector("#speechRate"),
   wordPanel: document.querySelector("#wordPanel"),
+  closeWordPanelButton: document.querySelector("#closeWordPanelButton"),
   selectedWord: document.querySelector("#selectedWord"),
   selectedSentence: document.querySelector("#selectedSentence"),
   speakWordButton: document.querySelector("#speakWordButton"),
@@ -88,6 +89,13 @@ function renderMorphology(word) {
   elements.morphologyNote.textContent = analysis.note || "";
 }
 
+function closeWordPanel() {
+  state.wordSelectionId += 1;
+  state.activeSentence = "";
+  elements.wordPanel.classList.add("hidden");
+  elements.translationStatus.textContent = "";
+}
+
 async function activateWord(token, sentence) {
   const word = normalizeHebrewWord(token);
 
@@ -148,7 +156,7 @@ function renderClickableText() {
     emptyState.className = "empty-state";
     emptyState.textContent = "Your Hebrew text will appear here.";
     elements.reader.append(emptyState);
-    elements.wordPanel.classList.add("hidden");
+    closeWordPanel();
     updateSpeechButtons();
     return;
   }
@@ -181,11 +189,11 @@ async function runOcr() {
     elements.editableText.value = text;
     renderClickableText();
     elements.ocrStatus.textContent =
-      "Hebrew text recognized. You can correct it manually if needed.";
+      "Hebrew text recognized. Review the text and correct any OCR mistakes if needed.";
   } catch (error) {
     console.error("Hebrew OCR failed:", error);
     elements.ocrStatus.textContent =
-      "OCR failed. Check your internet connection and try another image.";
+      "OCR failed. Try a sharper photo with the page filling most of the frame.";
   } finally {
     elements.recognizeButton.disabled = false;
     elements.ocrProgress.classList.add("hidden");
@@ -202,6 +210,7 @@ async function translate(text, scope, selectionId = null) {
   elements.translationStatus.textContent = isWordTranslation
     ? "Translating selected word..."
     : "Translating sentence...";
+
   elements.translateWordButton.disabled = true;
   elements.translateSentenceButton.disabled = true;
 
@@ -225,6 +234,15 @@ async function translate(text, scope, selectionId = null) {
       : "Sentence translated.";
   } catch (error) {
     console.error("Translation failed:", error);
+
+    if (
+      isWordTranslation &&
+      selectionId !== null &&
+      selectionId !== state.wordSelectionId
+    ) {
+      return;
+    }
+
     elements.translationStatus.textContent =
       "Translation failed. Please try again in a moment.";
   } finally {
@@ -242,6 +260,7 @@ function clearApp() {
 
   state.selectedImage = null;
   state.activeSentence = "";
+  state.wordSelectionId += 1;
 
   elements.imageInput.value = "";
   elements.imagePreview.removeAttribute("src");
@@ -251,11 +270,66 @@ function clearApp() {
   elements.ocrStatus.textContent = "";
   elements.ocrProgress.value = 0;
   elements.ocrProgress.classList.add("hidden");
-  elements.wordPanel.classList.add("hidden");
 
   setTranslationPlaceholders("word");
   setTranslationPlaceholders("sentence");
+  closeWordPanel();
   renderClickableText();
+}
+
+/**
+ * Moves every monster pupil toward the pointer while keeping it inside the eye.
+ */
+function initializeMonsterEyes() {
+  const eyes = [...document.querySelectorAll(".monster-eye")];
+
+  if (!eyes.length) {
+    return;
+  }
+
+  const updateEyes = (clientX, clientY) => {
+    eyes.forEach((eye) => {
+      const pupil = eye.querySelector(".monster-pupil");
+
+      if (!pupil) {
+        return;
+      }
+
+      const rect = eye.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const deltaX = clientX - centerX;
+      const deltaY = clientY - centerY;
+      const distance = Math.hypot(deltaX, deltaY) || 1;
+
+      const maxX = Math.max(2, rect.width * 0.17);
+      const maxY = Math.max(2, rect.height * 0.16);
+      const normalizedX = deltaX / distance;
+      const normalizedY = deltaY / distance;
+      const strength = Math.min(distance / 180, 1);
+
+      pupil.style.setProperty(
+        "--eye-x",
+        `${normalizedX * maxX * strength}px`,
+      );
+      pupil.style.setProperty(
+        "--eye-y",
+        `${normalizedY * maxY * strength}px`,
+      );
+    });
+  };
+
+  window.addEventListener("pointermove", (event) => {
+    updateEyes(event.clientX, event.clientY);
+  });
+
+  window.addEventListener("pointerleave", () => {
+    eyes.forEach((eye) => {
+      const pupil = eye.querySelector(".monster-pupil");
+      pupil?.style.setProperty("--eye-x", "0px");
+      pupil?.style.setProperty("--eye-y", "0px");
+    });
+  });
 }
 
 elements.imageInput.addEventListener("change", () => {
@@ -298,6 +372,14 @@ elements.translateSentenceButton.addEventListener("click", () => {
   translate(state.activeSentence, "sentence");
 });
 
+elements.closeWordPanelButton.addEventListener("click", closeWordPanel);
 elements.clearButton.addEventListener("click", clearApp);
 
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeWordPanel();
+  }
+});
+
+initializeMonsterEyes();
 renderClickableText();
