@@ -175,16 +175,12 @@ function renderReversoExamples(examples) {
 }
 
 function updateRememberButton() {
-  const data = state.activeWordData;
-  const ready =
-    Boolean(data?.word) &&
-    Boolean(data?.translations) &&
-    Boolean(data?.examples?.length);
+  const hasSelectedWord = Boolean(state.activeWordData?.word);
 
-  elements.rememberWordButton.disabled = !ready;
-  elements.rememberWordButton.title = ready
+  elements.rememberWordButton.disabled = !hasSelectedWord;
+  elements.rememberWordButton.title = hasSelectedWord
     ? "Save this word to My flashcards"
-    : "Wait for translation and a Reverso example to load";
+    : "Select a Hebrew word first";
 }
 
 async function loadReversoExamples(word, selectionId) {
@@ -247,7 +243,7 @@ async function activateWord(token, sentence) {
 
   elements.selectedSentence.textContent = state.activeSentence;
   elements.reversoLink.href = buildReversoContextUrl(word);
-  elements.rememberWordButton.disabled = true;
+  updateRememberButton();
 
   setTranslationPlaceholders("word");
   setTranslationPlaceholders("sentence");
@@ -508,25 +504,61 @@ function renderFlashcards() {
   elements.copyQuizletButton.disabled = false;
 }
 
-function rememberActiveWord() {
+async function rememberActiveWord() {
   const data = state.activeWordData;
 
-  if (!data?.translations || !data.examples?.length) {
-    elements.translationStatus.textContent =
-      "Wait for translation and a Reverso example before saving.";
+  if (!data?.word) {
     return;
   }
 
-  state.flashcards = saveFlashcard({
-    word: data.word,
-    translations: data.translations,
-    example: data.examples[0],
-    sentence: data.sentence,
-  });
+  elements.rememberWordButton.disabled = true;
+  elements.rememberWordButton.textContent = "Saving...";
 
-  renderFlashcards();
-  elements.translationStatus.textContent = "Word saved to My flashcards.";
-  elements.flashcardsStatus.textContent = `Saved ${data.word}.`;
+  try {
+    if (!data.translations) {
+      const translations = await translate(
+        data.word,
+        "word",
+        state.wordSelectionId,
+      );
+
+      if (translations) {
+        data.translations = translations;
+      }
+    }
+
+    if (!data.examples?.length) {
+      try {
+        data.examples = await fetchReversoExamples(data.word, 6);
+        renderReversoExamples(data.examples);
+      } catch (error) {
+        console.error("Could not add a Reverso example to flashcard:", error);
+      }
+    }
+
+    state.flashcards = saveFlashcard({
+      word: data.word,
+      translations: data.translations || {
+        uk: "—",
+        en: "—",
+        ru: "—",
+      },
+      example: data.examples?.[0] || null,
+      sentence: data.sentence,
+    });
+
+    renderFlashcards();
+
+    const savedWithExample = Boolean(data.examples?.length);
+    elements.translationStatus.textContent = savedWithExample
+      ? "Word saved to My flashcards."
+      : "Word saved. Reverso example could not be added right now.";
+
+    elements.flashcardsStatus.textContent = `Saved ${data.word}.`;
+  } finally {
+    elements.rememberWordButton.textContent = "Remember word";
+    updateRememberButton();
+  }
 }
 
 async function copyQuizletImport() {
