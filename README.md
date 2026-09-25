@@ -9,26 +9,42 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Edit OCR output manually
 - Render Hebrew text right-to-left
 - Click individual Hebrew words
+- Detect the sentence that contains the selected word
+- Translate a selected word into Ukrainian, English, and Russian
+- Translate the selected sentence into Ukrainian, English, and Russian
 - Speak the full text or one selected word with the browser Web Speech API
 - Change speech speed
 
 ## Technology
 
-The first version is intentionally static:
+The current version is intentionally static:
 
 - HTML
 - CSS
 - Vanilla JavaScript
 - Tesseract.js
 - Web Speech API
+- MyMemory Translation API
 
-No paid backend is required for the current MVP.
+No paid backend or private API key is required for the current MVP.
+
+## Translation behavior
+
+Translations are requested from the browser only when the user clicks a translation button.
+
+The app currently translates from Hebrew into:
+
+- Ukrainian
+- English
+- Russian
+
+Translation results are cached in memory for the current browser session to avoid repeating identical requests.
+
+The free translation service has usage limits, so translation quality and availability may vary.
 
 ## Run locally
 
-You can open `index.html` directly in a modern browser.
-
-For the most reliable behavior, run a simple local web server. For example:
+For the most reliable behavior, run a simple local web server:
 
 ```bash
 python3 -m http.server 8000
@@ -42,14 +58,15 @@ http://localhost:8000
 
 ## Planned next steps
 
-1. Ukrainian translation for selected words
-2. Ukrainian translation for full sentences
-3. Hebrew morphology and dictionary forms
-4. Personal vocabulary list
-5. Review mode and spaced repetition
-6. Better OCR preprocessing for book photos
-7. GitHub Pages deployment
+1. Hebrew morphology and dictionary forms
+2. Personal vocabulary list
+3. Review mode and spaced repetition
+4. Better OCR preprocessing for book photos
+5. Improved translation fallback behavior
+6. GitHub Pages deployment
 
 ## Privacy
 
-In the current MVP, OCR runs in the browser. The uploaded image is not intentionally stored by this application.
+OCR runs in the browser. The uploaded image is not intentionally stored by this application.
+
+Selected text is sent to the configured translation service only when the user requests a translation.
