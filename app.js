@@ -1,11 +1,12 @@
 import { recognizeHebrewText } from "./services/ocrService.js";
 import {
+  getGoogleTtsVoices,
   getHebrewVoices,
   getPreferredHebrewVoice,
   onVoicesChanged,
   speakHebrew,
   stopSpeech,
-} from "./services/speechService.js";
+} from "./services/speechService.js?v=google-wavenet-1";
 import { translateIntoLanguages } from "./services/translationService.js";
 import {
   buildQuizletImportText,
@@ -98,42 +99,58 @@ function updateSpeechButtons() {
   elements.stopButton.disabled = !hasText;
 }
 
-function initializeVoiceSelector() {
-  const voices = getHebrewVoices();
+async function initializeVoiceSelector() {
+  const browserVoices = getHebrewVoices();
+  const googleVoices = await getGoogleTtsVoices();
   const preferredVoice = getPreferredHebrewVoice();
   const previousSelection =
-    state.preferredVoiceURI || preferredVoice?.voiceURI || "";
+    state.preferredVoiceURI ||
+    googleVoices[0]?.voiceURI ||
+    preferredVoice?.voiceURI ||
+    "";
 
   elements.voiceSelect.replaceChildren();
 
-  if (!voices.length) {
+  googleVoices.forEach((voice, index) => {
+    const option = document.createElement("option");
+    option.value = voice.voiceURI;
+    option.textContent =
+      index === 0
+        ? `${voice.name} · ${voice.gender} · recommended`
+        : `${voice.name} · ${voice.gender}`;
+    elements.voiceSelect.append(option);
+  });
+
+  browserVoices.forEach((voice, index) => {
+    const option = document.createElement("option");
+    option.value = voice.voiceURI;
+    option.textContent =
+      googleVoices.length === 0 && index === 0
+        ? `${voice.name} · system · recommended`
+        : `${voice.name} · system`;
+    elements.voiceSelect.append(option);
+  });
+
+  if (!googleVoices.length && !browserVoices.length) {
     const option = document.createElement("option");
     option.value = "";
     option.textContent = "System Hebrew voice";
     elements.voiceSelect.append(option);
-    return;
   }
 
-  voices.forEach((voice, index) => {
-    const option = document.createElement("option");
-    option.value = voice.voiceURI;
-    option.textContent =
-      index === 0 ? `${voice.name} · recommended` : voice.name;
-    elements.voiceSelect.append(option);
-  });
-
-  const matchingVoice = voices.find(
-    (voice) => voice.voiceURI === previousSelection,
+  const availableValues = [...elements.voiceSelect.options].map(
+    (option) => option.value,
   );
 
-  elements.voiceSelect.value =
-    matchingVoice?.voiceURI || preferredVoice?.voiceURI || voices[0].voiceURI;
+  elements.voiceSelect.value = availableValues.includes(previousSelection)
+    ? previousSelection
+    : availableValues[0] || "";
 
   state.preferredVoiceURI = elements.voiceSelect.value;
 }
 
-function speak(text) {
-  speakHebrew(
+async function speak(text) {
+  return speakHebrew(
     text,
     Number(elements.speechRate.value),
     elements.voiceSelect.value,
@@ -806,7 +823,9 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-onVoicesChanged(initializeVoiceSelector);
+onVoicesChanged(() => {
+  initializeVoiceSelector();
+});
 initializeVoiceSelector();
 initializeSessionTimer();
 renderFlashcards();
