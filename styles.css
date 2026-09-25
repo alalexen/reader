@@ -592,6 +592,7 @@ progress::-webkit-progress-value {
 }
 
 .speech-controls select {
+  max-width: 230px;
   padding: 0.65rem 0.8rem;
   border: 2px solid var(--border);
   border-radius: 13px;
@@ -670,10 +671,44 @@ progress::-webkit-progress-value {
   position: sticky;
   z-index: 8;
   bottom: 1rem;
+  width: min(820px, 100%);
+  max-height: min(70vh, 680px);
+  margin-right: auto;
+  margin-left: auto;
+  padding: 1.15rem 1.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   border-color: #5d4fa5;
   box-shadow:
     0 22px 0 rgba(4, 7, 18, 0.26),
     0 34px 70px rgba(0, 0, 0, 0.38);
+}
+
+.word-panel::-webkit-scrollbar {
+  width: 10px;
+}
+
+.word-panel::-webkit-scrollbar-track {
+  margin: 18px 0;
+  border-radius: 999px;
+  background: rgba(8, 11, 29, 0.35);
+}
+
+.word-panel::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #505993;
+  background-clip: padding-box;
+}
+
+.word-panel-header {
+  position: sticky;
+  z-index: 3;
+  top: -1.15rem;
+  margin: -1.15rem -1.25rem 0;
+  padding: 1.15rem 1.25rem 0.8rem;
+  background: linear-gradient(180deg, #1a1f42 80%, rgba(26, 31, 66, 0));
 }
 
 .word-panel-header,
@@ -889,5 +924,89 @@ progress::-webkit-progress-value {
   .monster-yellow {
     width: 94px;
     height: 106px;
+  }
+}
+
+
+.reference-section {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 2px dashed #39427c;
+}
+
+.section-help {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.reference-results {
+  margin-top: 0.8rem;
+}
+
+.reference-placeholder {
+  margin: 0;
+  color: #8e98c6;
+  font-size: 0.9rem;
+}
+
+.dictionary-list {
+  margin: 0;
+  padding-left: 1.4rem;
+  color: #e8ebff;
+}
+
+.dictionary-list li + li {
+  margin-top: 0.5rem;
+}
+
+.example-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.example-item {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #374079;
+  border-radius: 14px;
+  color: #f2f4ff;
+  background: #12172f;
+  font-family: "Arial Hebrew", Arial, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  text-align: right;
+}
+
+.text-link {
+  flex: 0 0 auto;
+  color: var(--cyan);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.voice-select {
+  min-width: 180px;
+}
+
+@media (max-width: 720px) {
+  .word-panel {
+    max-height: 74vh;
+    padding: 1rem;
+  }
+
+  .word-panel-header {
+    top: -1rem;
+    margin: -1rem -1rem 0;
+    padding: 1rem 1rem 0.75rem;
+  }
+
+  .voice-select {
+    width: 100%;
+    max-width: none !important;
   }
 }
