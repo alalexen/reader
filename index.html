@@ -138,6 +138,39 @@
       </div>
     </section>
 
+
+    <section class="card flashcards-card">
+      <div class="section-heading">
+        <div>
+          <div class="section-title-row compact">
+            <span class="step-badge">3</span>
+            <h2>My flashcards</h2>
+          </div>
+          <p>Words you choose to remember stay saved in this browser.</p>
+        </div>
+
+        <div class="flashcard-toolbar">
+          <button id="copyQuizletButton" type="button" class="secondary">
+            Copy for Quizlet
+          </button>
+          <a
+            class="context-button"
+            href="https://quizlet.new"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Quizlet
+          </a>
+        </div>
+      </div>
+
+      <p id="flashcardsStatus" class="status" aria-live="polite"></p>
+
+      <div id="flashcardsList" class="flashcards-list">
+        <p class="empty-state">No saved words yet.</p>
+      </div>
+    </section>
+
     <aside id="wordPanel" class="card word-panel hidden">
       <div class="word-panel-header">
         <div>
@@ -158,6 +191,9 @@
 
       <div class="selected-word-actions">
         <button id="speakWordButton" type="button">Speak word</button>
+        <button id="rememberWordButton" type="button" class="remember-button" disabled>
+          Remember word
+        </button>
       </div>
 
       <section class="translation-section word-translation-section">
@@ -231,27 +267,6 @@
         <div id="examplesResults" class="reference-results">
           <p class="reference-placeholder">Examples will appear here.</p>
         </div>
-      </section>
-
-      <section class="analysis-section">
-        <div class="translation-heading">
-          <h3>Hebrew morphology</h3>
-          <span id="morphologySource" class="source-badge">Local analysis</span>
-        </div>
-
-        <div id="morphologyGrid" class="morphology-grid">
-          <div class="analysis-item"><span class="analysis-label">Dictionary form</span><span id="morphologyLemma">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Infinitive</span><span id="morphologyInfinitive">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Root</span><span id="morphologyRoot">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Part of speech</span><span id="morphologyPartOfSpeech">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Binyan</span><span id="morphologyBinyan">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Tense</span><span id="morphologyTense">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Person</span><span id="morphologyPerson">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Gender</span><span id="morphologyGender">—</span></div>
-          <div class="analysis-item"><span class="analysis-label">Number</span><span id="morphologyNumber">—</span></div>
-        </div>
-
-        <p id="morphologyNote" class="info-note"></p>
       </section>
 
       <p id="translationStatus" class="status" aria-live="polite"></p>
