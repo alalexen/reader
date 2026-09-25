@@ -1194,3 +1194,15 @@ progress::-webkit-progress-value {
     flex: 1 1 auto;
   }
 }
+
+
+/*
+ * Center the sticky selected-word panel against the app viewport column.
+ * Explicit positioning avoids visual drift caused by scrollbar gutter space.
+ */
+.word-panel {
+  left: 50%;
+  margin-left: 0;
+  margin-right: 0;
+  transform: translateX(-50%);
+}
