@@ -12,10 +12,6 @@ const FEMALE_VOICE_HINTS = [
   "feminine",
 ];
 
-/**
- * Scores a Hebrew voice so the app can prefer a natural male voice when one is
- * exposed by the current browser or operating system.
- */
 function scoreHebrewVoice(voice) {
   const language = voice.lang.toLowerCase();
   const name = voice.name.toLowerCase();
@@ -50,23 +46,32 @@ function scoreHebrewVoice(voice) {
 }
 
 /**
- * Finds the best available Hebrew voice.
- *
- * Web Speech API does not expose a standardized gender property, so this uses
- * known voice names and descriptive hints when available.
+ * Returns available Hebrew voices with the preferred voice first.
  */
-function findPreferredHebrewVoice() {
-  const voices = window.speechSynthesis.getVoices();
+export function getHebrewVoices() {
+  return window.speechSynthesis
+    .getVoices()
+    .map((voice) => ({
+      voice,
+      score: scoreHebrewVoice(voice),
+    }))
+    .filter(({ score }) => Number.isFinite(score))
+    .sort((a, b) => b.score - a.score)
+    .map(({ voice }) => voice);
+}
 
-  return (
-    voices
-      .map((voice) => ({
-        voice,
-        score: scoreHebrewVoice(voice),
-      }))
-      .filter(({ score }) => Number.isFinite(score))
-      .sort((a, b) => b.score - a.score)[0]?.voice || null
-  );
+/**
+ * Returns the best Hebrew voice currently exposed by the browser.
+ */
+export function getPreferredHebrewVoice() {
+  return getHebrewVoices()[0] || null;
+}
+
+/**
+ * Subscribes to browser voice-list changes.
+ */
+export function onVoicesChanged(callback) {
+  window.speechSynthesis.addEventListener?.("voiceschanged", callback);
 }
 
 /**
@@ -75,7 +80,7 @@ function findPreferredHebrewVoice() {
  * A rate of 1 is passed directly to SpeechSynthesisUtterance as the native
  * normal speed. Pitch stays at 1 to preserve the original voice character.
  */
-export function speakHebrew(text, rate = 1) {
+export function speakHebrew(text, rate = 1, voiceURI = "") {
   const cleanText = text.trim();
 
   if (!cleanText) {
@@ -85,15 +90,18 @@ export function speakHebrew(text, rate = 1) {
   stopSpeech();
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  const hebrewVoice = findPreferredHebrewVoice();
+  const voices = getHebrewVoices();
+  const selectedVoice =
+    voices.find((voice) => voice.voiceURI === voiceURI) ||
+    getPreferredHebrewVoice();
 
   utterance.lang = "he-IL";
   utterance.rate = Number(rate);
   utterance.pitch = 1;
   utterance.volume = 1;
 
-  if (hebrewVoice) {
-    utterance.voice = hebrewVoice;
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
   }
 
   window.speechSynthesis.speak(utterance);
