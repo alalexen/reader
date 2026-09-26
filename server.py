@@ -22,6 +22,7 @@ _tts_module = None
 _vision_client = None
 _vision_module = None
 _translate_client = None
+_hebrew_tokenizer = None
 
 
 def get_google_tts_client():
@@ -63,6 +64,19 @@ def get_google_translate_client():
 
     _translate_client = translate.Client()
     return _translate_client
+
+
+def get_hebrew_tokenizer():
+    """Return the lazily initialized local RFTokenizer Hebrew model."""
+    global _hebrew_tokenizer
+
+    if _hebrew_tokenizer is not None:
+        return _hebrew_tokenizer
+
+    from rftokenizer import RFTokenizer
+
+    _hebrew_tokenizer = RFTokenizer(model="heb")
+    return _hebrew_tokenizer
 
 
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
@@ -146,6 +160,37 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
             return
 
+        if path == "/api/morphology/status":
+            try:
+                get_hebrew_tokenizer()
+                self.send_json(
+                    200,
+                    {
+                        "available": True,
+                        "provider": "rftokenizer",
+                    },
+                )
+            except ImportError:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "rftokenizer",
+                        "reason": "dependency_missing",
+                    },
+                )
+            except Exception as error:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "rftokenizer",
+                        "reason": "model_unavailable",
+                        "detail": type(error).__name__,
+                    },
+                )
+            return
+
         super().do_GET()
 
     def do_POST(self):
@@ -161,6 +206,10 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/translate":
             self.handle_translate()
+            return
+
+        if path == "/api/morphology":
+            self.handle_morphology()
             return
 
         self.send_error(404)
@@ -323,9 +372,60 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
 
 
+    def handle_morphology(self):
+        """Segment one Hebrew word with the local RFTokenizer model."""
+        try:
+            payload = self.read_json_payload()
+            word = str(payload.get("word", "")).strip()
+
+            if not word:
+                raise ValueError("Word is required.")
+
+            if len(word) > 100:
+                raise ValueError("Word is too long.")
+
+            tokenizer = get_hebrew_tokenizer()
+            analyses = tokenizer.rf_tokenize([word])
+
+            if not analyses:
+                raise RuntimeError("RFTokenizer returned no analysis.")
+
+            segmented = str(analyses[0]).strip()
+            segments = [segment for segment in segmented.split("|") if segment]
+
+            self.send_json(
+                200,
+                {
+                    "word": word,
+                    "segments": segments,
+                    "provider": "rftokenizer",
+                },
+            )
+        except ValueError as error:
+            self.send_json(400, {"error": str(error)})
+        except ImportError:
+            self.send_json(
+                503,
+                {
+                    "error": "RFTokenizer dependency is not installed.",
+                    "code": "dependency_missing",
+                },
+            )
+        except Exception as error:
+            print(f"RFTokenizer morphology failed: {error}")
+            self.send_json(
+                503,
+                {
+                    "error": "Hebrew morphology analysis is unavailable.",
+                    "code": type(error).__name__,
+                },
+            )
+
+
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), HebrewReaderHandler)
     print(f"Hebrew Reader is running at http://{HOST}:{PORT}")
-    print("Google WaveNet, Vision OCR, and Translation are used when Application Default Credentials are available.")
+    print("Google WaveNet, Vision OCR, and Translation use Application Default Credentials when available.")
+    print("RFTokenizer provides local Hebrew morphological segmentation.")
     print("Press Control + C to stop.")
     server.serve_forever()
