@@ -59,6 +59,16 @@ const elements = {
   flashcardsStatus: document.querySelector("#flashcardsStatus"),
   copyQuizletButton: document.querySelector("#copyQuizletButton"),
   sessionTimer: document.querySelector("#sessionTimer"),
+  openSettingsButton: document.querySelector("#openSettingsButton"),
+  closeSettingsButton: document.querySelector("#closeSettingsButton"),
+  settingsBackdrop: document.querySelector("#settingsBackdrop"),
+  settingsTranslationProvider: document.querySelector("#settingsTranslationProvider"),
+  settingsOcrEngine: document.querySelector("#settingsOcrEngine"),
+  settingsVoiceSelect: document.querySelector("#settingsVoiceSelect"),
+  saveSettingsButton: document.querySelector("#saveSettingsButton"),
+  translationLanguageInputs: [
+    ...document.querySelectorAll('input[name="translationLanguage"]'),
+  ],
 };
 
 const translationElements = {
@@ -74,6 +84,38 @@ const translationElements = {
   },
 };
 
+const SETTINGS_STORAGE_KEY = "hebrewReaderSettings";
+const DEFAULT_SETTINGS = {
+  translationProvider: "google-nmt",
+  ocrEngine: "tesseract",
+  translationLanguages: ["uk", "en", "ru"],
+};
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "{}");
+    const languages = Array.isArray(saved.translationLanguages)
+      ? saved.translationLanguages.filter((code) => ["uk", "en", "ru"].includes(code))
+      : DEFAULT_SETTINGS.translationLanguages;
+
+    return {
+      translationProvider:
+        saved.translationProvider === "mymemory" ? "mymemory" : "google-nmt",
+      ocrEngine:
+        saved.ocrEngine === "google-vision" ? "google-vision" : "tesseract",
+      translationLanguages: languages.length
+        ? languages.slice(0, 3)
+        : DEFAULT_SETTINGS.translationLanguages,
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function saveSettingsToStorage(settings) {
+  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+}
+
 const state = {
   selectedImage: null,
   originalImage: null,
@@ -85,6 +127,7 @@ const state = {
   activeWordData: null,
   wordSelectionId: 0,
   preferredVoiceURI: localStorage.getItem("hebrewReaderVoiceURI") || "",
+  settings: loadSettings(),
   flashcards: loadFlashcards(),
 };
 
@@ -92,6 +135,95 @@ function setTranslationPlaceholders(scope) {
   Object.values(translationElements[scope]).forEach((element) => {
     element.textContent = "—";
   });
+}
+
+function applyTranslationLanguageVisibility() {
+  const selected = new Set(state.settings.translationLanguages);
+
+  document.querySelectorAll("[data-language]").forEach((element) => {
+    element.classList.toggle("is-hidden", !selected.has(element.dataset.language));
+  });
+}
+
+function cloneVoiceOptionsIntoSettings() {
+  elements.settingsVoiceSelect.replaceChildren();
+
+  [...elements.voiceSelect.options].forEach((option) => {
+    elements.settingsVoiceSelect.append(option.cloneNode(true));
+  });
+
+  elements.settingsVoiceSelect.value = elements.voiceSelect.value;
+}
+
+function getDraftSettings() {
+  return {
+    translationProvider: elements.settingsTranslationProvider.value,
+    ocrEngine: elements.settingsOcrEngine.value,
+    translationLanguages: elements.translationLanguageInputs
+      .filter((input) => input.checked)
+      .map((input) => input.value),
+    voiceURI: elements.settingsVoiceSelect.value,
+  };
+}
+
+function getCurrentSettingsSnapshot() {
+  return {
+    translationProvider: state.settings.translationProvider,
+    ocrEngine: elements.ocrEngine.value,
+    translationLanguages: [...state.settings.translationLanguages],
+    voiceURI: elements.voiceSelect.value,
+  };
+}
+
+function updateSettingsSaveButton() {
+  const draft = getDraftSettings();
+  const current = getCurrentSettingsSnapshot();
+  const hasLanguage = draft.translationLanguages.length > 0;
+
+  elements.saveSettingsButton.disabled =
+    !hasLanguage || JSON.stringify(draft) === JSON.stringify(current);
+}
+
+function openSettings() {
+  elements.settingsTranslationProvider.value = state.settings.translationProvider;
+  elements.settingsOcrEngine.value = elements.ocrEngine.value;
+  cloneVoiceOptionsIntoSettings();
+
+  elements.translationLanguageInputs.forEach((input) => {
+    input.checked = state.settings.translationLanguages.includes(input.value);
+  });
+
+  elements.settingsBackdrop.classList.remove("hidden");
+  elements.settingsBackdrop.setAttribute("aria-hidden", "false");
+  updateSettingsSaveButton();
+}
+
+function closeSettings() {
+  elements.settingsBackdrop.classList.add("hidden");
+  elements.settingsBackdrop.setAttribute("aria-hidden", "true");
+}
+
+function saveSettings() {
+  const draft = getDraftSettings();
+
+  if (!draft.translationLanguages.length) {
+    return;
+  }
+
+  state.settings = {
+    translationProvider: draft.translationProvider,
+    ocrEngine: draft.ocrEngine,
+    translationLanguages: draft.translationLanguages,
+  };
+  saveSettingsToStorage(state.settings);
+
+  elements.ocrEngine.value = draft.ocrEngine;
+  elements.voiceSelect.value = draft.voiceURI;
+  state.preferredVoiceURI = draft.voiceURI;
+  localStorage.setItem("hebrewReaderVoiceURI", state.preferredVoiceURI);
+
+  applyTranslationLanguageVisibility();
+  updateSettingsSaveButton();
 }
 
 function updateSpeechButtons() {
@@ -493,7 +625,11 @@ async function translate(text, scope, selectionId = null) {
   elements.translateSentenceButton.disabled = true;
 
   try {
-    const translations = await translateIntoLanguages(text, ["uk", "en", "ru"]);
+    const translations = await translateIntoLanguages(
+      text,
+      state.settings.translationLanguages,
+      state.settings.translationProvider,
+    );
 
     if (
       isWordTranslation &&
@@ -824,8 +960,43 @@ elements.voiceSelect.addEventListener("change", () => {
 elements.closeWordPanelButton.addEventListener("click", closeWordPanel);
 elements.clearButton.addEventListener("click", clearApp);
 
+elements.openSettingsButton.addEventListener("click", openSettings);
+elements.closeSettingsButton.addEventListener("click", closeSettings);
+elements.saveSettingsButton.addEventListener("click", saveSettings);
+
+[
+  elements.settingsTranslationProvider,
+  elements.settingsOcrEngine,
+  elements.settingsVoiceSelect,
+  ...elements.translationLanguageInputs,
+].forEach((control) => {
+  control.addEventListener("change", updateSettingsSaveButton);
+});
+
+elements.ocrEngine.addEventListener("change", () => {
+  state.settings.ocrEngine = elements.ocrEngine.value;
+  saveSettingsToStorage(state.settings);
+
+  if (!elements.settingsBackdrop.classList.contains("hidden")) {
+    elements.settingsOcrEngine.value = elements.ocrEngine.value;
+    updateSettingsSaveButton();
+  }
+});
+
+elements.voiceSelect.addEventListener("change", () => {
+  if (!elements.settingsBackdrop.classList.contains("hidden")) {
+    cloneVoiceOptionsIntoSettings();
+    updateSettingsSaveButton();
+  }
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (!elements.settingsBackdrop.classList.contains("hidden")) {
+      closeSettings();
+      return;
+    }
+
     closeWordPanel();
   }
 });
@@ -833,6 +1004,8 @@ document.addEventListener("keydown", (event) => {
 onVoicesChanged(() => {
   initializeVoiceSelector();
 });
+elements.ocrEngine.value = state.settings.ocrEngine;
+applyTranslationLanguageVisibility();
 initializeVoiceSelector();
 initializeSessionTimer();
 renderFlashcards();
