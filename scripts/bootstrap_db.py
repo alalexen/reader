@@ -139,7 +139,23 @@ def local_managed_port(database_url: str | None) -> int | None:
         return None
     if url.host not in {"localhost", "127.0.0.1"}:
         return None
-    return url.port or 5432
+
+    port = url.port or 5432
+    if not (DEFAULT_PORT <= port < DEFAULT_PORT + PORT_SCAN_LIMIT):
+        return None
+    return port
+
+
+def database_url_matches_managed(
+    database_url: str | None,
+    config: dict | None,
+) -> bool:
+    port = local_managed_port(database_url)
+    if port is None:
+        return False
+    if config is None:
+        return True
+    return port == int(config["port"])
 
 
 def read_managed_config() -> dict | None:
@@ -341,7 +357,7 @@ def bootstrap_managed_database(*, demo: bool = False) -> str:
         write_managed_config(inferred_port)
         config = read_managed_config()
 
-    if existing_url and config is None:
+    if existing_url and not database_url_matches_managed(existing_url, config):
         print("Using existing DATABASE_URL configuration.")
         print("No PostgreSQL service or data directory will be modified.")
         apply_migrations(existing_url)
