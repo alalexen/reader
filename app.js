@@ -1,4 +1,4 @@
-import { recognizeHebrewText } from "./services/ocrService.js?v=google-vision-2";
+import { recognizeHebrewText } from "./services/ocrService.js?v=ocr-selector-1";
 import {
   getGoogleTtsVoices,
   getHebrewVoices,
@@ -32,6 +32,7 @@ const elements = {
   applyCropButton: document.querySelector("#applyCropButton"),
   resetCropButton: document.querySelector("#resetCropButton"),
   cancelCropButton: document.querySelector("#cancelCropButton"),
+  ocrEngine: document.querySelector("#ocrEngine"),
   recognizeButton: document.querySelector("#recognizeButton"),
   clearButton: document.querySelector("#clearButton"),
   ocrStatus: document.querySelector("#ocrStatus"),
@@ -447,7 +448,10 @@ async function runOcr() {
   elements.ocrProgress.classList.remove("hidden");
 
   try {
-    const result = await recognizeHebrewText(state.selectedImage, (status, progress) => {
+    const result = await recognizeHebrewText(
+      state.selectedImage,
+      elements.ocrEngine.value,
+      (status, progress) => {
       const percentage =
         typeof progress === "number" ? ` ${Math.round(progress * 100)}%` : "";
 
@@ -455,8 +459,9 @@ async function runOcr() {
         elements.ocrProgress.value = progress;
       }
 
-      elements.ocrStatus.textContent = `${status || "Processing"}${percentage}`;
-    });
+        elements.ocrStatus.textContent = `${status || "Processing"}${percentage}`;
+      },
+    );
 
     elements.editableText.value = result.text;
     renderClickableText();
