@@ -118,11 +118,21 @@ print("Morphology probe:", "|".join(segments))
 
     print()
     print("Setup complete.")
-    print("Start the app with:")
+    print("Activate the environment:")
     if os.name == "nt":
         print(r"  .venv\Scripts\activate")
     else:
         print("  source .venv/bin/activate")
+    print()
+    print("For PostgreSQL-backed learning data:")
+    if os.name == "nt":
+        print("  Copy-Item .env.example .env")
+    else:
+        print("  cp .env.example .env")
+    print("  python scripts/init_db.py")
+    print("  # optional: python scripts/seed_demo.py")
+    print()
+    print("Start the app:")
     print("  python server.py")
 
 
