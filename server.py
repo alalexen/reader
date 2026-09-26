@@ -79,14 +79,10 @@ def get_hebpipe_package_dir():
     return Path(next(iter(spec.submodule_search_locations)))
 
 
-def get_hebpipe_required_model_paths():
-    """Return the HebPipe model files required by segmentation."""
+def get_hebpipe_model_path():
+    """Return the local HebPipe Hebrew segmentation model path."""
     model_dir = get_hebpipe_package_dir() / "models"
-    python_major = sys.version_info[0]
-
-    return [
-        model_dir / f"heb.sm{python_major}",
-    ]
+    return model_dir / f"heb.sm{sys.version_info[0]}"
 
 
 def load_hebpipe_segmentation_runtime():
@@ -99,6 +95,7 @@ def load_hebpipe_segmentation_runtime():
     package_dir = get_hebpipe_package_dir()
 
     whitespace_path = package_dir / "lib" / "whitespace_tokenize.py"
+
     def load_module(name, path):
         spec = importlib.util.spec_from_file_location(name, path)
         if spec is None or spec.loader is None:
@@ -113,7 +110,7 @@ def load_hebpipe_segmentation_runtime():
     )
     from rftokenizer import RFTokenizer
 
-    model_path = get_hebpipe_package_dir() / "models" / f"heb.sm{sys.version_info[0]}"
+    model_path = get_hebpipe_model_path()
     if not model_path.exists():
         raise FileNotFoundError("HebPipe Hebrew segmentation model is not installed.")
 
@@ -127,55 +124,52 @@ def load_hebpipe_segmentation_runtime():
     return _hebpipe_runtime
 
 
-def analyze_hebrew_with_hebpipe(sentence, target_word):
-    """Segment a selected word using HebPipe's segmentation resources."""
-    runtime = load_hebpipe_segmentation_runtime()
+def analyze_hebrew_word(word):
+    """Segment one Hebrew word using HebPipe's Hebrew tokenizer resources."""
+    clean_word = word.strip()
 
+    if not clean_word:
+        return []
+
+    runtime = load_hebpipe_segmentation_runtime()
     tokenized = runtime["whitespace_tokenize"](
-        sentence.replace("\t", "").replace("\r", ""),
+        clean_word,
         abbr=runtime["abbr_path"],
         add_sents=False,
         from_pipes=False,
     )
-
     segmented_lines = runtime["tokenizer"].rf_tokenize(
         tokenized.strip().split("\n")
     )
 
-    target = target_word.strip()
     for line in segmented_lines:
         candidate = str(line).strip()
-
-        if candidate and candidate.replace("|", "") == target:
+        if candidate and candidate.replace("|", "") == clean_word:
             return [segment for segment in candidate.split("|") if segment]
 
-    return [target]
+    return [clean_word]
 
 
 def check_hebpipe_runtime():
-    """Verify that HebPipe can load and run a minimal Hebrew segmentation."""
-    package_dir = get_hebpipe_package_dir()
-    model_paths = get_hebpipe_required_model_paths()
-    missing_models = [path for path in model_paths if not path.exists()]
+    """Verify that the HebPipe segmentation model can process Hebrew text."""
+    model_path = get_hebpipe_model_path()
 
-    if missing_models:
+    if not model_path.exists():
         return {
             "available": False,
             "provider": "hebpipe",
             "reason": "model_missing",
-            "missingModels": [path.name for path in missing_models],
-            "packagePath": str(package_dir),
+            "missingModels": [model_path.name],
         }
 
-    load_hebpipe_segmentation_runtime()
-    segments = analyze_hebrew_with_hebpipe("אני הולך למקום", "למקום")
+    segments = analyze_hebrew_word("למקום")
 
     return {
-        "available": True,
+        "available": len(segments) > 1,
         "provider": "hebpipe",
+        "reason": None if len(segments) > 1 else "probe_failed",
         "probeWord": "למקום",
         "probeSegments": segments,
-        "packagePath": str(package_dir),
     }
 
 
@@ -414,7 +408,6 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                 },
             )
 
-
     def handle_translate(self):
         try:
             payload = self.read_json_payload()
@@ -466,13 +459,11 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                 },
             )
 
-
     def handle_morphology(self):
-        """Analyze one selected Hebrew word with HebPipe in sentence context."""
+        """Analyze one selected Hebrew word with the local HebPipe model."""
         try:
             payload = self.read_json_payload()
             word = str(payload.get("word", "")).strip()
-            sentence = str(payload.get("sentence", "")).strip() or word
 
             if not word:
                 raise ValueError("Word is required.")
@@ -480,10 +471,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             if len(word) > 100:
                 raise ValueError("Word is too long.")
 
-            if len(sentence) > 4_000:
-                raise ValueError("Sentence is too long.")
-
-            segments = analyze_hebrew_with_hebpipe(sentence, word)
+            segments = analyze_hebrew_word(word)
 
             self.send_json(
                 200,
