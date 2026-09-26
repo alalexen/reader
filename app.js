@@ -1027,8 +1027,11 @@ elements.imagePreviewFrame.addEventListener("pointerup", endCropDrag);
 elements.imagePreviewFrame.addEventListener("pointercancel", endCropDrag);
 
 elements.recognizeButton.addEventListener("click", runOcr);
-elements.renderButton.addEventListener("click", renderClickableText);
-elements.editableText.addEventListener("input", updateSpeechButtons);
+elements.renderButton.addEventListener("click", () => {
+  setReaderMode(state.readerMode === "edit" ? "reader" : "edit");
+});
+elements.resizeTextButton.addEventListener("click", toggleTextWorkspaceSize);
+elements.editableText.addEventListener("input", updateTextWorkspaceControls);
 
 elements.speakButton.addEventListener("click", () => {
   speak(elements.editableText.value);
