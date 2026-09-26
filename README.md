@@ -92,6 +92,10 @@ The setup script recreates `.venv` with Python 3.12, installs all required Pytho
 packages, and downloads HebPipe's pretrained Hebrew model files. No model training is
 required.
 
+Note: `pip check` may still report DiaParser's published `stanza` pin as incompatible with
+HebPipe's newer `stanza` version. HebPipe's own Docker setup intentionally installs
+DiaParser with `--no-deps` to avoid enforcing that stale metadata pin.
+
 ### 4. Start the local web server
 
 Do not open `index.html` directly from Finder because the project uses JavaScript modules.
