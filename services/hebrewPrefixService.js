@@ -1,6 +1,6 @@
 import { stripHebrewMarks } from "../utils/hebrew.js";
 
-const PREFIXES = Object.freeze({
+const PREFIX_MEANINGS = Object.freeze({
   "ו": "and",
   "ה": "the",
   "ב": "in / at / with",
@@ -9,53 +9,117 @@ const PREFIXES = Object.freeze({
   "מ": "from",
 });
 
-const ALLOWED_SECOND_PREFIXES = new Set(["ה", "ב", "כ", "ל", "מ"]);
-const MIN_BASE_LENGTH = 3;
-
-function createPrefix(letter) {
+function toPrefixPart(letter) {
   return {
     letter,
-    meaning: PREFIXES[letter],
+    meaning: PREFIX_MEANINGS[letter],
   };
 }
 
+function buildAnalysisFromSegments(word, segments, provider) {
+  if (!Array.isArray(segments) || segments.length < 2) {
+    return null;
+  }
+
+  const prefixes = [];
+  let index = 0;
+
+  while (
+    index < segments.length - 1 &&
+    segments[index].length === 1 &&
+    PREFIX_MEANINGS[segments[index]]
+  ) {
+    prefixes.push(toPrefixPart(segments[index]));
+    index += 1;
+  }
+
+  if (!prefixes.length) {
+    return null;
+  }
+
+  const baseWord = segments.slice(index).join("");
+
+  if (!baseWord) {
+    return null;
+  }
+
+  return {
+    originalWord: word,
+    prefixes,
+    baseWord,
+    provider,
+  };
+}
+
+async function analyzeWithRFTokenizer(word) {
+  const response = await fetch("/api/morphology", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ word }),
+  });
+
+  if (!response.ok) {
+    throw new Error("RFTokenizer morphology is unavailable.");
+  }
+
+  const payload = await response.json();
+
+  return buildAnalysisFromSegments(
+    payload.word || word,
+    payload.segments,
+    payload.provider || "rftokenizer",
+  );
+}
+
 /**
- * Returns a conservative, orthography-based prefix hint.
+ * Provides a minimal fallback when the local morphology backend is unavailable.
  *
- * Hebrew morphology is context-sensitive, so this function intentionally
- * reports a possible decomposition rather than claiming a dictionary analysis.
+ * The fallback removes at most one common attached prefix to avoid the
+ * over-segmentation problem that the previous heuristic had.
  */
-export function analyzeHebrewPrefixes(word) {
+function analyzeConservatively(word) {
   const normalizedWord = stripHebrewMarks(word.trim());
 
-  if (normalizedWord.length < MIN_BASE_LENGTH + 1) {
+  if (normalizedWord.length < 4) {
     return null;
   }
 
-  const first = normalizedWord[0];
+  const firstLetter = normalizedWord[0];
 
-  if (!PREFIXES[first]) {
-    return null;
-  }
-
-  const prefixes = [createPrefix(first)];
-  let baseWord = normalizedWord.slice(1);
-
-  if (
-    baseWord.length > MIN_BASE_LENGTH &&
-    ALLOWED_SECOND_PREFIXES.has(baseWord[0])
-  ) {
-    prefixes.push(createPrefix(baseWord[0]));
-    baseWord = baseWord.slice(1);
-  }
-
-  if (baseWord.length < MIN_BASE_LENGTH) {
+  if (!PREFIX_MEANINGS[firstLetter]) {
     return null;
   }
 
   return {
     originalWord: normalizedWord,
-    prefixes,
-    baseWord,
+    prefixes: [toPrefixPart(firstLetter)],
+    baseWord: normalizedWord.slice(1),
+    provider: "fallback",
   };
+}
+
+/**
+ * Uses the local RFTokenizer model for Hebrew morphological segmentation.
+ * Falls back to a deliberately conservative single-prefix hint if the local
+ * backend is unavailable.
+ */
+export async function analyzeHebrewPrefixes(word) {
+  const cleanWord = stripHebrewMarks(word.trim());
+
+  if (!cleanWord) {
+    return null;
+  }
+
+  try {
+    return await analyzeWithRFTokenizer(cleanWord);
+  } catch (error) {
+    console.info(
+      "RFTokenizer morphology is unavailable; using conservative fallback.",
+      error,
+    );
+    return analyzeConservatively(cleanWord);
+  }
 }
