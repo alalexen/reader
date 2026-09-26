@@ -99,8 +99,6 @@ def load_hebpipe_segmentation_runtime():
     package_dir = get_hebpipe_package_dir()
 
     whitespace_path = package_dir / "lib" / "whitespace_tokenize.py"
-    sent_split_path = package_dir / "lib" / "sent_split.py"
-
     def load_module(name, path):
         spec = importlib.util.spec_from_file_location(name, path)
         if spec is None or spec.loader is None:
@@ -113,11 +111,6 @@ def load_hebpipe_segmentation_runtime():
         "_hebrew_reader_hebpipe_whitespace",
         whitespace_path,
     )
-    sent_split_module = load_module(
-        "_hebrew_reader_hebpipe_sent_split",
-        sent_split_path,
-    )
-
     from rftokenizer import RFTokenizer
 
     model_path = get_hebpipe_package_dir() / "models" / f"heb.sm{sys.version_info[0]}"
@@ -129,7 +122,6 @@ def load_hebpipe_segmentation_runtime():
     _hebpipe_runtime = {
         "tokenizer": tokenizer,
         "whitespace_tokenize": whitespace_module.tokenize,
-        "toks_to_sents": sent_split_module.toks_to_sents,
         "abbr_path": str(package_dir / "data" / "heb_abbr.tab"),
     }
     return _hebpipe_runtime
