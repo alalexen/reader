@@ -1955,3 +1955,43 @@ progress::-webkit-progress-value {
 .base-part {
   font-weight: 700;
 }
+
+
+/* One text workspace switches between editing and clickable reading. */
+.text-workspace {
+  margin-top: 1rem;
+}
+
+.text-workspace .editable-text,
+.text-workspace .reader {
+  width: 100%;
+  min-height: 210px;
+  margin-top: 0;
+}
+
+.text-workspace.is-expanded .editable-text,
+.text-workspace.is-expanded .reader {
+  min-height: 70vh;
+}
+
+.text-workspace-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.text-workspace-actions #resizeTextButton {
+  margin-left: auto;
+}
+
+.text-workspace .reader {
+  overflow-y: auto;
+}
+
+@media (max-width: 720px) {
+  .text-workspace.is-expanded .editable-text,
+  .text-workspace.is-expanded .reader {
+    min-height: 62vh;
+  }
+}
