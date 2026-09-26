@@ -1,8 +1,8 @@
 const STORAGE_KEY = "hebrewReaderSettings";
 
-export const SUPPORTED_TRANSLATION_LANGUAGES = ["uk", "en", "ru"];
+const SUPPORTED_TRANSLATION_LANGUAGES = ["uk", "en", "ru"];
 
-export const DEFAULT_SETTINGS = Object.freeze({
+const DEFAULT_SETTINGS = Object.freeze({
   translationProvider: "google-nmt",
   ocrEngine: "tesseract",
   translationLanguages: [...SUPPORTED_TRANSLATION_LANGUAGES],
