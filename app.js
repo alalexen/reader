@@ -7,7 +7,7 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
-import { analyzeHebrewPrefixes } from "./services/hebrewPrefixService.js?v=rftokenizer-1";
+import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-1";
 import {
   loadSettings,
   saveSettings as persistSettings,
@@ -347,11 +347,11 @@ function closeWordPanel() {
   elements.translationStatus.textContent = "";
 }
 
-async function renderWordStructure(word, selectionId) {
+async function renderWordStructure(word, sentence, selectionId) {
   elements.wordStructureParts.replaceChildren();
   elements.wordStructureSection.classList.add("hidden");
 
-  const analysis = await analyzeHebrewPrefixes(word);
+  const analysis = await analyzeHebrewMorphology(word, sentence);
 
   if (selectionId !== state.wordSelectionId || !analysis) {
     return;
@@ -421,7 +421,7 @@ async function activateWord(token, sentence) {
   elements.wordPanel.classList.remove("hidden");
 
   await Promise.all([
-    renderWordStructure(word, selectionId),
+    renderWordStructure(word, state.activeSentence, selectionId),
     translate(word, "word", selectionId),
   ]);
   updateRememberButton();
