@@ -513,7 +513,7 @@ async function translate(text, scope, selectionId = null) {
     }
 
     elements.translationStatus.textContent = isWordTranslation
-      ? "Word details loaded."
+      ? ""
       : "Sentence translated.";
 
     return translations;
