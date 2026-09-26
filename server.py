@@ -26,7 +26,6 @@ _vision_client = None
 _vision_module = None
 _translate_client = None
 _hebpipe_runtime = None
-_hebpipe_tokenizer = None
 
 
 def get_google_tts_client():
@@ -80,9 +79,15 @@ def get_hebpipe_package_dir():
     return Path(next(iter(spec.submodule_search_locations)))
 
 
-def get_hebpipe_model_path():
-    """Return the morphology model path used by HebPipe for this Python version."""
-    return get_hebpipe_package_dir() / "models" / f"heb.sm{sys.version_info[0]}"
+def get_hebpipe_required_model_paths():
+    """Return the local HebPipe model files required by the selected pipeline."""
+    model_dir = get_hebpipe_package_dir() / "models"
+    python_major = sys.version_info[0]
+
+    return [
+        model_dir / f"heb.sm{python_major}",
+        model_dir / "heb.xrm",
+    ]
 
 
 def load_hebpipe_runtime():
@@ -111,28 +116,16 @@ def load_hebpipe_runtime():
     return module
 
 
-def get_hebpipe_tokenizer():
-    """Return HebPipe's lazily initialized Hebrew segmentation model."""
-    global _hebpipe_tokenizer
-
-    if _hebpipe_tokenizer is not None:
-        return _hebpipe_tokenizer
-
-    model_path = get_hebpipe_model_path()
-
-    if not model_path.exists():
-        raise FileNotFoundError("HebPipe Hebrew model is not installed.")
-
-    runtime = load_hebpipe_runtime()
-    _hebpipe_tokenizer = runtime.RFTokenizer(model=str(model_path))
-    return _hebpipe_tokenizer
-
-
 def analyze_hebrew_with_hebpipe(sentence, target_word):
-    """Segment a selected word with HebPipe using the surrounding sentence."""
-    runtime = load_hebpipe_runtime()
-    tokenizer = get_hebpipe_tokenizer()
+    """Segment a selected word using HebPipe and its surrounding sentence."""
+    missing_models = [
+        path for path in get_hebpipe_required_model_paths() if not path.exists()
+    ]
 
+    if missing_models:
+        raise FileNotFoundError("HebPipe Hebrew models are not installed.")
+
+    runtime = load_hebpipe_runtime()
     segmented_text = runtime.nlp(
         sentence,
         do_whitespace=True,
@@ -143,7 +136,7 @@ def analyze_hebrew_with_hebpipe(sentence, target_word):
         do_entity=False,
         out_mode="pipes",
         sent_tag=None,
-        preloaded=(tokenizer, None, None, None),
+        preloaded=None,
         cpu=True,
     )
 
@@ -241,13 +234,14 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
         if path == "/api/morphology/status":
             try:
                 package_dir = get_hebpipe_package_dir()
-                model_path = get_hebpipe_model_path()
+                model_paths = get_hebpipe_required_model_paths()
+                models_available = all(path.exists() for path in model_paths)
                 self.send_json(
                     200,
                     {
-                        "available": model_path.exists(),
+                        "available": models_available,
                         "provider": "hebpipe",
-                        "reason": None if model_path.exists() else "model_missing",
+                        "reason": None if models_available else "model_missing",
                         "packagePath": str(package_dir),
                     },
                 )
