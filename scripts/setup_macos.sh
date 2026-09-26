@@ -27,6 +27,13 @@ python -m pip install "diaparser==1.1.3" --no-deps
 python -m pip install "hebpipe==4.0.2.0" --no-deps
 
 echo
+echo "Downloading Stanza Hebrew resources if they are missing..."
+python - <<'PY'
+import stanza
+stanza.download("he")
+PY
+
+echo
 echo "Installed Python:"
 python --version
 echo
