@@ -1821,3 +1821,130 @@ progress::-webkit-progress-value {
 .selected-sentence::after {
   content: close-quote;
 }
+
+
+/* Keep text-recognition and settings selects visually identical to Voice. */
+.speech-controls select,
+.ocr-controls select,
+.settings-modal select {
+  max-width: 230px;
+  padding: 0.65rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 13px;
+  color: var(--text);
+  background: #171c3d;
+  box-shadow: none;
+}
+
+.settings-gear {
+  position: absolute;
+  z-index: 6;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 1.25rem;
+  box-shadow: none;
+}
+
+.settings-gear:hover:not(:disabled) {
+  transform: rotate(18deg);
+  box-shadow: none;
+}
+
+.settings-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(9, 10, 20, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.settings-backdrop.hidden {
+  display: none;
+}
+
+.settings-modal {
+  width: min(620px, calc(100vw - 2rem));
+  max-height: min(760px, calc(100vh - 2rem));
+  overflow-y: auto;
+  padding: 1.35rem;
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+}
+
+.settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-header h2 {
+  margin: 0.2rem 0 0;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.settings-field {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 800;
+}
+
+.settings-field select {
+  width: 100%;
+  max-width: none;
+}
+
+.language-settings {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+}
+
+.language-settings legend {
+  padding: 0 0.35rem;
+  font-weight: 900;
+}
+
+.language-settings p {
+  margin: 0 0 0.25rem;
+  color: var(--muted);
+}
+
+.language-settings label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.translation-item.is-hidden {
+  display: none;
+}
