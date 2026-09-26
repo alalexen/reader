@@ -61,28 +61,47 @@ import importlib.util
 from pathlib import Path
 from urllib.request import urlretrieve
 
-spec = importlib.util.find_spec("hebpipe")
-if spec is None or not spec.submodule_search_locations:
-    raise SystemExit("HebPipe package was not found after installation.")
+def package_dir(name):
+    spec = importlib.util.find_spec(name)
+    if spec is None or not spec.submodule_search_locations:
+        raise SystemExit(f"{name} package was not found after installation.")
+    return Path(next(iter(spec.submodule_search_locations)))
 
-package_dir = Path(next(iter(spec.submodule_search_locations)))
-model_dir = package_dir / "models"
-model_dir.mkdir(parents=True, exist_ok=True)
-model_path = model_dir / "heb.sm3"
+hebpipe_dir = package_dir("hebpipe")
+rftokenizer_dir = package_dir("rftokenizer")
 
-if not model_path.exists():
-    print("Downloading pretrained Hebrew segmentation model...")
-    urlretrieve(
+downloads = [
+    (
+        hebpipe_dir / "models" / "heb.sm3",
         "https://gucorpling.org/amir/download/heb_models_v4/heb.sm3",
-        model_path,
-    )
+        "HebPipe segmentation model",
+    ),
+    (
+        rftokenizer_dir / "models" / "heb.seg",
+        "https://gucorpling.org/amir/download/heb_models_v4/heb.seg",
+        "Hebrew Flair segmentation model",
+    ),
+]
 
-print(f"HebPipe model: {model_path}")
+for target, url, label in downloads:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if not target.exists():
+        print(f"Downloading {label}...")
+        urlretrieve(url, target)
+    print(f"{label}: {target}")
 """
     run(python, "-c", model_setup)
 
     probe = r"""
+import sklearn
+import flair
 from server import analyze_hebrew_word
+
+if sklearn.__version__ != "1.4.1.post1":
+    raise SystemExit(f"Unexpected scikit-learn version: {sklearn.__version__}")
+
+if flair.__version__ != "0.13.0":
+    raise SystemExit(f"Unexpected Flair version: {flair.__version__}")
 
 segments = analyze_hebrew_word("למקום")
 if len(segments) < 2:
