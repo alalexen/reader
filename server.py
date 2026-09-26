@@ -493,12 +493,13 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
         except ValueError as error:
             self.send_json(400, {"error": str(error)})
-        except ImportError:
+        except ImportError as error:
             self.send_json(
                 503,
                 {
                     "error": "HebPipe dependency is not installed.",
                     "code": "dependency_missing",
+                    "detail": str(error),
                 },
             )
         except FileNotFoundError:
