@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import Card, ReadingText, Word
+from ..models import Card, Encounter, ReadingText, Word
 
 
 def get_text_by_title(session: Session, title: str) -> ReadingText | None:
@@ -69,3 +69,38 @@ def create_card(
     session.add(card)
     session.flush()
     return card
+
+
+def get_encounter(
+    session: Session,
+    *,
+    word_id: int,
+    text_id: int,
+    sentence: str,
+) -> Encounter | None:
+    return session.scalar(
+        select(Encounter).where(
+            Encounter.word_id == word_id,
+            Encounter.text_id == text_id,
+            Encounter.sentence == sentence,
+        )
+    )
+
+
+def create_encounter(
+    session: Session,
+    *,
+    word: Word,
+    text: ReadingText,
+    sentence: str,
+    position: int | None = None,
+) -> Encounter:
+    encounter = Encounter(
+        word=word,
+        text=text,
+        sentence=sentence,
+        position=position,
+    )
+    session.add(encounter)
+    session.flush()
+    return encounter
