@@ -114,6 +114,7 @@ if len(segments) < 2:
 print("Morphology probe:", "|".join(segments))
 """
     run(python, "-c", probe)
+    run(python, "-m", "unittest", "tests.test_database_schema")
 
     print()
     print("Setup complete.")
