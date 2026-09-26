@@ -1773,3 +1773,51 @@ progress::-webkit-progress-value {
     height: 60px;
   }
 }
+
+
+/* OCR controls align with the speech selector style. */
+.ocr-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.ocr-controls select {
+  max-width: 230px;
+  padding: 0.65rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 13px;
+  color: var(--text);
+  background: #171c3d;
+}
+
+.recognize-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
+
+.image-choice-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.clear-image-button {
+  margin-left: auto;
+}
+
+.selected-sentence {
+  color: #111111 !important;
+  font-style: italic;
+  quotes: "“" "”";
+}
+
+.selected-sentence::before {
+  content: open-quote;
+}
+
+.selected-sentence::after {
+  content: close-quote;
+}
