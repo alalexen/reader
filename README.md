@@ -138,6 +138,35 @@ Quizlet does not currently expose a self-service public API for independent apps
 
 
 
+
+## macOS system Hebrew voice
+
+Hebrew Reader can use the Hebrew voices provided by macOS through the browser's Web Speech API. This is the default fallback when Google Cloud Text-to-Speech is not configured.
+
+### Install or enable a Hebrew voice on macOS
+
+1. Open **Apple menu → System Settings → Accessibility → Read & Speak**.
+2. Set **System speech language** to **Hebrew** if it is available.
+3. Open **System voice** and download a Hebrew voice if macOS offers one that is not installed yet.
+4. Play the sample in System Settings to confirm that the voice works.
+5. Fully quit and reopen the browser after installing a new voice.
+6. Restart Hebrew Reader and check the **Voice** selector.
+
+You can also inspect the Hebrew voices currently exposed to the browser from DevTools:
+
+```js
+speechSynthesis
+  .getVoices()
+  .filter((voice) => voice.lang.toLowerCase().startsWith("he"))
+  .map((voice) => ({
+    name: voice.name,
+    lang: voice.lang,
+    local: voice.localService,
+  }));
+```
+
+If this returns an empty array immediately after opening the page, wait a moment and run it again because browser voice lists can load asynchronously.
+
 ## Optional Google WaveNet Hebrew speech
 
 Hebrew Reader can use Google's Hebrew WaveNet voices:
@@ -180,3 +209,14 @@ python3 server.py
 ```
 
 When credentials are detected, the Voice selector shows the four Google WaveNet Hebrew voices before the system voices. Google credentials stay on the local server and are never sent to the browser.
+
+### Corporate-device note
+
+If you are developing on a company-managed Mac, follow your employer's acceptable-use, software-installation, cloud-service, and data-handling policies before installing the Google Cloud CLI or creating local Application Default Credentials.
+
+The local Google setup stores authentication credentials on the workstation so Google client libraries can use them. Do not use company Google credentials, company billing, or company data for a personal project unless your employer has explicitly approved it. Do not send confidential work text, customer information, source code, or other company data to Google Cloud Text-to-Speech unless that use is approved by your organization.
+
+For a personal project on a managed laptop, the safest options are:
+
+- use the built-in macOS Hebrew voice only; or
+- use Google Cloud TTS from a personal device and personal Google Cloud project after confirming that personal development tools and external cloud services are allowed on the company laptop.
