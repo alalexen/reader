@@ -3,7 +3,10 @@
 
 import importlib.util
 import json
+import os
+import pathlib
 import sys
+import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -26,6 +29,7 @@ _vision_client = None
 _vision_module = None
 _translate_client = None
 _hebpipe_runtime = None
+_morphology_lock = threading.Lock()
 
 
 def get_google_tts_client():
@@ -124,6 +128,23 @@ def load_hebpipe_segmentation_runtime():
     return _hebpipe_runtime
 
 
+def run_hebrew_segmentation(tokenizer, tokens):
+    """Run RFTokenizer with compatibility for the upstream Windows-saved Flair model."""
+    with _morphology_lock:
+        needs_path_compat = os.name != "nt" and not tokenizer.loaded
+
+        if not needs_path_compat:
+            return tokenizer.rf_tokenize(tokens)
+
+        original_windows_path = pathlib.WindowsPath
+        pathlib.WindowsPath = pathlib.PosixPath
+
+        try:
+            return tokenizer.rf_tokenize(tokens)
+        finally:
+            pathlib.WindowsPath = original_windows_path
+
+
 def analyze_hebrew_word(word):
     """Segment one Hebrew word using HebPipe's Hebrew tokenizer resources."""
     clean_word = word.strip()
@@ -138,8 +159,9 @@ def analyze_hebrew_word(word):
         add_sents=False,
         from_pipes=False,
     )
-    segmented_lines = runtime["tokenizer"].rf_tokenize(
-        tokenized.strip().split("\n")
+    segmented_lines = run_hebrew_segmentation(
+        runtime["tokenizer"],
+        tokenized.strip().split("\n"),
     )
 
     for line in segmented_lines:
