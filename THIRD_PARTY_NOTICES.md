@@ -1,40 +1,52 @@
 # Third-Party Notices
 
-This project is personal and non-commercial.
+This project uses third-party open-source software and pretrained language resources.
 
 ## HebPipe
 
-HebPipe is used as the local Hebrew NLP and morphological-analysis dependency.
+HebPipe provides the Hebrew tokenizer resources and pretrained Hebrew segmentation model used by Hebrew Reader.
 
 - Project: https://github.com/amir-zeldes/HebPipe
 - PyPI: https://pypi.org/project/hebpipe/
 - Author: Amir Zeldes
+- Version used: 4.0.2.0
 - Code license: Apache License 2.0
-- Installed package version: 4.0.2.0
 
-HebPipe is installed as a Python dependency and its source code is not copied into this repository.
+HebPipe is installed as a Python package, but Hebrew Reader does not load HebPipe's full NLP pipeline.
 
-## HebPipe language-model resources
+HebPipe's own license notice states that some language-model resources may use licenses different from the Apache 2.0 code license.
 
-HebPipe's LICENSE.md states that while the HebPipe code is licensed under Apache License 2.0,
-some resources used for language models may use different licenses.
+## RFTokenizer
 
-This repository does not vendor HebPipe model files, training datasets, or downloaded model
-resources. They remain local to the developer machine and retain their upstream license and
-attribution requirements.
+RFTokenizer performs the actual Hebrew word segmentation used by HebPipe.
 
-- HebPipe licensing note:
-  https://github.com/amir-zeldes/HebPipe/blob/master/LICENSE.md
-- HebPipe model documentation:
-  https://github.com/amir-zeldes/HebPipe
+- Project: https://github.com/amir-zeldes/RFTokenizer
+- PyPI: https://pypi.org/project/rftokenizer/
+- Author: Amir Zeldes
+- Version used: 2.2.0
+- Code license: Apache License 2.0
 
-## Transitive dependencies
+Hebrew Reader pins RFTokenizer 2.2.0 because HebPipe 4.0.2.0 uses the legacy Python 3 `.sm3` model format supported by that version.
 
-HebPipe installs additional third-party Python packages required by its NLP pipeline.
-Those packages are transitive dependencies of HebPipe rather than direct dependencies
-declared by Hebrew Reader, and each retains its own upstream license.
+## Hebrew segmentation resources
+
+RFTokenizer's upstream documentation states that the data supplied for its Hebrew segmentation experiment is derived from the Universal Dependencies Hebrew Treebank and is made available under CC BY-NC-SA 4.0.
+
+- RFTokenizer documentation:
+  https://github.com/amir-zeldes/RFTokenizer
+- UD Hebrew HTB:
+  https://github.com/UniversalDependencies/UD_Hebrew-HTB
+- CC BY-NC-SA 4.0:
+  https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+The pretrained model is downloaded locally during setup and is not committed to this repository.
+
+HebPipe explicitly warns that language-model resources may have separate licensing terms. This notice therefore does not claim that every model artifact is licensed under Apache 2.0.
+
+## Other dependencies
+
+Additional Python and browser dependencies retain their own upstream licenses.
 
 ## Scope
 
-The notices in this file document third-party software and resources used by this project.
-They do not modify or replace the licenses of those third-party projects or model resources.
+These notices document third-party software and resources used by Hebrew Reader. They do not replace, modify, or reinterpret the upstream licenses.
