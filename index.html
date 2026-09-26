@@ -79,6 +79,11 @@
       </div>
 
       <div class="actions">
+        <label for="ocrEngine">OCR</label>
+        <select id="ocrEngine">
+          <option value="tesseract" selected>Local Tesseract (default)</option>
+          <option value="google-vision">Google Vision</option>
+        </select>
         <button id="recognizeButton" type="button" disabled>Recognize Hebrew text</button>
         <button id="clearButton" type="button" class="secondary">Clear</button>
       </div>
@@ -268,6 +273,6 @@
   </main>
 
 
-  <script type="module" src="app.js?v=google-vision-2"></script>
+  <script type="module" src="app.js?v=ocr-selector-1"></script>
 </body>
 </html>
