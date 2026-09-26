@@ -20,6 +20,7 @@ _tts_client = None
 _tts_module = None
 _vision_client = None
 _vision_module = None
+_translate_client = None
 
 
 def get_google_tts_client():
@@ -48,6 +49,19 @@ def get_google_vision_client():
     _vision_client = vision.ImageAnnotatorClient()
     _vision_module = vision
     return _vision_client, _vision_module
+
+
+def get_google_translate_client():
+    """Return an authenticated Google Cloud Translation client."""
+    global _translate_client
+
+    if _translate_client is not None:
+        return _translate_client
+
+    from google.cloud import translate_v2 as translate
+
+    _translate_client = translate.Client()
+    return _translate_client
 
 
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
@@ -89,6 +103,37 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                     {
                         "available": False,
                         "provider": "google",
+                        "reason": "credentials_missing",
+                        "detail": type(error).__name__,
+                    },
+                )
+            return
+
+        if path == "/api/translate/status":
+            try:
+                get_google_translate_client()
+                self.send_json(
+                    200,
+                    {
+                        "available": True,
+                        "provider": "google-nmt",
+                    },
+                )
+            except ImportError:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "google-nmt",
+                        "reason": "dependency_missing",
+                    },
+                )
+            except Exception as error:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "google-nmt",
                         "reason": "credentials_missing",
                         "detail": type(error).__name__,
                     },
@@ -137,6 +182,10 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/ocr":
             self.handle_ocr()
+            return
+
+        if path == "/api/translate":
+            self.handle_translate()
             return
 
         self.send_error(404)
@@ -255,9 +304,65 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
 
 
+    def handle_translate(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length <= 0 or content_length > 64_000:
+                raise ValueError("Invalid request size.")
+
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            text = str(payload.get("text", "")).strip()
+            target_language = str(payload.get("target", "")).strip().lower()
+
+            if not text:
+                raise ValueError("Text is required.")
+
+            if target_language not in {"en", "ru", "uk"}:
+                raise ValueError("Unsupported target language.")
+
+            client = get_google_translate_client()
+            result = client.translate(
+                text,
+                source_language="he",
+                target_language=target_language,
+                format_="text",
+            )
+
+            translated_text = str(result.get("translatedText", "")).strip()
+            if not translated_text:
+                raise RuntimeError("Google Translation returned no text.")
+
+            self.send_json(
+                200,
+                {
+                    "text": translated_text,
+                    "provider": "google-nmt",
+                },
+            )
+        except ValueError as error:
+            self.send_json(400, {"error": str(error)})
+        except ImportError:
+            self.send_json(
+                503,
+                {
+                    "error": "Google Translation dependency is not installed.",
+                    "code": "dependency_missing",
+                },
+            )
+        except Exception as error:
+            print(f"Google Translation failed: {error}")
+            self.send_json(
+                503,
+                {
+                    "error": "Google Translation is unavailable.",
+                    "code": type(error).__name__,
+                },
+            )
+
+
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), HebrewReaderHandler)
     print(f"Hebrew Reader is running at http://{HOST}:{PORT}")
-    print("Google WaveNet and Vision OCR are used when Application Default Credentials are available.")
+    print("Google WaveNet, Vision OCR, and Translation are used when Application Default Credentials are available.")
     print("Press Control + C to stop.")
     server.serve_forever()
