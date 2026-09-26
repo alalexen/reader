@@ -13,7 +13,6 @@ From the project root, create the local environment:
 ```bash
 python3.12 scripts/setup.py
 source .venv/bin/activate
-python server.py
 ```
 
 ### Windows
@@ -21,13 +20,6 @@ python server.py
 ```powershell
 py -3.12 scripts/setup.py
 .\.venv\Scripts\activate
-python server.py
-```
-
-Open:
-
-```text
-http://127.0.0.1:8000
 ```
 
 The setup script recreates `.venv`, installs the Python dependencies, installs the compatible HebPipe 4.0.2.0 segmentation stack, downloads the pretrained Hebrew segmentation models, and runs morphology plus database-schema checks before reporting success.
@@ -46,8 +38,16 @@ If your PostgreSQL installation does not provide the `createdb` helper, create a
 
 Copy the environment template:
 
+macOS / Linux:
+
 ```bash
 cp .env.example .env
+```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
 ```
 
 The default template uses:
@@ -76,7 +76,21 @@ python scripts/seed_demo.py
 
 The demo seed is idempotent: running it again does not intentionally create duplicate demo words/cards.
 
-Check the database connection after starting the server:
+The PostgreSQL layer is the foundation for Library, Review/SRS and progress. The current visible flashcard screen still reads its existing browser data until the SRS migration is implemented, so seeded database cards are not shown in that old list yet.
+
+Start the app:
+
+```bash
+python server.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+Check the database connection:
 
 ```bash
 curl http://127.0.0.1:8000/api/database/status
