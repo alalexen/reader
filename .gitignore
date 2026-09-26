@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# Ignore new Markdown working/docs files by default.
+*.md
