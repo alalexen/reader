@@ -45,14 +45,22 @@ def run(
     capture_output: bool = False,
     env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        args,
-        cwd=PROJECT_ROOT,
-        check=check,
-        text=True,
-        capture_output=capture_output,
-        env=env,
-    )
+    try:
+        return subprocess.run(
+            args,
+            cwd=PROJECT_ROOT,
+            check=check,
+            text=True,
+            capture_output=capture_output,
+            env=env,
+        )
+    except subprocess.CalledProcessError as error:
+        detail = (error.stderr or error.stdout or "").strip()
+        command = " ".join(args)
+        message = f"Command failed: {command}"
+        if detail:
+            message += f"\n{detail}"
+        raise BootstrapError(message) from error
 
 
 def postgres_major(binary: Path) -> str | None:
@@ -191,8 +199,21 @@ def write_managed_config(port: int) -> None:
 
 
 def write_env(database_url: str) -> None:
-    """Create .env only when the project does not already have one."""
+    """Add DATABASE_URL without overwriting other local .env settings."""
     if ENV_FILE.exists():
+        values = dotenv_values(ENV_FILE)
+        if str(values.get("DATABASE_URL") or "").strip():
+            return
+
+        current = ENV_FILE.read_text(encoding="utf-8")
+        separator = "" if not current or current.endswith("\n") else "\n"
+        ENV_FILE.write_text(
+            current
+            + separator
+            + "# Added by scripts/bootstrap_db.py\n"
+            + f"DATABASE_URL={database_url}\n",
+            encoding="utf-8",
+        )
         return
 
     ENV_FILE.write_text(
