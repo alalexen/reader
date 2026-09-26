@@ -1,4 +1,4 @@
-import { recognizeHebrewText } from "./services/ocrService.js";
+import { recognizeHebrewText } from "./services/ocrService.js?v=google-vision-1";
 import {
   getGoogleTtsVoices,
   getHebrewVoices,
