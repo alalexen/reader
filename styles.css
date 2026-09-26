@@ -165,13 +165,6 @@ button.secondary {
   text-transform: uppercase;
 }
 
-.subtitle {
-  max-width: 570px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 1.1rem;
-}
-
 .section-title-row {
   display: flex;
   align-items: center;
@@ -236,8 +229,7 @@ button.secondary {
 }
 
 .upload-help,
-.section-heading p,
-.info-note {
+.section-heading p {
   color: var(--muted);
 }
 
@@ -497,8 +489,7 @@ progress::-webkit-progress-value {
   margin-top: 1rem;
 }
 
-.translation-item,
-.analysis-item {
+.translation-item {
   position: relative;
   min-height: 100px;
   overflow: hidden;
@@ -531,8 +522,7 @@ progress::-webkit-progress-value {
   background: var(--yellow);
 }
 
-.translation-label,
-.analysis-label {
+.translation-label {
   display: block;
   margin-bottom: 0.45rem;
   color: #919bca;
@@ -560,11 +550,6 @@ progress::-webkit-progress-value {
   background: #2a2f63;
   font-size: 0.78rem;
   font-weight: 900;
-}
-
-.info-note {
-  margin: 0.85rem 0 0;
-  font-size: 0.9rem;
 }
 
 .hidden {
@@ -937,18 +922,6 @@ progress::-webkit-progress-value {
   }
 }
 
-.art-credit {
-  width: min(1040px, calc(100% - 2rem));
-  margin: 0 auto 1.4rem;
-  color: #7782b6;
-  font-size: 0.72rem;
-  text-align: center;
-}
-
-.art-credit a {
-  color: #9ba7df;
-}
-
 @media (max-width: 720px) {
   .monster-walk-track {
     height: 66px;
@@ -1191,7 +1164,6 @@ body::before {
 .section-copy > p,
 .section-heading p,
 .upload-help,
-.info-note,
 .status,
 .section-help {
   color: var(--muted);
@@ -1415,7 +1387,6 @@ button.secondary:hover:not(:disabled) {
 }
 
 .translation-label,
-.analysis-label,
 .saved-label {
   color: #8a6e5f;
   font-weight: 800;
@@ -1475,14 +1446,6 @@ progress::-webkit-progress-bar {
 
 progress::-webkit-progress-value {
   background: linear-gradient(90deg, #9c4d38, #d29870);
-}
-
-.art-credit {
-  color: #8f7667;
-}
-
-.art-credit a {
-  color: #5a1914;
 }
 
 
