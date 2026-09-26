@@ -5,7 +5,7 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 ## Current MVP
 
 - Upload a photo of a Hebrew book page
-- Run Hebrew OCR directly in the browser with Tesseract.js
+- Use Google Vision OCR for Hebrew text, with local Tesseract.js as a fallback
 - Edit OCR output manually
 - Render Hebrew text right-to-left
 - Click individual Hebrew words
@@ -104,11 +104,12 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - CSS
 - Vanilla JavaScript with ES modules
 - Tesseract.js
+- Google Cloud Vision (optional primary OCR backend)
 - Google Cloud Text-to-Speech (optional WaveNet backend)
 - Web Speech API fallback
 - MyMemory Translation API
 
-The core app still works without a paid backend. Google Cloud Text-to-Speech is optional and requires a Google Cloud project with billing enabled. When it is not configured, Hebrew Reader falls back to the browser's Hebrew voices.
+The core app still works without Google Cloud. Google Cloud Text-to-Speech and Vision are optional and require a Google Cloud project with billing enabled. Without Google Vision, OCR automatically falls back to local Tesseract.js. Without Google TTS, speech falls back to browser Hebrew voices.
 
 ## Translation behavior
 
@@ -118,7 +119,7 @@ The free translation service has usage limits, so translation quality and availa
 
 ## Privacy
 
-OCR runs in the browser. The uploaded image is not intentionally stored by this application.
+When Google Vision is available, the selected image is sent to Google Cloud only when OCR is requested. If Google Vision is unavailable, OCR falls back to Tesseract.js in the browser. The image is not intentionally stored by this application.
 
 Selected text is sent to the configured translation service only when the user requests a translation.
 
@@ -135,6 +136,31 @@ Selected text is sent to the configured translation service only when the user r
 Flashcards are stored in the browser with `localStorage`. Each saved card contains the Hebrew word, Ukrainian/English/Russian translations, and the original sentence from the uploaded text.
 
 Quizlet does not currently expose a self-service public API for independent apps to create sets. Hebrew Reader therefore uses Quizlet's supported text-import workflow: click **Copy for Quizlet**, open Quizlet, create a flashcard set, choose **Import**, and paste the copied text.
+
+
+## Google Vision OCR
+
+Google Vision is used first for Hebrew OCR. If it is unavailable, Hebrew Reader automatically falls back to local Tesseract.js.
+
+Enable the API:
+
+```bash
+gcloud services enable vision.googleapis.com
+```
+
+Install the dependency:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+The same Application Default Credentials used for Google TTS are used for Vision OCR.
+
+Check the backend:
+
+```text
+http://localhost:8000/api/ocr/status
+```
 
 ## System Hebrew voice
 
