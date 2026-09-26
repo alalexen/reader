@@ -39,7 +39,7 @@ RFTokenizer's upstream documentation states that the data supplied for its Hebre
 - CC BY-NC-SA 4.0:
   https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-The pretrained model is downloaded locally during setup and is not committed to this repository.
+The pretrained `heb.sm3` and `heb.seg` model files are downloaded locally during setup and are not committed to this repository.
 
 HebPipe explicitly warns that language-model resources may have separate licensing terms. This notice therefore does not claim that every model artifact is licensed under Apache 2.0.
 
