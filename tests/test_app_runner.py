@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from scripts import run_hebrew_reader
 
@@ -11,16 +11,18 @@ from scripts import run_hebrew_reader
 class HebrewReaderRunnerTests(unittest.TestCase):
     def test_clear_web_port_does_nothing_when_free(self):
         with (
-            patch.object(run_hebrew_reader, "listening_pids", return_value=[]),
             patch.object(run_hebrew_reader, "port_is_free", return_value=True),
+            patch.object(run_hebrew_reader, "listening_pids") as listening,
             patch.object(run_hebrew_reader, "terminate_process") as terminate,
         ):
             run_hebrew_reader.clear_web_port(8000)
 
+        listening.assert_not_called()
         terminate.assert_not_called()
 
     def test_clear_web_port_gracefully_stops_existing_listener(self):
         with (
+            patch.object(run_hebrew_reader, "port_is_free", return_value=False),
             patch.object(run_hebrew_reader, "listening_pids", return_value=[1234]),
             patch.object(
                 run_hebrew_reader,
@@ -40,6 +42,7 @@ class HebrewReaderRunnerTests(unittest.TestCase):
 
     def test_clear_web_port_force_stops_when_graceful_stop_fails(self):
         with (
+            patch.object(run_hebrew_reader, "port_is_free", return_value=False),
             patch.object(
                 run_hebrew_reader,
                 "listening_pids",
@@ -62,8 +65,8 @@ class HebrewReaderRunnerTests(unittest.TestCase):
         self.assertEqual(
             terminate.call_args_list,
             [
-                unittest.mock.call(1234),
-                unittest.mock.call(1234, force=True),
+                call(1234),
+                call(1234, force=True),
             ],
         )
 
