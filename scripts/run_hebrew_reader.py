@@ -154,7 +154,11 @@ def terminate_process(pid: int, *, force: bool = False) -> None:
             capture_output=True,
             check=False,
         )
-        if result.returncode != 0 and pid in listening_pids(WEB_PORT):
+        if (
+            force
+            and result.returncode != 0
+            and pid in listening_pids(WEB_PORT)
+        ):
             detail = (result.stderr or result.stdout or "").strip()
             raise RunnerError(
                 f"Could not stop PID {pid}."
@@ -184,14 +188,15 @@ def wait_until_port_free(port: int, timeout: float) -> bool:
 
 def clear_web_port(port: int = WEB_PORT) -> None:
     """Stop current listeners so Hebrew Reader can keep its stable localhost URL."""
+    if port_is_free(port):
+        return
+
     pids = listening_pids(port)
 
     if not pids:
-        if not port_is_free(port):
-            raise RunnerError(
-                f"Port {port} is occupied, but no listening process could be identified."
-            )
-        return
+        raise RunnerError(
+            f"Port {port} is occupied, but no listening process could be identified."
+        )
 
     print(f"Port {port} is already in use.")
     for pid in pids:
