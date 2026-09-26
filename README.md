@@ -94,11 +94,19 @@ reader/
 │   ├── settingsService.js
 │   ├── speechService.js
 │   └── translationService.js
+├── ui/
+│   ├── elements.js
+│   ├── flashcardsController.js
+│   ├── imageController.js
+│   ├── readerController.js
+│   ├── sessionTimer.js
+│   ├── settingsController.js
+│   └── speechController.js
 └── utils/
     └── hebrew.js
 ```
 
-`app.js` owns UI state and event wiring. Reusable browser features live in `services/`, and small Hebrew text helpers live in `utils/`. `server.py` is now only the server entry point; request handling, Google Cloud clients, and Hebrew morphology live in `backend/`.
+`app.js` is now the composition root: it owns shared UI state and wires controllers together. Browser API/data logic lives in `services/`, DOM-focused behavior lives in `ui/`, and small Hebrew text helpers live in `utils/`. `server.py` is now only the server entry point; request handling, Google Cloud clients, and Hebrew morphology live in `backend/`.
 
 ## Hebrew morphology
 

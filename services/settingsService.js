@@ -1,4 +1,5 @@
 const STORAGE_KEY = "hebrewReaderSettings";
+const LEGACY_VOICE_STORAGE_KEY = "hebrewReaderVoiceURI";
 
 const SUPPORTED_TRANSLATION_LANGUAGES = ["uk", "en", "ru"];
 
@@ -6,6 +7,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   translationProvider: "google-nmt",
   ocrEngine: "tesseract",
   translationLanguages: [...SUPPORTED_TRANSLATION_LANGUAGES],
+  voiceURI: "",
 });
 
 function normalizeLanguages(value) {
@@ -35,12 +37,17 @@ export function loadSettings() {
       ocrEngine:
         saved.ocrEngine === "google-vision" ? "google-vision" : "tesseract",
       translationLanguages: normalizeLanguages(saved.translationLanguages),
+      voiceURI:
+        typeof saved.voiceURI === "string"
+          ? saved.voiceURI
+          : localStorage.getItem(LEGACY_VOICE_STORAGE_KEY) || "",
     };
   } catch (error) {
     console.warn("Could not load saved settings:", error);
     return {
       ...DEFAULT_SETTINGS,
       translationLanguages: [...DEFAULT_SETTINGS.translationLanguages],
+      voiceURI: DEFAULT_SETTINGS.voiceURI,
     };
   }
 }
@@ -50,4 +57,5 @@ export function loadSettings() {
  */
 export function saveSettings(settings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  localStorage.removeItem(LEGACY_VOICE_STORAGE_KEY);
 }
