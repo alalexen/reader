@@ -5,11 +5,8 @@ function containsHebrew(text) {
   return /[\u0590-\u05FF]/u.test(text);
 }
 
-/**
- * Requests one translation pair from MyMemory.
- */
-async function requestTranslation(text, sourceLanguage, targetLanguage) {
-  const cacheKey = `${sourceLanguage}:${targetLanguage}:${text}`;
+async function requestMyMemoryTranslation(text, sourceLanguage, targetLanguage) {
+  const cacheKey = `mymemory:${sourceLanguage}:${targetLanguage}:${text}`;
 
   if (translationCache.has(cacheKey)) {
     return translationCache.get(cacheKey);
@@ -42,13 +39,7 @@ async function requestTranslation(text, sourceLanguage, targetLanguage) {
   return translatedText;
 }
 
-/**
- * Translates Hebrew text into one target language.
- *
- * Ukrainian and Russian first use a direct translation. If the free service
- * leaves Hebrew text untranslated, the service retries through English.
- */
-async function translateHebrew(text, targetLanguage) {
+async function translateWithMyMemory(text, targetLanguage) {
   const cleanText = text.trim();
 
   if (!cleanText) {
@@ -56,11 +47,11 @@ async function translateHebrew(text, targetLanguage) {
   }
 
   if (targetLanguage === "en") {
-    return requestTranslation(cleanText, "he", "en");
+    return requestMyMemoryTranslation(cleanText, "he", "en");
   }
 
   try {
-    const directTranslation = await requestTranslation(
+    const directTranslation = await requestMyMemoryTranslation(
       cleanText,
       "he",
       targetLanguage,
@@ -73,19 +64,81 @@ async function translateHebrew(text, targetLanguage) {
     console.warn("Direct translation failed, trying English fallback:", error);
   }
 
-  const englishTranslation = await requestTranslation(cleanText, "he", "en");
-  return requestTranslation(englishTranslation, "en", targetLanguage);
+  const englishTranslation = await requestMyMemoryTranslation(cleanText, "he", "en");
+  return requestMyMemoryTranslation(englishTranslation, "en", targetLanguage);
+}
+
+async function translateWithGoogle(text, targetLanguage) {
+  const cacheKey = `google-nmt:he:${targetLanguage}:${text}`;
+
+  if (translationCache.has(cacheKey)) {
+    return translationCache.get(cacheKey);
+  }
+
+  const response = await fetch("/api/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      text,
+      target: targetLanguage,
+    }),
+  });
+
+  if (!response.ok) {
+    let detail = "Google Translation is unavailable.";
+
+    try {
+      const body = await response.json();
+      detail = body.error || detail;
+    } catch {
+      // Keep the generic error.
+    }
+
+    throw new Error(detail);
+  }
+
+  const data = await response.json();
+  const translatedText = data?.text?.trim();
+
+  if (!translatedText) {
+    throw new Error("Google Translation returned an empty result.");
+  }
+
+  translationCache.set(cacheKey, translatedText);
+  return translatedText;
 }
 
 /**
- * Translates one Hebrew text value into multiple languages.
+ * Translates Hebrew into multiple target languages.
+ * Google NMT falls back to MyMemory when the local Google backend is unavailable.
  */
-export async function translateIntoLanguages(text, targetLanguages) {
+export async function translateIntoLanguages(
+  text,
+  targetLanguages,
+  provider = "google-nmt",
+) {
+  const cleanText = text.trim();
+
   const entries = await Promise.all(
-    targetLanguages.map(async (languageCode) => [
-      languageCode,
-      await translateHebrew(text, languageCode),
-    ]),
+    targetLanguages.map(async (languageCode) => {
+      let translatedText;
+
+      if (provider === "mymemory") {
+        translatedText = await translateWithMyMemory(cleanText, languageCode);
+      } else {
+        try {
+          translatedText = await translateWithGoogle(cleanText, languageCode);
+        } catch (error) {
+          console.warn("Google Translation failed, using MyMemory:", error);
+          translatedText = await translateWithMyMemory(cleanText, languageCode);
+        }
+      }
+
+      return [languageCode, translatedText];
+    }),
   );
 
   return Object.fromEntries(entries);
