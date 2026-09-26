@@ -314,6 +314,8 @@ reader/
 │   ├── setup.py
 │   ├── init_db.py
 │   └── seed_demo.py
+├── tests/
+│   └── test_database_schema.py
 ├── services/
 │   ├── flashcardsService.js
 │   ├── hebrewMorphologyService.js
