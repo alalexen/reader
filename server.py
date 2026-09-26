@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Local development server for Hebrew Reader, including optional Google Cloud services."""
 
+import importlib.util
 import json
+import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import urlparse
 
 HOST = "127.0.0.1"
@@ -22,7 +25,8 @@ _tts_module = None
 _vision_client = None
 _vision_module = None
 _translate_client = None
-_hebrew_tokenizer = None
+_hebpipe_runtime = None
+_hebpipe_tokenizer = None
 
 
 def get_google_tts_client():
@@ -66,17 +70,91 @@ def get_google_translate_client():
     return _translate_client
 
 
-def get_hebrew_tokenizer():
-    """Return the lazily initialized local RFTokenizer Hebrew model."""
-    global _hebrew_tokenizer
+def get_hebpipe_package_dir():
+    """Return the installed HebPipe package directory without executing its CLI."""
+    spec = importlib.util.find_spec("hebpipe")
 
-    if _hebrew_tokenizer is not None:
-        return _hebrew_tokenizer
+    if spec is None or not spec.submodule_search_locations:
+        raise ImportError("HebPipe is not installed.")
 
-    from rftokenizer import RFTokenizer
+    return Path(next(iter(spec.submodule_search_locations)))
 
-    _hebrew_tokenizer = RFTokenizer(model="heb")
-    return _hebrew_tokenizer
+
+def get_hebpipe_model_path():
+    """Return the morphology model path used by HebPipe for this Python version."""
+    return get_hebpipe_package_dir() / "models" / f"heb.sm{sys.version_info[0]}"
+
+
+def load_hebpipe_runtime():
+    """Load HebPipe's runtime module without executing hebpipe.__init__."""
+    global _hebpipe_runtime
+
+    if _hebpipe_runtime is not None:
+        return _hebpipe_runtime
+
+    package_dir = get_hebpipe_package_dir()
+    module_path = package_dir / "heb_pipe.py"
+    spec = importlib.util.spec_from_file_location(
+        "_hebrew_reader_hebpipe_runtime",
+        module_path,
+    )
+
+    if spec is None or spec.loader is None:
+        raise ImportError("Could not load HebPipe runtime.")
+
+    if str(package_dir) not in sys.path:
+        sys.path.insert(0, str(package_dir))
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    _hebpipe_runtime = module
+    return module
+
+
+def get_hebpipe_tokenizer():
+    """Return HebPipe's lazily initialized Hebrew segmentation model."""
+    global _hebpipe_tokenizer
+
+    if _hebpipe_tokenizer is not None:
+        return _hebpipe_tokenizer
+
+    model_path = get_hebpipe_model_path()
+
+    if not model_path.exists():
+        raise FileNotFoundError("HebPipe Hebrew model is not installed.")
+
+    runtime = load_hebpipe_runtime()
+    _hebpipe_tokenizer = runtime.RFTokenizer(model=str(model_path))
+    return _hebpipe_tokenizer
+
+
+def analyze_hebrew_with_hebpipe(sentence, target_word):
+    """Segment a selected word with HebPipe using the surrounding sentence."""
+    runtime = load_hebpipe_runtime()
+    tokenizer = get_hebpipe_tokenizer()
+
+    segmented_text = runtime.nlp(
+        sentence,
+        do_whitespace=True,
+        do_tok=True,
+        do_tag=False,
+        do_lemma=False,
+        do_parse=False,
+        do_entity=False,
+        out_mode="pipes",
+        sent_tag=None,
+        preloaded=(tokenizer, None, None, None),
+        cpu=True,
+    )
+
+    target = target_word.strip()
+    for line in segmented_text.splitlines():
+        candidate = line.strip()
+
+        if candidate and candidate.replace("|", "") == target:
+            return [segment for segment in candidate.split("|") if segment]
+
+    return [target]
 
 
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
@@ -162,12 +240,15 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/morphology/status":
             try:
-                get_hebrew_tokenizer()
+                package_dir = get_hebpipe_package_dir()
+                model_path = get_hebpipe_model_path()
                 self.send_json(
                     200,
                     {
-                        "available": True,
-                        "provider": "rftokenizer",
+                        "available": model_path.exists(),
+                        "provider": "hebpipe",
+                        "reason": None if model_path.exists() else "model_missing",
+                        "packagePath": str(package_dir),
                     },
                 )
             except ImportError:
@@ -175,18 +256,8 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                     200,
                     {
                         "available": False,
-                        "provider": "rftokenizer",
+                        "provider": "hebpipe",
                         "reason": "dependency_missing",
-                    },
-                )
-            except Exception as error:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "rftokenizer",
-                        "reason": "model_unavailable",
-                        "detail": type(error).__name__,
                     },
                 )
             return
@@ -373,10 +444,11 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
 
     def handle_morphology(self):
-        """Segment one Hebrew word with the local RFTokenizer model."""
+        """Analyze one selected Hebrew word with HebPipe in sentence context."""
         try:
             payload = self.read_json_payload()
             word = str(payload.get("word", "")).strip()
+            sentence = str(payload.get("sentence", "")).strip() or word
 
             if not word:
                 raise ValueError("Word is required.")
@@ -384,21 +456,17 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             if len(word) > 100:
                 raise ValueError("Word is too long.")
 
-            tokenizer = get_hebrew_tokenizer()
-            analyses = tokenizer.rf_tokenize([word])
+            if len(sentence) > 4_000:
+                raise ValueError("Sentence is too long.")
 
-            if not analyses:
-                raise RuntimeError("RFTokenizer returned no analysis.")
-
-            segmented = str(analyses[0]).strip()
-            segments = [segment for segment in segmented.split("|") if segment]
+            segments = analyze_hebrew_with_hebpipe(sentence, word)
 
             self.send_json(
                 200,
                 {
                     "word": word,
                     "segments": segments,
-                    "provider": "rftokenizer",
+                    "provider": "hebpipe",
                 },
             )
         except ValueError as error:
@@ -407,12 +475,20 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             self.send_json(
                 503,
                 {
-                    "error": "RFTokenizer dependency is not installed.",
+                    "error": "HebPipe dependency is not installed.",
                     "code": "dependency_missing",
                 },
             )
+        except FileNotFoundError:
+            self.send_json(
+                503,
+                {
+                    "error": "HebPipe Hebrew model is not installed.",
+                    "code": "model_missing",
+                },
+            )
         except Exception as error:
-            print(f"RFTokenizer morphology failed: {error}")
+            print(f"HebPipe morphology failed: {error}")
             self.send_json(
                 503,
                 {
@@ -426,6 +502,6 @@ if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), HebrewReaderHandler)
     print(f"Hebrew Reader is running at http://{HOST}:{PORT}")
     print("Google WaveNet, Vision OCR, and Translation use Application Default Credentials when available.")
-    print("RFTokenizer provides local Hebrew morphological segmentation.")
+    print("HebPipe provides local Hebrew morphological analysis.")
     print("Press Control + C to stop.")
     server.serve_forever()
