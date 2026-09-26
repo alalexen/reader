@@ -150,6 +150,33 @@ def analyze_hebrew_with_hebpipe(sentence, target_word):
     return [target]
 
 
+def check_hebpipe_runtime():
+    """Verify that HebPipe can load and run a minimal Hebrew segmentation."""
+    package_dir = get_hebpipe_package_dir()
+    model_paths = get_hebpipe_required_model_paths()
+    missing_models = [path for path in model_paths if not path.exists()]
+
+    if missing_models:
+        return {
+            "available": False,
+            "provider": "hebpipe",
+            "reason": "model_missing",
+            "missingModels": [path.name for path in missing_models],
+            "packagePath": str(package_dir),
+        }
+
+    load_hebpipe_runtime()
+    segments = analyze_hebrew_with_hebpipe("אני הולך למקום", "למקום")
+
+    return {
+        "available": True,
+        "provider": "hebpipe",
+        "probeWord": "למקום",
+        "probeSegments": segments,
+        "packagePath": str(package_dir),
+    }
+
+
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
     def send_json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
@@ -233,25 +260,26 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/morphology/status":
             try:
-                package_dir = get_hebpipe_package_dir()
-                model_paths = get_hebpipe_required_model_paths()
-                models_available = all(path.exists() for path in model_paths)
-                self.send_json(
-                    200,
-                    {
-                        "available": models_available,
-                        "provider": "hebpipe",
-                        "reason": None if models_available else "model_missing",
-                        "packagePath": str(package_dir),
-                    },
-                )
-            except ImportError:
+                self.send_json(200, check_hebpipe_runtime())
+            except ImportError as error:
                 self.send_json(
                     200,
                     {
                         "available": False,
                         "provider": "hebpipe",
                         "reason": "dependency_missing",
+                        "detail": str(error),
+                    },
+                )
+            except Exception as error:
+                print(f"HebPipe status check failed: {error}")
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "hebpipe",
+                        "reason": "runtime_error",
+                        "detail": type(error).__name__,
                     },
                 )
             return
@@ -488,6 +516,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                 {
                     "error": "Hebrew morphology analysis is unavailable.",
                     "code": type(error).__name__,
+                    "detail": str(error),
                 },
             )
 
