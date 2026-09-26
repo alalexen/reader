@@ -5,12 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=ui-refine-20260926-1" />
+  <link rel="stylesheet" href="styles.css?v=settings-google-nmt-1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <main class="app-shell">
     <header class="hero card hero-card">
+      <button
+        id="openSettingsButton"
+        type="button"
+        class="settings-gear"
+        aria-label="Open settings"
+        title="Settings"
+      >⚙</button>
       <div class="hero-copy">
         <p class="eyebrow">Hebrew learning tool</p>
         <h1>Hebrew Reader</h1>
@@ -82,7 +89,7 @@
       </div>
 
       <div class="ocr-controls">
-        <label for="ocrEngine">OCR</label>
+        <label for="ocrEngine">Text recognition</label>
         <select id="ocrEngine" class="ocr-select">
           <option value="tesseract" selected>Local Tesseract (default)</option>
           <option value="google-vision">Google Vision</option>
@@ -211,15 +218,15 @@
         </div>
 
         <div class="translation-grid">
-          <div class="translation-item accent-pink">
+          <div class="translation-item accent-pink" data-language="uk">
             <span class="translation-label">Ukrainian</span>
             <span id="wordTranslationUk" class="translation-value" dir="ltr" lang="uk">—</span>
           </div>
-          <div class="translation-item accent-cyan">
+          <div class="translation-item accent-cyan" data-language="en">
             <span class="translation-label">English</span>
             <span id="wordTranslationEn" class="translation-value" dir="ltr" lang="en">—</span>
           </div>
-          <div class="translation-item accent-yellow">
+          <div class="translation-item accent-yellow" data-language="ru">
             <span class="translation-label">Russian</span>
             <span id="wordTranslationRu" class="translation-value" dir="ltr" lang="ru">—</span>
           </div>
@@ -240,15 +247,15 @@
         </div>
 
         <div class="translation-grid">
-          <div class="translation-item accent-pink">
+          <div class="translation-item accent-pink" data-language="uk">
             <span class="translation-label">Ukrainian</span>
             <span id="sentenceTranslationUk" class="translation-value" dir="ltr" lang="uk">—</span>
           </div>
-          <div class="translation-item accent-cyan">
+          <div class="translation-item accent-cyan" data-language="en">
             <span class="translation-label">English</span>
             <span id="sentenceTranslationEn" class="translation-value" dir="ltr" lang="en">—</span>
           </div>
-          <div class="translation-item accent-yellow">
+          <div class="translation-item accent-yellow" data-language="ru">
             <span class="translation-label">Russian</span>
             <span id="sentenceTranslationRu" class="translation-value" dir="ltr" lang="ru">—</span>
           </div>
@@ -278,6 +285,76 @@
   </main>
 
 
-  <script type="module" src="app.js?v=ui-refine-20260926-1"></script>
+  <div id="settingsBackdrop" class="settings-backdrop hidden" aria-hidden="true">
+    <section
+      id="settingsModal"
+      class="settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settingsTitle"
+    >
+      <div class="settings-header">
+        <div>
+          <p class="eyebrow">Preferences</p>
+          <h2 id="settingsTitle">Settings</h2>
+        </div>
+        <button
+          id="closeSettingsButton"
+          type="button"
+          class="icon-button"
+          aria-label="Close settings"
+          title="Close"
+        >×</button>
+      </div>
+
+      <div class="settings-grid">
+        <label class="settings-field">
+          <span>Translation model</span>
+          <select id="settingsTranslationProvider">
+            <option value="google-nmt">Google NMT</option>
+            <option value="mymemory">MyMemory</option>
+          </select>
+        </label>
+
+        <label class="settings-field">
+          <span>Text recognition</span>
+          <select id="settingsOcrEngine">
+            <option value="tesseract">Local Tesseract</option>
+            <option value="google-vision">Google Vision</option>
+          </select>
+        </label>
+
+        <label class="settings-field">
+          <span>Voice</span>
+          <select id="settingsVoiceSelect">
+            <option value="">Loading Hebrew voices...</option>
+          </select>
+        </label>
+      </div>
+
+      <fieldset class="language-settings">
+        <legend>Translation languages</legend>
+        <p>Choose 1 to 3 languages.</p>
+        <label>
+          <input type="checkbox" name="translationLanguage" value="uk" />
+          Ukrainian
+        </label>
+        <label>
+          <input type="checkbox" name="translationLanguage" value="en" />
+          English
+        </label>
+        <label>
+          <input type="checkbox" name="translationLanguage" value="ru" />
+          Russian
+        </label>
+      </fieldset>
+
+      <div class="settings-actions">
+        <button id="saveSettingsButton" type="button" disabled>Save</button>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="app.js?v=settings-google-nmt-1"></script>
 </body>
 </html>
