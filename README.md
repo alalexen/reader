@@ -112,6 +112,7 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - Web Speech API fallback
 - Google Cloud Translation NMT (primary translation backend)
 - MyMemory Translation API fallback
+- RFTokenizer 3.0.0 for optional local Hebrew morphological segmentation
 
 The core app still works without Google Cloud. Google Cloud Text-to-Speech, Vision, and Translation are optional and require a Google Cloud project with billing enabled. Local Tesseract is the default OCR engine. Google Vision can be selected in the UI and falls back to Tesseract if unavailable. Browser Hebrew speech remains available without Google TTS.
 
@@ -282,3 +283,16 @@ The existing **Text recognition** and **Voice** dropdowns remain available in th
 When a Hebrew word is selected, Hebrew Reader can show a **Possible word structure** section. It recognizes common attached letters such as `ב`, `כ`, `ל`, `מ`, `ו`, and `ה`, and displays a possible base word.
 
 This is intentionally a conservative spelling-based hint, not a full morphological or dictionary analysis. Hebrew prefixes can be ambiguous without lexical and sentence-level context.
+
+
+## Third-party licenses
+
+This personal, non-commercial project uses third-party open-source software.
+
+RFTokenizer is installed as a Python dependency and is licensed under Apache License 2.0.
+The upstream RFTokenizer documentation states that data used for its Hebrew segmentation
+experiment is derived from the Universal Dependencies Hebrew Treebank and is available
+under CC BY-NC-SA 4.0.
+
+No RFTokenizer Hebrew model files or training datasets are committed to this repository.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution and license details.
