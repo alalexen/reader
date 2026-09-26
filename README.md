@@ -107,15 +107,21 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - Google Cloud Vision (optional primary OCR backend)
 - Google Cloud Text-to-Speech (optional WaveNet backend)
 - Web Speech API fallback
-- MyMemory Translation API
+- Google Cloud Translation NMT (primary translation backend)
+- MyMemory Translation API fallback
 
 The core app still works without Google Cloud. Google Cloud Text-to-Speech and Vision are optional and require a Google Cloud project with billing enabled. Without Google Vision, OCR automatically falls back to local Tesseract.js. Without Google TTS, speech falls back to browser Hebrew voices.
 
 ## Translation behavior
 
-Translations are requested only when the user clicks a translation button and are cached in memory for the current browser session.
+Translations use Google Cloud Translation NMT when selected in Settings and fall back to MyMemory if Google Translation is unavailable. Only the languages selected in Settings are requested, so choosing one language sends one translation request, two languages send two, and three languages send three.
 
-The free translation service has usage limits, so translation quality and availability may vary.
+Enable Google Translation:
+
+```bash
+gcloud services enable translate.googleapis.com
+python3 -m pip install -r requirements.txt
+```
 
 ## Privacy
 
@@ -251,4 +257,18 @@ Open:
 http://localhost:8000
 ```
 
-When Google credentials are available, the **Voice** selector shows the Google Hebrew voices before the system voices.
+When Google credentials are available, the **Voice** selector includes both the system Hebrew voice and Google Hebrew voices. The system voice remains the default unless another voice is selected.
+
+
+## Settings
+
+Open **Settings** with the gear button in the top-right corner.
+
+Settings include:
+
+- translation model: Google NMT or MyMemory
+- text recognition: Local Tesseract or Google Vision
+- voice: system Hebrew voices and Google Hebrew voices
+- translation languages: choose 1 to 3 from Ukrainian, English, and Russian
+
+The existing **Text recognition** and **Voice** dropdowns remain available in the main interface.
