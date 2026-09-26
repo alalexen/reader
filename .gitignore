@@ -5,3 +5,6 @@ __pycache__/
 
 # Ignore new Markdown working/docs files by default.
 *.md
+
+# Local database / service credentials.
+.env
