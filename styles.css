@@ -1775,7 +1775,7 @@ progress::-webkit-progress-value {
 }
 
 
-/* OCR controls align with the speech selector style. */
+/* Shared select styling keeps Voice, Text recognition, and Settings consistent. */
 .ocr-controls {
   display: flex;
   align-items: center;
@@ -1783,13 +1783,24 @@ progress::-webkit-progress-value {
   margin-top: 1rem;
 }
 
-.ocr-controls select {
+.ocr-controls label {
+  color: #745f52;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.speech-controls select,
+.ocr-controls select,
+.settings-modal select {
   max-width: 230px;
   padding: 0.65rem 0.8rem;
-  border: 2px solid var(--border);
-  border-radius: 13px;
+  border: 1px solid rgba(90, 25, 20, 0.2);
+  border-radius: 999px;
   color: var(--text);
-  background: #171c3d;
+  background: #f9efe5;
+  box-shadow: none;
 }
 
 .recognize-row {
@@ -1799,7 +1810,6 @@ progress::-webkit-progress-value {
 }
 
 .image-choice-actions {
-  display: flex;
   align-items: center;
   gap: 0.75rem;
 }
@@ -1822,20 +1832,6 @@ progress::-webkit-progress-value {
   content: close-quote;
 }
 
-
-/* Keep text-recognition and settings selects visually identical to Voice. */
-.speech-controls select,
-.ocr-controls select,
-.settings-modal select {
-  max-width: 230px;
-  padding: 0.65rem 0.8rem;
-  border: 2px solid var(--border);
-  border-radius: 13px;
-  color: var(--text);
-  background: #171c3d;
-  box-shadow: none;
-}
-
 .settings-gear {
   position: absolute;
   z-index: 6;
@@ -1849,7 +1845,7 @@ progress::-webkit-progress-value {
   border: 2px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
+  color: #fff8f1;
   font-size: 1.25rem;
   box-shadow: none;
 }
@@ -1947,4 +1943,40 @@ progress::-webkit-progress-value {
 
 .translation-item.is-hidden {
   display: none;
+}
+
+
+/* Hebrew prefix hints are intentionally presented as possible decompositions. */
+.word-structure-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(90, 25, 20, 0.15);
+}
+
+.word-structure-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.word-structure-part {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(90, 25, 20, 0.15);
+  border-radius: 999px;
+  background: #fffaf4;
+  color: var(--text);
+  font-family: "Arial Hebrew", Arial, sans-serif;
+}
+
+.prefix-part {
+  color: #5a1914;
+  background: #f6e8db;
+}
+
+.base-part {
+  font-weight: 700;
 }
