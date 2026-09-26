@@ -104,41 +104,41 @@ async function initializeVoiceSelector() {
   const browserVoices = getHebrewVoices();
   const googleVoices = await getGoogleTtsVoices();
   const preferredVoice = getPreferredHebrewVoice();
+  const defaultSystemVoice =
+    browserVoices.find((voice) => voice.default) || preferredVoice || null;
+
   const previousSelection =
-    state.preferredVoiceURI ||
-    googleVoices[0]?.voiceURI ||
-    preferredVoice?.voiceURI ||
-    "";
+    state.preferredVoiceURI || defaultSystemVoice?.voiceURI || "";
 
   elements.voiceSelect.replaceChildren();
 
-  googleVoices.forEach((voice, index) => {
+  if (defaultSystemVoice) {
+    const option = document.createElement("option");
+    option.value = defaultSystemVoice.voiceURI;
+    option.textContent = `${defaultSystemVoice.name} · system (default)`;
+    elements.voiceSelect.append(option);
+  }
+
+  browserVoices
+    .filter((voice) => voice.voiceURI !== defaultSystemVoice?.voiceURI)
+    .forEach((voice) => {
+      const option = document.createElement("option");
+      option.value = voice.voiceURI;
+      option.textContent = `${voice.name} · system`;
+      elements.voiceSelect.append(option);
+    });
+
+  googleVoices.forEach((voice) => {
     const option = document.createElement("option");
     option.value = voice.voiceURI;
-    option.textContent =
-      index === 0
-        ? `${voice.name} · ${voice.gender} (default)`
-        : `${voice.name} · ${voice.gender}`;
+    option.textContent = `${voice.name} · ${voice.gender}`;
     elements.voiceSelect.append(option);
   });
 
-  const defaultSystemVoice =
-    browserVoices.find((voice) => voice.default) || preferredVoice;
-
-  browserVoices.forEach((voice) => {
-    const option = document.createElement("option");
-    option.value = voice.voiceURI;
-    option.textContent =
-      voice.voiceURI === defaultSystemVoice?.voiceURI
-        ? `${voice.name} · system (default)`
-        : `${voice.name} · system`;
-    elements.voiceSelect.append(option);
-  });
-
-  if (!googleVoices.length && !browserVoices.length) {
+  if (!browserVoices.length && !googleVoices.length) {
     const option = document.createElement("option");
     option.value = "";
-    option.textContent = "System Hebrew voice";
+    option.textContent = "System Hebrew voice (default)";
     elements.voiceSelect.append(option);
   }
 
@@ -148,11 +148,10 @@ async function initializeVoiceSelector() {
 
   elements.voiceSelect.value = availableValues.includes(previousSelection)
     ? previousSelection
-    : availableValues[0] || "";
+    : defaultSystemVoice?.voiceURI || availableValues[0] || "";
 
   state.preferredVoiceURI = elements.voiceSelect.value;
 }
-
 async function speak(text) {
   return speakHebrew(
     text,
