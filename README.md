@@ -5,14 +5,15 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 ## Current MVP
 
 - Upload a photo of a Hebrew book page
-- Use Google Vision OCR for Hebrew text, with local Tesseract.js as a fallback
+- Choose Local Tesseract OCR by default or Google Vision OCR when configured
 - Edit OCR output manually
 - Render Hebrew text right-to-left
 - Click individual Hebrew words
 - Speak the full text or one selected word
 - Use Google Hebrew WaveNet voices when Google Cloud TTS is configured, with browser Hebrew voices as a fallback
 - Use speech speeds of 0.5×, 1×, 1.5×, and 2×
-- Translate words and sentences into Ukrainian, English, and Russian
+- Translate words and sentences with Google NMT or MyMemory
+- Show a conservative Hebrew-prefix hint for selected words
 - Open the selected word directly on the Reverso Context website
 - Save selected words to local flashcards
 - Speak saved words and their original source sentences
@@ -28,8 +29,10 @@ reader/
 ├── server.py
 ├── services/
 │   ├── flashcardsService.js
+│   ├── hebrewPrefixService.js
 │   ├── imageProcessingService.js
 │   ├── ocrService.js
+│   ├── settingsService.js
 │   ├── speechService.js
 │   └── translationService.js
 └── utils/
@@ -110,7 +113,7 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - Google Cloud Translation NMT (primary translation backend)
 - MyMemory Translation API fallback
 
-The core app still works without Google Cloud. Google Cloud Text-to-Speech and Vision are optional and require a Google Cloud project with billing enabled. Without Google Vision, OCR automatically falls back to local Tesseract.js. Without Google TTS, speech falls back to browser Hebrew voices.
+The core app still works without Google Cloud. Google Cloud Text-to-Speech, Vision, and Translation are optional and require a Google Cloud project with billing enabled. Local Tesseract is the default OCR engine. Google Vision can be selected in the UI and falls back to Tesseract if unavailable. Browser Hebrew speech remains available without Google TTS.
 
 ## Translation behavior
 
@@ -146,7 +149,7 @@ Quizlet does not currently expose a self-service public API for independent apps
 
 ## Google Vision OCR
 
-Google Vision is used first for Hebrew OCR. If it is unavailable, Hebrew Reader automatically falls back to local Tesseract.js.
+Local Tesseract is the default OCR engine. Google Vision can be selected from **Text recognition** or **Settings**. If Google Vision is unavailable, Hebrew Reader automatically falls back to local Tesseract.js.
 
 Enable the API:
 
@@ -272,3 +275,10 @@ Settings include:
 - translation languages: choose 1 to 3 from Ukrainian, English, and Russian
 
 The existing **Text recognition** and **Voice** dropdowns remain available in the main interface.
+
+
+## Hebrew prefix hints
+
+When a Hebrew word is selected, Hebrew Reader can show a **Possible word structure** section. It recognizes common attached letters such as `ב`, `כ`, `ל`, `מ`, `ו`, and `ה`, and displays a possible base word.
+
+This is intentionally a conservative spelling-based hint, not a full morphological or dictionary analysis. Hebrew prefixes can be ambiguous without lexical and sentence-level context.
