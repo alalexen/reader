@@ -188,6 +188,8 @@ HebPipe 4.0.2.0 is installed separately with `--no-deps` by `scripts/setup.py`. 
 
 The setup script downloads both pretrained Hebrew morphology assets used by the model: `heb.sm3` (RFTokenizer segmentation model) and `heb.seg` (Flair segmentation model), then runs a real morphology probe before reporting success.
 
+The distributed `heb.seg` checkpoint contains a Windows-specific serialized path. The backend applies a narrow compatibility shim only while loading that pretrained checkpoint on macOS/Linux, then immediately restores the standard `pathlib` behavior.
+
 ## Third-party licenses
 
 HebPipe code is licensed under Apache License 2.0. RFTokenizer code is also licensed under Apache License 2.0.
