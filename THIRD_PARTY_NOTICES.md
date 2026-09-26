@@ -2,36 +2,39 @@
 
 This project is personal and non-commercial.
 
-## RFTokenizer
+## HebPipe
 
-RFTokenizer is used as an optional local Hebrew morphological segmentation dependency.
+HebPipe is used as the local Hebrew NLP and morphological-analysis dependency.
 
-- Project: https://github.com/amir-zeldes/RFTokenizer
-- PyPI: https://pypi.org/project/rftokenizer/
+- Project: https://github.com/amir-zeldes/HebPipe
+- PyPI: https://pypi.org/project/hebpipe/
 - Author: Amir Zeldes
 - Code license: Apache License 2.0
-- Installed package version: 3.0.0
+- Installed package version: 4.0.2.0
 
-RFTokenizer is installed as a Python dependency and is not copied into this repository.
+HebPipe is installed as a Python dependency and its source code is not copied into this repository.
 
-## Hebrew segmentation data and model resources
+## HebPipe language-model resources
 
-The RFTokenizer upstream documentation states that the data provided for its Hebrew
-segmentation experiment is derived from the Universal Dependencies version of the
-Hebrew Treebank and is made available under CC BY-NC-SA 4.0.
+HebPipe's LICENSE.md states that while the HebPipe code is licensed under Apache License 2.0,
+some resources used for language models may use different licenses.
 
-- RFTokenizer licensing/data note:
-  https://github.com/amir-zeldes/RFTokenizer
-- UD Hebrew HTB:
-  https://github.com/UniversalDependencies/UD_Hebrew-HTB
-- CC BY-NC-SA 4.0:
-  https://creativecommons.org/licenses/by-nc-sa/4.0/
+This repository does not vendor HebPipe model files, training datasets, or downloaded model
+resources. They remain local to the developer machine and retain their upstream license and
+attribution requirements.
 
-This repository does not vendor RFTokenizer Hebrew model files or training datasets.
-If such files are downloaded locally for personal use, their upstream license and
-attribution requirements must be preserved.
+- HebPipe licensing note:
+  https://github.com/amir-zeldes/HebPipe/blob/master/LICENSE.md
+- HebPipe model documentation:
+  https://github.com/amir-zeldes/HebPipe
+
+## Transitive dependencies
+
+HebPipe installs additional third-party Python packages required by its NLP pipeline.
+Those packages are transitive dependencies of HebPipe rather than direct dependencies
+declared by Hebrew Reader, and each retains its own upstream license.
 
 ## Scope
 
-The notices in this file are intended to document third-party dependencies used by
-this project. They do not change the licenses of the third-party projects.
+The notices in this file document third-party software and resources used by this project.
+They do not modify or replace the licenses of those third-party projects or model resources.
