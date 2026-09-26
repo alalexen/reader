@@ -7,7 +7,7 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
-import { translateIntoLanguages } from "./services/translationService.js";
+import { translateIntoLanguages } from "./services/translationService.js?v=google-nmt-1";
 import {
   buildQuizletImportText,
   loadFlashcards,
