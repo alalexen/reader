@@ -13,7 +13,7 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Use Google Hebrew WaveNet voices when Google Cloud TTS is configured, with browser Hebrew voices as a fallback
 - Use speech speeds of 0.5×, 1×, 1.5×, and 2×
 - Translate words and sentences with Google NMT or MyMemory
-- Show a conservative Hebrew-prefix hint for selected words
+- Show sentence-aware Hebrew morphological segmentation for selected words
 - Open the selected word directly on the Reverso Context website
 - Save selected words to local flashcards
 - Speak saved words and their original source sentences
@@ -29,7 +29,7 @@ reader/
 ├── server.py
 ├── services/
 │   ├── flashcardsService.js
-│   ├── hebrewPrefixService.js
+│   ├── hebrewMorphologyService.js
 │   ├── imageProcessingService.js
 │   ├── ocrService.js
 │   ├── settingsService.js
@@ -112,7 +112,7 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - Web Speech API fallback
 - Google Cloud Translation NMT (primary translation backend)
 - MyMemory Translation API fallback
-- RFTokenizer 3.0.0 for local Hebrew morphological segmentation
+- HebPipe 4.0.2.0 for local Hebrew morphological analysis
 
 The core app still works without Google Cloud. Google Cloud Text-to-Speech, Vision, and Translation are optional and require a Google Cloud project with billing enabled. Local Tesseract is the default OCR engine. Google Vision can be selected in the UI and falls back to Tesseract if unavailable. Browser Hebrew speech remains available without Google TTS.
 
@@ -278,17 +278,19 @@ Settings include:
 The existing **Text recognition** and **Voice** dropdowns remain available in the main interface.
 
 
-## Hebrew prefix analysis
+## Hebrew morphology with HebPipe
 
-When a Hebrew word is selected, Hebrew Reader sends that word to the local Python backend. The backend uses RFTokenizer's Hebrew model to segment attached morphemes, for example a prefix and the remaining word form.
+When a Hebrew word is selected, Hebrew Reader sends the selected word together with its surrounding sentence to the local Python backend. The backend uses HebPipe's Hebrew segmentation model and returns the segmentation for the selected word.
 
-RFTokenizer runs locally. If it is unavailable, the frontend falls back to a deliberately conservative single-prefix hint rather than repeatedly stripping possible prefixes.
+There is no spelling-based fallback. If HebPipe is unavailable or does not produce a useful segmentation, Hebrew Reader hides the word-structure hint instead of guessing.
 
-Install the local morphology dependency with the rest of the Python requirements:
+Install HebPipe with the rest of the Python dependencies:
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
+
+HebPipe model files are not bundled with this repository. On a new machine, run HebPipe once and allow its official setup flow to download the required local models.
 
 Check the local morphology backend:
 
@@ -296,17 +298,15 @@ Check the local morphology backend:
 http://localhost:8000/api/morphology/status
 ```
 
-RFTokenizer performs morphological segmentation rather than full dictionary lemmatization, so the UI labels the result as a possible word structure.
+A response with `"available": true` means both the package and the Hebrew segmentation model are available. A `model_missing` response means HebPipe is installed but its local model still needs to be downloaded.
 
 
 ## Third-party licenses
 
 This personal, non-commercial project uses third-party open-source software.
 
-RFTokenizer is installed as a Python dependency and is licensed under Apache License 2.0.
-The upstream RFTokenizer documentation states that data used for its Hebrew segmentation
-experiment is derived from the Universal Dependencies Hebrew Treebank and is available
-under CC BY-NC-SA 4.0.
+HebPipe 4.0.2.0 is installed as a Python dependency. HebPipe code is licensed under Apache License 2.0. The HebPipe license explicitly notes that some language-model resources may use different licenses.
 
-No RFTokenizer Hebrew model files or training datasets are committed to this repository.
+HebPipe model files are downloaded locally and are not committed to this repository. Transitive packages installed by HebPipe retain their own upstream licenses.
+
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution and license details.
