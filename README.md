@@ -69,17 +69,39 @@ git switch main
 git pull
 ```
 
-### 3. Start a local web server
+### 3. Install the local Python environment on macOS
 
-Do not open `index.html` directly from Finder because the project now uses JavaScript modules.
+HebPipe 4.0.2.0 requires Python 3.12 and has an upstream dependency conflict between
+`stanza` and `diaparser`. The project setup script follows HebPipe's own Docker
+installation strategy: it installs the compatible runtime dependencies first, then
+installs DiaParser and HebPipe without re-running their conflicting dependency metadata.
 
-If Python 3 is installed:
+Install Python 3.12 if needed:
 
 ```bash
-python3 server.py
+brew install python@3.12
 ```
 
-### 4. Open the app
+Then run:
+
+```bash
+bash scripts/setup_macos.sh
+```
+
+The setup script recreates `.venv` with Python 3.12, installs all required Python
+packages, and downloads HebPipe's pretrained Hebrew model files. No model training is
+required.
+
+### 4. Start the local web server
+
+Do not open `index.html` directly from Finder because the project uses JavaScript modules.
+
+```bash
+source .venv/bin/activate
+python server.py
+```
+
+### 5. Open the app
 
 Open this address in your browser:
 
@@ -96,8 +118,12 @@ A simple workflow for local changes is:
 ```bash
 git switch feature/mvp-reader
 git pull
-python3 server.py
+source .venv/bin/activate
+python server.py
 ```
+
+Re-run `bash scripts/setup_macos.sh` only when the Python environment or pinned
+dependencies need to be rebuilt.
 
 Edit the files in VS Code or another editor and refresh `http://localhost:8000` to see your changes.
 
@@ -124,8 +150,9 @@ Enable Google Translation:
 
 ```bash
 gcloud services enable translate.googleapis.com
-python3 -m pip install -r requirements.txt
 ```
+
+The Google Translation client is installed by `scripts/setup_macos.sh`.
 
 ## Privacy
 
@@ -158,11 +185,7 @@ Enable the API:
 gcloud services enable vision.googleapis.com
 ```
 
-Install the dependency:
-
-```bash
-python3 -m pip install -r requirements.txt
-```
+The Google Vision client is installed by `scripts/setup_macos.sh`.
 
 The same Application Default Credentials used for Google TTS are used for Vision OCR.
 
@@ -240,10 +263,9 @@ gcloud auth application-default print-access-token >/dev/null && echo "ADC OK"
 ### Run on macOS
 
 ```bash
-python3 -m venv .venv
+bash scripts/setup_macos.sh
 source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-python3 server.py
+python server.py
 ```
 
 ### Run on Windows
@@ -284,13 +306,13 @@ When a Hebrew word is selected, Hebrew Reader sends the selected word together w
 
 There is no spelling-based fallback. If HebPipe is unavailable or does not produce a useful segmentation, Hebrew Reader hides the word-structure hint instead of guessing.
 
-Install HebPipe with the rest of the Python dependencies:
+HebPipe is installed by `scripts/setup_macos.sh`. The script uses Python 3.12,
+installs HebPipe's compatible CPU dependency set, and follows HebPipe's official
+workaround for its published `stanza` / `diaparser` resolver conflict.
 
-```bash
-python3 -m pip install -r requirements.txt
-```
-
-HebPipe model files are not bundled with this repository. On a new machine, run HebPipe once and allow its official setup flow to download the required local models.
+HebPipe model files are not bundled with this repository. The setup script invokes
+HebPipe's own model download flow and stores the pretrained models locally. No training
+is required.
 
 Check the local morphology backend:
 
