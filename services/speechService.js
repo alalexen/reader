@@ -152,7 +152,7 @@ function speakWithBrowser(text, rate = 1, voiceURI = "") {
   window.speechSynthesis.speak(utterance);
 }
 
-function splitForGoogleTts(text, maxLength = 3200) {
+function splitForGoogleTts(text, maxLength = 1800) {
   const normalized = text.replace(/\r\n/g, "\n").trim();
 
   if (normalized.length <= maxLength) {
