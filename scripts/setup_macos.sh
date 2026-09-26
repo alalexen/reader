@@ -32,6 +32,27 @@ python --version
 echo
 echo "HebPipe package:"
 python -m pip show hebpipe | sed -n '1,6p'
+
+HEBPIPE_DIR="$(python - <<'PY'
+import importlib.util
+spec = importlib.util.find_spec("hebpipe")
+if spec is None or not spec.submodule_search_locations:
+    raise SystemExit("HebPipe package was not found after installation.")
+print(next(iter(spec.submodule_search_locations)))
+PY
+)"
+
+HEBPIPE_SCRIPT="$HEBPIPE_DIR/heb_pipe.py"
+TMP_INPUT="$(mktemp)"
+printf 'למקום\n' > "$TMP_INPUT"
+
+echo
+echo "Downloading HebPipe pretrained Hebrew models if they are missing..."
+printf 'Y\n' | python "$HEBPIPE_SCRIPT" -wt -o pipes --cpu "$TMP_INPUT"
+rm -f "$TMP_INPUT"
+
 echo
 echo "Setup complete."
-echo "Next: run HebPipe once to download its Hebrew model files, then start server.py."
+echo "Start the app with:"
+echo "  source .venv/bin/activate"
+echo "  python server.py"
