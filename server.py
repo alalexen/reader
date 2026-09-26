@@ -80,69 +80,79 @@ def get_hebpipe_package_dir():
 
 
 def get_hebpipe_required_model_paths():
-    """Return the local HebPipe model files required by the selected pipeline."""
+    """Return the HebPipe model files required by segmentation."""
     model_dir = get_hebpipe_package_dir() / "models"
     python_major = sys.version_info[0]
 
     return [
         model_dir / f"heb.sm{python_major}",
-        model_dir / "heb.xrm",
     ]
 
 
-def load_hebpipe_runtime():
-    """Load HebPipe's runtime module without executing hebpipe.__init__."""
+def load_hebpipe_segmentation_runtime():
+    """Load only HebPipe segmentation helpers without importing Xrenner/NER."""
     global _hebpipe_runtime
 
     if _hebpipe_runtime is not None:
         return _hebpipe_runtime
 
     package_dir = get_hebpipe_package_dir()
-    module_path = package_dir / "heb_pipe.py"
-    spec = importlib.util.spec_from_file_location(
-        "_hebrew_reader_hebpipe_runtime",
-        module_path,
+
+    whitespace_path = package_dir / "lib" / "whitespace_tokenize.py"
+    sent_split_path = package_dir / "lib" / "sent_split.py"
+
+    def load_module(name, path):
+        spec = importlib.util.spec_from_file_location(name, path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not load HebPipe module: {path.name}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    whitespace_module = load_module(
+        "_hebrew_reader_hebpipe_whitespace",
+        whitespace_path,
+    )
+    sent_split_module = load_module(
+        "_hebrew_reader_hebpipe_sent_split",
+        sent_split_path,
     )
 
-    if spec is None or spec.loader is None:
-        raise ImportError("Could not load HebPipe runtime.")
+    from rftokenizer import RFTokenizer
 
-    if str(package_dir) not in sys.path:
-        sys.path.insert(0, str(package_dir))
+    model_path = get_hebpipe_package_dir() / "models" / f"heb.sm{sys.version_info[0]}"
+    if not model_path.exists():
+        raise FileNotFoundError("HebPipe Hebrew segmentation model is not installed.")
 
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    _hebpipe_runtime = module
-    return module
+    tokenizer = RFTokenizer(model=str(model_path))
+
+    _hebpipe_runtime = {
+        "tokenizer": tokenizer,
+        "whitespace_tokenize": whitespace_module.tokenize,
+        "toks_to_sents": sent_split_module.toks_to_sents,
+        "abbr_path": str(package_dir / "data" / "heb_abbr.tab"),
+    }
+    return _hebpipe_runtime
 
 
 def analyze_hebrew_with_hebpipe(sentence, target_word):
-    """Segment a selected word using HebPipe and its surrounding sentence."""
-    missing_models = [
-        path for path in get_hebpipe_required_model_paths() if not path.exists()
-    ]
+    """Segment a selected word using HebPipe's segmentation resources."""
+    runtime = load_hebpipe_segmentation_runtime()
 
-    if missing_models:
-        raise FileNotFoundError("HebPipe Hebrew models are not installed.")
+    tokenized = runtime["whitespace_tokenize"](
+        sentence.replace("\t", "").replace("\r", ""),
+        abbr=runtime["abbr_path"],
+        add_sents=False,
+        from_pipes=False,
+    )
 
-    runtime = load_hebpipe_runtime()
-    segmented_text = runtime.nlp(
-        sentence,
-        do_whitespace=True,
-        do_tok=True,
-        do_tag=False,
-        do_lemma=False,
-        do_parse=False,
-        do_entity=False,
-        out_mode="pipes",
-        sent_tag=None,
-        preloaded=None,
-        cpu=True,
+    segmented_lines = runtime["tokenizer"].rf_tokenize(
+        tokenized.strip().split("\n")
     )
 
     target = target_word.strip()
-    for line in segmented_text.splitlines():
-        candidate = line.strip()
+    for line in segmented_lines:
+        candidate = str(line).strip()
 
         if candidate and candidate.replace("|", "") == target:
             return [segment for segment in candidate.split("|") if segment]
@@ -165,7 +175,7 @@ def check_hebpipe_runtime():
             "packagePath": str(package_dir),
         }
 
-    load_hebpipe_runtime()
+    load_hebpipe_segmentation_runtime()
     segments = analyze_hebrew_with_hebpipe("אני הולך למקום", "למקום")
 
     return {
