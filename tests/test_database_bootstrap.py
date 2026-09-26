@@ -35,6 +35,20 @@ class DatabaseBootstrapTests(unittest.TestCase):
 
             self.assertIsNone(port)
 
+    def test_existing_managed_config_does_not_override_external_local_url(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            data_dir = Path(temp_dir)
+            (data_dir / "PG_VERSION").write_text("15\n", encoding="utf-8")
+            config = {"port": 55432}
+
+            with patch.object(bootstrap_db, "DATA_DIR", data_dir):
+                matches = bootstrap_db.database_url_matches_managed(
+                    "postgresql+psycopg://127.0.0.1:5432/hebrew_reader",
+                    config,
+                )
+
+            self.assertFalse(matches)
+
     def test_different_database_name_is_not_managed(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             data_dir = Path(temp_dir)
