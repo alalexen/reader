@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local development server for Hebrew Reader, including optional Google TTS."""
+"""Local development server for Hebrew Reader, including optional Google Cloud services."""
 
 import json
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 HOST = "127.0.0.1"
 PORT = 8000
+MAX_OCR_IMAGE_BYTES = 15_000_000
 
 GOOGLE_HEBREW_VOICES = {
     "he-IL-Wavenet-A",
@@ -17,6 +18,8 @@ GOOGLE_HEBREW_VOICES = {
 
 _tts_client = None
 _tts_module = None
+_vision_client = None
+_vision_module = None
 
 
 def get_google_tts_client():
@@ -31,6 +34,20 @@ def get_google_tts_client():
     _tts_client = texttospeech.TextToSpeechClient()
     _tts_module = texttospeech
     return _tts_client, _tts_module
+
+
+def get_google_vision_client():
+    """Return an authenticated Google Cloud Vision client."""
+    global _vision_client, _vision_module
+
+    if _vision_client is not None:
+        return _vision_client, _vision_module
+
+    from google.cloud import vision
+
+    _vision_client = vision.ImageAnnotatorClient()
+    _vision_module = vision
+    return _vision_client, _vision_module
 
 
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
@@ -78,15 +95,53 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                 )
             return
 
+        if path == "/api/ocr/status":
+            try:
+                get_google_vision_client()
+                self.send_json(
+                    200,
+                    {
+                        "available": True,
+                        "provider": "google-vision",
+                    },
+                )
+            except ImportError:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "google-vision",
+                        "reason": "dependency_missing",
+                    },
+                )
+            except Exception as error:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "google-vision",
+                        "reason": "credentials_missing",
+                        "detail": type(error).__name__,
+                    },
+                )
+            return
+
         super().do_GET()
 
     def do_POST(self):
         path = urlparse(self.path).path
 
-        if path != "/api/tts":
-            self.send_error(404)
+        if path == "/api/tts":
+            self.handle_tts()
             return
 
+        if path == "/api/ocr":
+            self.handle_ocr()
+            return
+
+        self.send_error(404)
+
+    def handle_tts(self):
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
             if content_length <= 0 or content_length > 64_000:
@@ -100,7 +155,6 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             if not text:
                 raise ValueError("Text is required.")
 
-            # Browser code splits long passages before they reach this endpoint.
             if len(text) > 4_000:
                 raise ValueError("Text chunk is too long.")
 
@@ -151,10 +205,59 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
                 },
             )
 
+    def handle_ocr(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length <= 0 or content_length > MAX_OCR_IMAGE_BYTES:
+                raise ValueError("Invalid image size.")
+
+            content_type = self.headers.get("Content-Type", "")
+            if not content_type.startswith("image/"):
+                raise ValueError("An image is required.")
+
+            image_bytes = self.rfile.read(content_length)
+            client, vision = get_google_vision_client()
+
+            response = client.document_text_detection(
+                image=vision.Image(content=image_bytes),
+                image_context=vision.ImageContext(language_hints=["he"]),
+            )
+
+            if response.error.message:
+                raise RuntimeError(response.error.message)
+
+            text = (response.full_text_annotation.text or "").strip()
+            self.send_json(
+                200,
+                {
+                    "text": text,
+                    "provider": "google-vision",
+                },
+            )
+        except ValueError as error:
+            self.send_json(400, {"error": str(error)})
+        except ImportError:
+            self.send_json(
+                503,
+                {
+                    "error": "Google Vision dependency is not installed.",
+                    "code": "dependency_missing",
+                },
+            )
+        except Exception as error:
+            print(f"Google Vision OCR failed: {error}")
+            self.send_json(
+                503,
+                {
+                    "error": "Google Vision OCR is unavailable.",
+                    "code": type(error).__name__,
+                },
+            )
+
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), HebrewReaderHandler)
     print(f"Hebrew Reader is running at http://{HOST}:{PORT}")
-    print("Google WaveNet is used when Application Default Credentials are available.")
+    print("Google WaveNet and Vision OCR are used when Application Default Credentials are available.")
     print("Press Control + C to stop.")
     server.serve_forever()
