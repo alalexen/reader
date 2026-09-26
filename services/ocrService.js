@@ -48,9 +48,19 @@ async function recognizeWithTesseract(image, onProgress) {
 }
 
 /**
- * Uses Google Vision OCR first and falls back to local Tesseract.js.
+ * Runs the selected OCR engine. Google Vision falls back to local Tesseract.js
+ * if the cloud request is unavailable.
  */
-export async function recognizeHebrewText(image, onProgress = () => {}) {
+export async function recognizeHebrewText(
+  image,
+  provider = "tesseract",
+  onProgress = () => {},
+) {
+  if (provider !== "google-vision") {
+    const text = await recognizeWithTesseract(image, onProgress);
+    return { text, provider: "tesseract" };
+  }
+
   try {
     const text = await recognizeWithGoogleVision(image, onProgress);
 
