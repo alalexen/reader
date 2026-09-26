@@ -5,12 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=crop-hero-20260926-1" />
+  <link rel="stylesheet" href="styles.css?v=refactor-1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <main class="app-shell">
     <header class="hero card hero-card">
+      <button
+        id="openSettingsButton"
+        type="button"
+        class="settings-gear"
+        aria-label="Open settings"
+        title="Settings"
+      >⚙</button>
       <div class="hero-copy">
         <p class="eyebrow">Hebrew learning tool</p>
         <h1>Hebrew Reader</h1>
@@ -66,6 +73,9 @@
           <button id="cropImageButton" type="button" class="secondary">
             Crop image
           </button>
+          <button id="clearButton" type="button" class="secondary clear-image-button">
+            Clear
+          </button>
         </div>
 
         <div id="cropControls" class="crop-controls hidden">
@@ -78,9 +88,16 @@
         </div>
       </div>
 
-      <div class="actions">
+      <div class="ocr-controls">
+        <label for="ocrEngine">Text recognition</label>
+        <select id="ocrEngine" class="ocr-select">
+          <option value="tesseract" selected>Local Tesseract (default)</option>
+          <option value="google-vision">Google Vision</option>
+        </select>
+      </div>
+
+      <div class="recognize-row">
         <button id="recognizeButton" type="button" disabled>Recognize Hebrew text</button>
-        <button id="clearButton" type="button" class="secondary">Clear</button>
       </div>
 
       <div id="ocrStatus" class="status" aria-live="polite"></div>
@@ -96,7 +113,7 @@
               <h2>Read the text</h2>
             </div>
           </div>
-          <p>Every Hebrew word is clickable.</p>
+          <p>Edit the text, then switch it to clickable reading mode.</p>
         </div>
 
         <div class="speech-controls">
@@ -117,20 +134,25 @@
         </div>
       </div>
 
-      <textarea
-        id="editableText"
-        class="editable-text"
-        dir="rtl"
-        lang="he"
-        placeholder="Recognized Hebrew text will appear here. You can also type or correct the text manually."
-      ></textarea>
+      <div id="textWorkspace" class="text-workspace">
+        <textarea
+          id="editableText"
+          class="editable-text"
+          dir="rtl"
+          lang="he"
+          placeholder="Recognized Hebrew text will appear here. You can also type or correct the text manually."
+        ></textarea>
 
-      <div class="actions">
-        <button id="renderButton" type="button">Make words clickable</button>
+        <div id="reader" class="reader hidden" dir="rtl" lang="he"></div>
       </div>
 
-      <div id="reader" class="reader" dir="rtl" lang="he">
-        <p class="empty-state">Your Hebrew text will appear here.</p>
+      <div class="text-workspace-actions">
+        <button id="renderButton" type="button" class="hidden">
+          Make words clickable
+        </button>
+        <button id="resizeTextButton" type="button" class="secondary">
+          Expand
+        </button>
       </div>
     </section>
 
@@ -194,6 +216,16 @@
         </button>
       </div>
 
+      <section id="wordStructureSection" class="word-structure-section hidden">
+        <div class="translation-heading">
+          <div>
+            <h3>Possible word structure</h3>
+            <p class="section-help">Automated Hebrew segmentation. It may contain errors.</p>
+          </div>
+        </div>
+        <div id="wordStructureParts" class="word-structure-parts"></div>
+      </section>
+
       <section class="translation-section word-translation-section">
         <div class="translation-heading">
           <h3>Word translation</h3>
@@ -201,15 +233,15 @@
         </div>
 
         <div class="translation-grid">
-          <div class="translation-item accent-pink">
+          <div class="translation-item accent-pink" data-language="uk">
             <span class="translation-label">Ukrainian</span>
             <span id="wordTranslationUk" class="translation-value" dir="ltr" lang="uk">—</span>
           </div>
-          <div class="translation-item accent-cyan">
+          <div class="translation-item accent-cyan" data-language="en">
             <span class="translation-label">English</span>
             <span id="wordTranslationEn" class="translation-value" dir="ltr" lang="en">—</span>
           </div>
-          <div class="translation-item accent-yellow">
+          <div class="translation-item accent-yellow" data-language="ru">
             <span class="translation-label">Russian</span>
             <span id="wordTranslationRu" class="translation-value" dir="ltr" lang="ru">—</span>
           </div>
@@ -230,15 +262,15 @@
         </div>
 
         <div class="translation-grid">
-          <div class="translation-item accent-pink">
+          <div class="translation-item accent-pink" data-language="uk">
             <span class="translation-label">Ukrainian</span>
             <span id="sentenceTranslationUk" class="translation-value" dir="ltr" lang="uk">—</span>
           </div>
-          <div class="translation-item accent-cyan">
+          <div class="translation-item accent-cyan" data-language="en">
             <span class="translation-label">English</span>
             <span id="sentenceTranslationEn" class="translation-value" dir="ltr" lang="en">—</span>
           </div>
-          <div class="translation-item accent-yellow">
+          <div class="translation-item accent-yellow" data-language="ru">
             <span class="translation-label">Russian</span>
             <span id="sentenceTranslationRu" class="translation-value" dir="ltr" lang="ru">—</span>
           </div>
@@ -268,6 +300,76 @@
   </main>
 
 
-  <script type="module" src="app.js?v=crop-hero-20260926-1"></script>
+  <div id="settingsBackdrop" class="settings-backdrop hidden" aria-hidden="true">
+    <section
+      id="settingsModal"
+      class="settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settingsTitle"
+    >
+      <div class="settings-header">
+        <div>
+          <p class="eyebrow">Preferences</p>
+          <h2 id="settingsTitle">Settings</h2>
+        </div>
+        <button
+          id="closeSettingsButton"
+          type="button"
+          class="icon-button"
+          aria-label="Close settings"
+          title="Close"
+        >×</button>
+      </div>
+
+      <div class="settings-grid">
+        <label class="settings-field">
+          <span>Translation model</span>
+          <select id="settingsTranslationProvider">
+            <option value="google-nmt">Google NMT</option>
+            <option value="mymemory">MyMemory</option>
+          </select>
+        </label>
+
+        <label class="settings-field">
+          <span>Text recognition</span>
+          <select id="settingsOcrEngine">
+            <option value="tesseract">Local Tesseract</option>
+            <option value="google-vision">Google Vision</option>
+          </select>
+        </label>
+
+        <label class="settings-field">
+          <span>Voice</span>
+          <select id="settingsVoiceSelect">
+            <option value="">Loading Hebrew voices...</option>
+          </select>
+        </label>
+      </div>
+
+      <fieldset class="language-settings">
+        <legend>Translation languages</legend>
+        <p>Choose 1 to 3 languages.</p>
+        <label>
+          <input type="checkbox" name="translationLanguage" value="uk" />
+          Ukrainian
+        </label>
+        <label>
+          <input type="checkbox" name="translationLanguage" value="en" />
+          English
+        </label>
+        <label>
+          <input type="checkbox" name="translationLanguage" value="ru" />
+          Russian
+        </label>
+      </fieldset>
+
+      <div class="settings-actions">
+        <button id="saveSettingsButton" type="button" disabled>Save</button>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="app.js?v=refactor-1"></script>
 </body>
 </html>

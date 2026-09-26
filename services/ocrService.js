@@ -1,14 +1,30 @@
 import { preprocessImageForOcr } from "./imageProcessingService.js";
 
-/**
- * Runs Hebrew OCR in the browser using Tesseract.js.
- */
-export async function recognizeHebrewText(image, onProgress = () => {}) {
+async function recognizeWithGoogleVision(image, onProgress) {
+  onProgress("Trying Google Vision OCR", 0.1);
+
+  const response = await fetch("/api/ocr", {
+    method: "POST",
+    headers: {
+      "Content-Type": image.type || "application/octet-stream",
+    },
+    body: image,
+  });
+
+  if (!response.ok) {
+    throw new Error("Google Vision OCR is unavailable.");
+  }
+
+  const payload = await response.json();
+  return (payload.text || "").trim();
+}
+
+async function recognizeWithTesseract(image, onProgress) {
   if (!window.Tesseract) {
     throw new Error("Tesseract.js is not available.");
   }
 
-  onProgress("Preparing image", 0);
+  onProgress("Preparing image for local OCR", 0);
 
   const processedImage = await preprocessImageForOcr(image);
 
@@ -28,5 +44,36 @@ export async function recognizeHebrewText(image, onProgress = () => {}) {
     return result.data.text.trim();
   } finally {
     await worker.terminate();
+  }
+}
+
+/**
+ * Runs the selected OCR engine. Google Vision falls back to local Tesseract.js
+ * if the cloud request is unavailable.
+ */
+export async function recognizeHebrewText(
+  image,
+  provider = "tesseract",
+  onProgress = () => {},
+) {
+  if (provider !== "google-vision") {
+    const text = await recognizeWithTesseract(image, onProgress);
+    return { text, provider: "tesseract" };
+  }
+
+  try {
+    const text = await recognizeWithGoogleVision(image, onProgress);
+
+    if (text) {
+      onProgress("Google Vision OCR complete", 1);
+      return { text, provider: "google-vision" };
+    }
+
+    throw new Error("Google Vision returned no text.");
+  } catch (error) {
+    console.warn("Google Vision OCR failed, using Tesseract.js:", error);
+    onProgress("Google Vision unavailable. Using local OCR", 0);
+    const text = await recognizeWithTesseract(image, onProgress);
+    return { text, provider: "tesseract" };
   }
 }

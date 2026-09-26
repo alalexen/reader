@@ -1,137 +1,216 @@
 # Hebrew Reader
 
-Hebrew Reader is a free browser-based learning tool for reading Hebrew from photos.
+Hebrew Reader is a browser-based Hebrew study tool for reading text from photos, listening to Hebrew, translating selected words and sentences, and saving vocabulary.
 
-## Current MVP
+## Requirements
 
-- Upload a photo of a Hebrew book page
-- Run Hebrew OCR directly in the browser with Tesseract.js
-- Edit OCR output manually
-- Render Hebrew text right-to-left
-- Click individual Hebrew words
-- Speak the full text or one selected word
-- Select from Hebrew voices exposed by the browser or operating system
-- Use speech speeds of 0.5×, 1×, 1.5×, and 2×
-- Translate words and sentences into Ukrainian, English, and Russian
-- Open the selected word directly on the Reverso Context website
-- Save selected words to local flashcards
-- Speak saved words and their original source sentences
-- Copy saved cards in Quizlet's tab-separated import format
+**Python 3.12 is required.**
 
-## Project structure
+The project is pinned to Python 3.12 because the local Hebrew morphology stack uses HebPipe 4.0.2.0 and its legacy Hebrew segmentation model format.
 
-```text
-reader/
-├── index.html
-├── styles.css
-├── app.js
-├── server.py
-├── services/
-│   ├── flashcardsService.js
-│   ├── imageProcessingService.js
-│   ├── ocrService.js
-│   ├── speechService.js
-│   └── translationService.js
-└── utils/
-    └── hebrew.js
-```
+You also need:
 
-The architecture intentionally separates responsibilities:
+- a modern browser
+- internet access during the first setup
+- Git
+- optional: Google Cloud credentials for Google Vision OCR, WaveNet TTS, and Google Translation
 
-- `app.js` manages page state and connects UI events to services.
-- `services/` contains integrations and application capabilities.
-- `utils/` contains small reusable Hebrew text helpers.
+No model training is required. The setup script downloads the pretrained Hebrew segmentation models automatically.
 
-## Run locally
+## Quick start
 
-### 1. Clone the repository
+Clone the repository and switch to the current feature branch:
 
 ```bash
 git clone https://github.com/alalexen/reader.git
 cd reader
-```
-
-### 2. Switch to the current feature branch
-
-Until Pull Request #1 is merged:
-
-```bash
 git switch feature/mvp-reader
 ```
 
-After the pull request is merged, you can use:
+Create the local environment:
+
+### macOS / Linux
 
 ```bash
-git switch main
-git pull
+python3.12 scripts/setup.py
+source .venv/bin/activate
+python server.py
 ```
 
-### 3. Start a local web server
+### Windows
 
-Do not open `index.html` directly from Finder because the project now uses JavaScript modules.
-
-If Python 3 is installed:
-
-```bash
-python3 server.py
+```powershell
+py -3.12 scripts/setup.py
+.\.venv\Scripts\activate
+python server.py
 ```
 
-### 4. Open the app
-
-Open this address in your browser:
+Then open:
 
 ```text
 http://localhost:8000
 ```
 
-Stop the server with `Control + C` in the terminal.
+The setup script deliberately recreates `.venv` so that dependency versions are reproducible.
 
-## Development workflow
+## Main features
 
-A simple workflow for local changes is:
+- photo upload and image cropping
+- Local Tesseract OCR
+- optional Google Vision OCR
+- editable right-to-left Hebrew text
+- clickable Hebrew words
+- browser Hebrew speech and optional Google WaveNet voices
+- 0.5×, 1×, 1.5×, and 2× speech rates
+- Google Translation with MyMemory fallback
+- local Hebrew morphological segmentation
+- Reverso Context external link
+- local flashcards
+- Quizlet-compatible text export
+- persistent user settings
 
-```bash
-git switch feature/mvp-reader
-git pull
-python3 server.py
+## Project structure
+
+```text
+reader/
+├── app.js
+├── index.html
+├── server.py
+├── styles.css
+├── styles/
+│   ├── core.css
+│   ├── features.css
+│   └── theme.css
+├── requirements.txt
+├── THIRD_PARTY_NOTICES.md
+├── backend/
+│   ├── __init__.py
+│   ├── google_cloud.py
+│   ├── http_handler.py
+│   └── morphology.py
+├── scripts/
+│   └── setup.py
+├── services/
+│   ├── flashcardsService.js
+│   ├── hebrewMorphologyService.js
+│   ├── imageProcessingService.js
+│   ├── ocrService.js
+│   ├── settingsService.js
+│   ├── speechService.js
+│   └── translationService.js
+├── ui/
+│   ├── elements.js
+│   ├── flashcardsController.js
+│   ├── imageController.js
+│   ├── readerController.js
+│   ├── sessionTimer.js
+│   ├── settingsController.js
+│   └── speechController.js
+└── utils/
+    └── hebrew.js
 ```
 
-Edit the files in VS Code or another editor and refresh `http://localhost:8000` to see your changes.
+`app.js` is now the composition root: it owns shared UI state and wires controllers together. Browser API/data logic lives in `services/`, DOM-focused behavior lives in `ui/`, and small Hebrew text helpers live in `utils/`. `styles.css` is only an entry point; base rules, the editorial theme, and feature-specific styles are separated under `styles/` while preserving cascade order. `server.py` is now only the server entry point; request handling, Google Cloud clients, and Hebrew morphology live in `backend/`.
 
-## Technology
+## Hebrew morphology
 
-- HTML
-- CSS
-- Vanilla JavaScript with ES modules
-- Tesseract.js
-- Web Speech API
-- MyMemory Translation API
+The word-structure panel uses the Hebrew segmentation resources distributed for HebPipe 4.0.2.0. HebPipe itself uses RFTokenizer for this segmentation step, so Hebrew Reader pins **RFTokenizer 2.2.0** because that version supports HebPipe's legacy `.sm3` model format.
 
-No paid backend or private API key is required for the current MVP.
+The app does not load HebPipe's full NLP pipeline, dependency parser, NER, or coreference stack. Only the resources needed for word segmentation are installed and loaded.
 
-## Translation behavior
+Morphological segmentation is automatic and can be wrong. The UI explicitly labels it as a possible word structure rather than a definitive linguistic analysis.
 
-Translations are requested only when the user clicks a translation button and are cached in memory for the current browser session.
+Check the local morphology backend:
 
-The free translation service has usage limits, so translation quality and availability may vary.
+```text
+http://localhost:8000/api/morphology/status
+```
 
-## Privacy
+A healthy response contains:
 
-OCR runs in the browser. The uploaded image is not intentionally stored by this application.
+```json
+{
+  "available": true,
+  "provider": "hebpipe"
+}
+```
 
-Selected text is sent to the configured translation service only when the user requests a translation.
+## OCR
 
+Local Tesseract is the default OCR engine and runs in the browser. Google Vision is optional.
 
-## Word reference
+When Google Vision is selected and unavailable, the app falls back to local Tesseract.
 
-- MyMemory provides automatic Ukrainian, English, and Russian translations.
-- Reverso Context is available only as an external website link for the selected word.
-- Hebrew Reader does not fetch, parse, proxy, or display Reverso example text inside the app.
+Backend status:
 
+```text
+http://localhost:8000/api/ocr/status
+```
 
-## Flashcards and Quizlet
+## Translation
 
-Flashcards are stored in the browser with `localStorage`. Each saved card contains the Hebrew word, Ukrainian/English/Russian translations, and the original sentence from the uploaded text.
+Google Cloud Translation NMT is the default translation provider when configured. MyMemory is available as an alternative and as a fallback.
 
-Quizlet does not currently expose a self-service public API for independent apps to create sets. Hebrew Reader therefore uses Quizlet's supported text-import workflow: click **Copy for Quizlet**, open Quizlet, create a flashcard set, choose **Import**, and paste the copied text.
+Supported target languages:
 
+- Ukrainian
+- English
+- Russian
+
+The app translates the selected full word as written. The morphology panel is informational and does not rewrite the text sent to Google Translation.
+
+## Speech
+
+The app can use Hebrew voices exposed by the browser's Web Speech API.
+
+When Google Cloud Text-to-Speech is configured, Google Hebrew WaveNet voices are also available.
+
+Backend status:
+
+```text
+http://localhost:8000/api/tts/status
+```
+
+## Optional Google Cloud setup
+
+Google Cloud is not required for the core local app.
+
+To use Google Vision, Google Translation, or Google WaveNet, configure Application Default Credentials:
+
+```bash
+gcloud auth application-default login
+```
+
+Enable only the APIs you want:
+
+```bash
+gcloud services enable vision.googleapis.com
+gcloud services enable translate.googleapis.com
+gcloud services enable texttospeech.googleapis.com
+```
+
+The corresponding Python clients are installed by `scripts/setup.py`.
+
+## Local data and privacy
+
+Flashcards and settings are stored in browser `localStorage`.
+
+Images are sent to Google only when Google Vision OCR is selected. Text is sent to the selected translation provider when a translation is requested. Browser TTS remains local to the browser; Google WaveNet sends requested text to Google Cloud.
+
+## Dependency notes
+
+Direct Python dependencies are declared in `requirements.txt`.
+
+HebPipe 4.0.2.0 is installed separately with `--no-deps` by `scripts/setup.py`. Hebrew Reader does not use HebPipe's full NLP pipeline, but the selected Hebrew segmentation model itself uses RFTokenizer + Flair/BERT features. For reproducibility, the compatible ML versions are pinned in `requirements.txt`, including scikit-learn 1.4.1.post1, Pandas 2.2.3, Flair 0.13.0, Torch 2.2.1, and Transformers 4.35.2. Stanza and DiaParser are not required by the app's segmentation path.
+
+The setup script downloads both pretrained Hebrew morphology assets used by the model: `heb.sm3` (RFTokenizer segmentation model) and `heb.seg` (Flair segmentation model), then runs a real morphology probe before reporting success.
+
+The distributed `heb.seg` checkpoint contains a Windows-specific serialized path. The backend applies a narrow compatibility shim only while loading that pretrained checkpoint on macOS/Linux, then immediately restores the standard `pathlib` behavior.
+
+## Third-party licenses
+
+HebPipe code is licensed under Apache License 2.0. RFTokenizer code is also licensed under Apache License 2.0.
+
+HebPipe explicitly notes that language-model resources can have separate licensing terms. RFTokenizer's upstream documentation states that its Hebrew segmentation experiment data is derived from the Universal Dependencies Hebrew Treebank, which is distributed under CC BY-NC-SA 4.0.
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the detailed attribution and license notes.
