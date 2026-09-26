@@ -17,3 +17,9 @@ torch==2.2.1
 transformers==4.35.2
 flair==0.13.0
 gensim==4.3.2
+
+# Persistent learning data.
+SQLAlchemy>=2.0,<3.0
+alembic>=1.13,<2.0
+psycopg[binary]>=3.1,<4.0
+python-dotenv>=1.0,<2.0
