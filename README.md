@@ -23,7 +23,7 @@ macOS / Linux:
 ```bash
 python3.12 scripts/setup.py
 source .venv/bin/activate
-python scripts/start.py
+python scripts/run_hebrew_reader.py
 ```
 
 Windows:
@@ -31,12 +31,12 @@ Windows:
 ```powershell
 py -3.12 scripts/setup.py
 .\.venv\Scripts\activate
-python scripts/start.py
+python scripts/run_hebrew_reader.py
 ```
 
 The Python setup recreates `.venv`, installs dependencies, installs the compatible HebPipe 4.0.2.0 segmentation stack, downloads the Hebrew segmentation models, and runs the local test suite.
 
-Then `scripts/start.py` performs the application bootstrap automatically:
+Then `scripts/run_hebrew_reader.py` performs the application bootstrap automatically:
 
 1. respects an existing `DATABASE_URL` if the user already configured PostgreSQL;
 2. otherwise creates a private PostgreSQL cluster under `~/.hebrew-reader/postgres`;
@@ -45,7 +45,7 @@ Then `scripts/start.py` performs the application bootstrap automatically:
 5. creates the `hebrew_reader` database if needed;
 6. creates the project-local `.env` if needed;
 7. applies all Alembic migrations;
-8. starts the Hebrew Reader web server.
+8. checks whether web port `8000` is occupied; if it is, stops the listening process (tries a graceful stop first, then a forced stop if needed);\n9. starts the Hebrew Reader web server on `http://127.0.0.1:8000`.
 
 The managed cluster runs independently of `brew services`, so Hebrew Reader does not stop, restart, reconfigure, or reuse a work PostgreSQL service.
 
@@ -60,7 +60,7 @@ http://127.0.0.1:8000
 For a new/empty database:
 
 ```bash
-python scripts/start.py --demo
+python scripts/run_hebrew_reader.py --demo
 ```
 
 The demo seed creates one short Hebrew text plus a few words, encounters, and starter cards. It is idempotent, and it refuses to seed an already-used database that contains learning data.
@@ -73,10 +73,10 @@ After the first setup:
 
 ```bash
 source .venv/bin/activate
-python scripts/start.py
+python scripts/run_hebrew_reader.py
 ```
 
-If the managed PostgreSQL cluster was stopped, `start.py` starts it again automatically before launching the app.
+If the managed PostgreSQL cluster was stopped, `run_hebrew_reader.py` starts it again automatically before launching the app. If port `8000` is already occupied, the launcher prints the PID/command it found, stops that listener, waits for the port to become free, and then reuses `8000`.
 
 `Control + C` stops the web server. The managed PostgreSQL process can stay running between sessions. To stop it too:
 
@@ -340,11 +340,12 @@ reader/
 │   ├── __init__.py
 │   ├── setup.py
 │   ├── bootstrap_db.py
-│   ├── start.py
+│   ├── run_hebrew_reader.py
 │   ├── stop_db.py
 │   ├── init_db.py
 │   └── seed_demo.py
 ├── tests/
+│   ├── test_app_runner.py
 │   ├── test_database_bootstrap.py
 │   └── test_database_schema.py
 ├── services/
