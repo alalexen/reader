@@ -7,7 +7,7 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
-import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-2";
+import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-3";
 import {
   loadSettings,
   saveSettings as persistSettings,
@@ -357,39 +357,52 @@ async function renderWordStructure(word, sentence, selectionId) {
     return;
   }
 
-  analysis.prefixes.forEach((prefix) => {
+  const appendPart = (tokenText, meaningText, className = "") => {
     const part = document.createElement("span");
-    part.className = "word-structure-part prefix-part";
+    part.className = `word-structure-part ${className}`.trim();
 
     const token = document.createElement("strong");
     token.className = "word-structure-token";
     token.dir = "rtl";
     token.lang = "he";
-    token.textContent = `${prefix.letter}־`;
+    token.textContent = tokenText;
 
     const meaning = document.createElement("span");
     meaning.className = "word-structure-meaning";
-    meaning.textContent = prefix.meaning;
+    meaning.textContent = meaningText;
 
     part.append(token, meaning);
     elements.wordStructureParts.append(part);
-  });
+  };
 
-  const base = document.createElement("span");
-  base.className = "word-structure-part base-part";
+  if (analysis.error) {
+    appendPart("HebPipe", analysis.error, "base-part");
+    elements.wordStructureSection.classList.remove("hidden");
+    return;
+  }
 
-  const baseToken = document.createElement("strong");
-  baseToken.className = "word-structure-token";
-  baseToken.dir = "rtl";
-  baseToken.lang = "he";
-  baseToken.textContent = analysis.baseWord;
+  if (!analysis.segmented) {
+    appendPart(analysis.originalWord, "No segmentation returned", "base-part");
+    elements.wordStructureSection.classList.remove("hidden");
+    return;
+  }
 
-  const baseLabel = document.createElement("span");
-  baseLabel.className = "word-structure-meaning";
-  baseLabel.textContent = "base word";
+  if (analysis.prefixes.length) {
+    analysis.prefixes.forEach((prefix) => {
+      appendPart(`${prefix.letter}־`, prefix.meaning, "prefix-part");
+    });
 
-  base.append(baseToken, baseLabel);
-  elements.wordStructureParts.append(base);
+    appendPart(analysis.baseWord, "base word", "base-part");
+  } else {
+    analysis.segments.forEach((segment, index) => {
+      appendPart(
+        segment,
+        index === analysis.segments.length - 1 ? "segment" : "morpheme",
+        index === analysis.segments.length - 1 ? "base-part" : "prefix-part",
+      );
+    });
+  }
+
   elements.wordStructureSection.classList.remove("hidden");
 }
 
