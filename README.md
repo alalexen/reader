@@ -30,7 +30,68 @@ Open:
 http://127.0.0.1:8000
 ```
 
-The setup script recreates `.venv`, installs the Python dependencies, installs the compatible HebPipe 4.0.2.0 segmentation stack, downloads the pretrained Hebrew segmentation models, and runs a real morphology probe before reporting success.
+The setup script recreates `.venv`, installs the Python dependencies, installs the compatible HebPipe 4.0.2.0 segmentation stack, downloads the pretrained Hebrew segmentation models, and runs morphology plus database-schema checks before reporting success.
+
+## PostgreSQL setup
+
+Persistent learning data is stored in PostgreSQL. The repository contains the schema and migrations, but never your personal database contents.
+
+Create an empty database:
+
+```bash
+createdb hebrew_reader
+```
+
+If your PostgreSQL installation does not provide the `createdb` helper, create a database named `hebrew_reader` with your usual PostgreSQL client.
+
+Copy the environment template:
+
+```bash
+cp .env.example .env
+```
+
+The default template uses:
+
+```text
+postgresql+psycopg://localhost/hebrew_reader
+```
+
+If PostgreSQL requires a username/password, change it to:
+
+```text
+postgresql+psycopg://USER:PASSWORD@127.0.0.1:5432/hebrew_reader
+```
+
+Apply the schema:
+
+```bash
+python scripts/init_db.py
+```
+
+Optional demo data:
+
+```bash
+python scripts/seed_demo.py
+```
+
+The demo seed is idempotent: running it again does not intentionally create duplicate demo words/cards.
+
+Check the database connection after starting the server:
+
+```bash
+curl http://127.0.0.1:8000/api/database/status
+```
+
+A healthy database returns:
+
+```json
+{
+  "available": true,
+  "provider": "postgresql"
+}
+```
+
+Your `.env` is ignored by Git. Someone cloning the repository receives the models, migrations and optional demo seed, but not your texts, cards, review history or any other PostgreSQL data.
 
 ## Default configuration
 
@@ -42,7 +103,7 @@ The application can run without Google Cloud credentials.
 | Voice | Hebrew voice exposed by the browser / operating system | The app automatically prefers an available Hebrew voice. Voice quality and availability depend on the machine and browser. |
 | Translation | Google NMT is selected in Settings; if the local Google backend is unavailable, the app falls back to MyMemory | The fallback keeps translation usable without credentials, but results can be less consistent than Google Cloud Translation. |
 | Word structure | Local HebPipe segmentation | This is an automatic possible decomposition, not a definitive linguistic analysis. |
-| Flashcards | Browser localStorage | Saved locally in the current browser profile. |
+| Flashcards | Browser localStorage (temporary during the current MVP) | Existing cards remain there until the Review/SRS migration step moves learning data into PostgreSQL. |
 
 ### Using the default voice
 
@@ -203,9 +264,13 @@ When a Google WaveNet voice is selected, long text is split into smaller chunks 
 
 ## Local data and privacy
 
-Flashcards and settings are stored in browser `localStorage`.
+PostgreSQL is the persistent store for the new learning-data model: texts, words, encounters, review cards/history and study sessions. The current MVP flashcard UI still uses browser `localStorage` until the SRS migration is implemented; this avoids losing existing cards during the transition.
+
+Small UI/preferences data can remain in browser `localStorage`.
 
 Images are sent to Google only when Google Vision is selected. Text is sent to the selected translation provider when translation is requested. Browser speech uses the browser/OS speech implementation; selecting a Google WaveNet voice sends the requested Hebrew text to Google Cloud Text-to-Speech.
+
+The database itself is not committed to Git. `.env` is ignored, while `.env.example` only documents the connection format.
 
 ## Project structure
 
@@ -215,14 +280,26 @@ reader/
 ├── index.html
 ├── server.py
 ├── requirements.txt
+├── alembic.ini
+├── .env.example
 ├── THIRD_PARTY_NOTICES.md
 ├── backend/
 │   ├── __init__.py
+│   ├── database.py
+│   ├── models.py
 │   ├── google_cloud.py
 │   ├── http_handler.py
-│   └── morphology.py
+│   ├── morphology.py
+│   └── repositories/
+│       └── learning_repository.py
+├── migrations/
+│   ├── env.py
+│   └── versions/
+│       └── 0001_learning_data.py
 ├── scripts/
-│   └── setup.py
+│   ├── setup.py
+│   ├── init_db.py
+│   └── seed_demo.py
 ├── services/
 │   ├── flashcardsService.js
 │   ├── hebrewMorphologyService.js
@@ -253,6 +330,8 @@ reader/
 ## Dependency notes
 
 Direct Python dependencies are declared in `requirements.txt`.
+
+Persistent learning data uses SQLAlchemy 2, Alembic, Psycopg 3 and PostgreSQL. Schema changes should be added as new Alembic revisions rather than editing an already-applied migration.
 
 HebPipe 4.0.2.0 is installed separately with `--no-deps` by `scripts/setup.py`. The selected Hebrew segmentation model uses RFTokenizer and Flair/BERT components, so the compatible ML versions are pinned, including scikit-learn 1.4.1.post1, Pandas 2.2.3, Flair 0.13.0, Torch 2.2.1, and Transformers 4.35.2.
 
