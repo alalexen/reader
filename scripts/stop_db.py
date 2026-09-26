@@ -3,21 +3,13 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from bootstrap_db import (
-    APP_HOME,
-    BootstrapError,
-    DATA_DIR,
-    MANAGED_CONFIG,
-    find_postgres_bin_dir,
-    run,
-)
+from bootstrap_db import BootstrapError, DATA_DIR, find_postgres_bin_dir, run
 
 
 def main() -> None:
