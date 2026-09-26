@@ -28,15 +28,26 @@ function splitPrefixSegment(segment) {
 }
 
 function buildWordStructure(word, segments, provider) {
-  if (!Array.isArray(segments) || segments.length < 2) {
-    return null;
+  const normalizedSegments = Array.isArray(segments)
+    ? segments.filter(Boolean)
+    : [];
+
+  if (normalizedSegments.length < 2) {
+    return {
+      originalWord: word,
+      provider,
+      segmented: false,
+      segments: normalizedSegments.length ? normalizedSegments : [word],
+      prefixes: [],
+      baseWord: word,
+    };
   }
 
   const prefixes = [];
   let index = 0;
 
-  while (index < segments.length - 1) {
-    const segmentPrefixes = splitPrefixSegment(segments[index]);
+  while (index < normalizedSegments.length - 1) {
+    const segmentPrefixes = splitPrefixSegment(normalizedSegments[index]);
 
     if (!segmentPrefixes.length) {
       break;
@@ -46,28 +57,24 @@ function buildWordStructure(word, segments, provider) {
     index += 1;
   }
 
-  if (!prefixes.length) {
-    return null;
-  }
-
-  const baseWord = segments.slice(index).join("");
-
-  if (!baseWord) {
-    return null;
-  }
+  const baseWord = prefixes.length
+    ? normalizedSegments.slice(index).join("")
+    : "";
 
   return {
     originalWord: word,
+    provider,
+    segmented: true,
+    segments: normalizedSegments,
     prefixes,
     baseWord,
-    provider,
   };
 }
 
 /**
- * Requests sentence-aware Hebrew morphological segmentation from the local
- * HebPipe backend. No spelling-based fallback is used: an unavailable or
- * inconclusive analyzer simply produces no structure hint.
+ * Requests Hebrew morphological segmentation from the local HebPipe backend.
+ * The raw HebPipe segments are preserved even when they cannot be classified
+ * as known prefixes, so the UI can show the analyzer result instead of hiding it.
  */
 export async function analyzeHebrewMorphology(word, sentence) {
   const cleanWord = stripHebrewMarks(word.trim());
@@ -89,11 +96,20 @@ export async function analyzeHebrewMorphology(word, sentence) {
       }),
     });
 
-    if (!response.ok) {
-      return null;
-    }
+    const payload = await response.json().catch(() => ({}));
 
-    const payload = await response.json();
+    if (!response.ok) {
+      return {
+        originalWord: cleanWord,
+        provider: "hebpipe",
+        error: payload.error || "HebPipe morphology is unavailable.",
+        code: payload.code || "request_failed",
+        segments: [],
+        prefixes: [],
+        segmented: false,
+        baseWord: cleanWord,
+      };
+    }
 
     return buildWordStructure(
       payload.word || cleanWord,
@@ -102,6 +118,15 @@ export async function analyzeHebrewMorphology(word, sentence) {
     );
   } catch (error) {
     console.info("HebPipe morphology is unavailable.", error);
-    return null;
+    return {
+      originalWord: cleanWord,
+      provider: "hebpipe",
+      error: "HebPipe morphology is unavailable.",
+      code: "network_error",
+      segments: [],
+      prefixes: [],
+      segmented: false,
+      baseWord: cleanWord,
+    };
   }
 }
