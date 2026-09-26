@@ -45,7 +45,8 @@ Then `scripts/run_hebrew_reader.py` performs the application bootstrap automatic
 5. creates the `hebrew_reader` database if needed;
 6. creates the project-local `.env` if needed;
 7. applies all Alembic migrations;
-8. checks whether web port `8000` is occupied; if it is, stops the listening process (tries a graceful stop first, then a forced stop if needed);\n9. starts the Hebrew Reader web server on `http://127.0.0.1:8000`.
+8. checks whether web port `8000` is occupied; if it is, stops the listening process (tries a graceful stop first, then a forced stop if needed);
+9. starts the Hebrew Reader web server on `http://127.0.0.1:8000`.
 
 The managed cluster runs independently of `brew services`, so Hebrew Reader does not stop, restart, reconfigure, or reuse a work PostgreSQL service.
 
