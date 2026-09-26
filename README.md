@@ -79,6 +79,11 @@ reader/
 ├── styles.css
 ├── requirements.txt
 ├── THIRD_PARTY_NOTICES.md
+├── backend/
+│   ├── __init__.py
+│   ├── google_cloud.py
+│   ├── http_handler.py
+│   └── morphology.py
 ├── scripts/
 │   └── setup.py
 ├── services/
@@ -93,7 +98,7 @@ reader/
     └── hebrew.js
 ```
 
-`app.js` owns UI state and event wiring. Reusable features live in `services/`, and small Hebrew text helpers live in `utils/`. The Python server exposes local API endpoints for optional Google services and Hebrew morphology.
+`app.js` owns UI state and event wiring. Reusable browser features live in `services/`, and small Hebrew text helpers live in `utils/`. `server.py` is now only the server entry point; request handling, Google Cloud clients, and Hebrew morphology live in `backend/`.
 
 ## Hebrew morphology
 
