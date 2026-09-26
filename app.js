@@ -7,7 +7,7 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
-import { analyzeHebrewPrefixes } from "./services/hebrewPrefixService.js";
+import { analyzeHebrewPrefixes } from "./services/hebrewPrefixService.js?v=rftokenizer-1";
 import {
   loadSettings,
   saveSettings as persistSettings,
@@ -347,13 +347,13 @@ function closeWordPanel() {
   elements.translationStatus.textContent = "";
 }
 
-function renderWordStructure(word) {
-  const analysis = analyzeHebrewPrefixes(word);
-
+async function renderWordStructure(word, selectionId) {
   elements.wordStructureParts.replaceChildren();
-  elements.wordStructureSection.classList.toggle("hidden", !analysis);
+  elements.wordStructureSection.classList.add("hidden");
 
-  if (!analysis) {
+  const analysis = await analyzeHebrewPrefixes(word);
+
+  if (selectionId !== state.wordSelectionId || !analysis) {
     return;
   }
 
@@ -390,6 +390,7 @@ function renderWordStructure(word) {
 
   base.append(baseToken, baseLabel);
   elements.wordStructureParts.append(base);
+  elements.wordStructureSection.classList.remove("hidden");
 }
 
 async function activateWord(token, sentence) {
@@ -410,7 +411,6 @@ async function activateWord(token, sentence) {
   };
 
   elements.selectedSentence.textContent = state.activeSentence;
-  renderWordStructure(word);
   elements.reversoLink.href =
     `https://context.reverso.net/translation/hebrew-english/${encodeURIComponent(word)}`;
   updateRememberButton();
@@ -420,7 +420,10 @@ async function activateWord(token, sentence) {
   elements.translationStatus.textContent = "";
   elements.wordPanel.classList.remove("hidden");
 
-  await translate(word, "word", selectionId);
+  await Promise.all([
+    renderWordStructure(word, selectionId),
+    translate(word, "word", selectionId),
+  ]);
   updateRememberButton();
 }
 
