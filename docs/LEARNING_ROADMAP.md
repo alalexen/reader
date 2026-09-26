@@ -181,7 +181,8 @@ Demo seed никогда не содержит личные данные пол�
 - [x] database health endpoint
 - [x] private managed PostgreSQL cluster outside the repository
 - [x] automatic first-run database bootstrap
-- [x] one-command app start via `scripts/start.py`
+- [x] one-command app start via `scripts/run_hebrew_reader.py`
+- [x] web-port 8000 cleanup before launch
 - [x] safe managed-database stop helper
 - [x] existing/custom `DATABASE_URL` is respected without touching that PostgreSQL service
 - [x] bootstrap safety tests
