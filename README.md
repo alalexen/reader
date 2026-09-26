@@ -77,6 +77,10 @@ reader/
 ├── index.html
 ├── server.py
 ├── styles.css
+├── styles/
+│   ├── core.css
+│   ├── features.css
+│   └── theme.css
 ├── requirements.txt
 ├── THIRD_PARTY_NOTICES.md
 ├── backend/
@@ -106,7 +110,7 @@ reader/
     └── hebrew.js
 ```
 
-`app.js` is now the composition root: it owns shared UI state and wires controllers together. Browser API/data logic lives in `services/`, DOM-focused behavior lives in `ui/`, and small Hebrew text helpers live in `utils/`. `server.py` is now only the server entry point; request handling, Google Cloud clients, and Hebrew morphology live in `backend/`.
+`app.js` is now the composition root: it owns shared UI state and wires controllers together. Browser API/data logic lives in `services/`, DOM-focused behavior lives in `ui/`, and small Hebrew text helpers live in `utils/`. `styles.css` is only an entry point; base rules, the editorial theme, and feature-specific styles are separated under `styles/` while preserving cascade order. `server.py` is now only the server entry point; request handling, Google Cloud clients, and Hebrew morphology live in `backend/`.
 
 ## Hebrew morphology
 
