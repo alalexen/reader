@@ -4,85 +4,50 @@ Hebrew Reader is a browser-based tool for studying Hebrew from real text: upload
 
 ## Setup
 
-**Python 3.12 is required.**
+**Python 3.12 and PostgreSQL are required.**
 
-From the project root, create the local environment:
+Hebrew Reader manages its own private PostgreSQL cluster for learning data. It does not need to use or restart a system/work PostgreSQL service.
 
-### macOS / Linux
-
-```bash
-python3.12 scripts/setup.py
-source .venv/bin/activate
-```
-
-### Windows
-
-```powershell
-py -3.12 scripts/setup.py
-.\.venv\Scripts\activate
-```
-
-The setup script recreates `.venv`, installs the Python dependencies, installs the compatible HebPipe 4.0.2.0 segmentation stack, downloads the pretrained Hebrew segmentation models, and runs morphology plus database-schema checks before reporting success.
-
-## PostgreSQL setup
-
-Persistent learning data is stored in PostgreSQL. The repository contains the schema and migrations, but never your personal database contents.
-
-Create an empty database:
+On macOS, if PostgreSQL is not installed:
 
 ```bash
-createdb hebrew_reader
+brew install postgresql@15
 ```
 
-If your PostgreSQL installation does not provide the `createdb` helper, create a database named `hebrew_reader` with your usual PostgreSQL client.
+On Linux/Windows, install PostgreSQL so `postgres`, `initdb`, `pg_ctl`, `createdb`, and `psql` are available. The bootstrap script also detects Homebrew PostgreSQL installations that are not on `PATH`.
 
-Copy the environment template:
+### First setup
 
 macOS / Linux:
 
 ```bash
-cp .env.example .env
+python3.12 scripts/setup.py
+source .venv/bin/activate
+python scripts/start.py
 ```
 
-Windows PowerShell:
+Windows:
 
 ```powershell
-Copy-Item .env.example .env
+py -3.12 scripts/setup.py
+.\.venv\Scripts\activate
+python scripts/start.py
 ```
 
-The default template uses:
+The Python setup recreates `.venv`, installs dependencies, installs the compatible HebPipe 4.0.2.0 segmentation stack, downloads the Hebrew segmentation models, and runs the local test suite.
 
-```text
-postgresql+psycopg://localhost/hebrew_reader
-```
+Then `scripts/start.py` performs the application bootstrap automatically:
 
-If PostgreSQL requires a username/password, change it to:
+1. respects an existing `DATABASE_URL` if the user already configured PostgreSQL;
+2. otherwise creates a private PostgreSQL cluster under `~/.hebrew-reader/postgres`;
+3. binds that managed server only to `127.0.0.1`;
+4. chooses a free port starting at `55432`;
+5. creates the `hebrew_reader` database if needed;
+6. creates the project-local `.env` if needed;
+7. applies all Alembic migrations;
+8. starts the Hebrew Reader web server.
 
-```text
-postgresql+psycopg://USER:PASSWORD@127.0.0.1:5432/hebrew_reader
-```
-
-Apply the schema:
-
-```bash
-python scripts/init_db.py
-```
-
-Optional demo data:
-
-```bash
-python scripts/seed_demo.py
-```
-
-The demo seed is idempotent: running it again does not intentionally create duplicate demo words/cards.
-
-The PostgreSQL layer is the foundation for Library, Review/SRS and progress. The current visible flashcard screen still reads its existing browser data until the SRS migration is implemented, so seeded database cards are not shown in that old list yet.
-
-Start the app:
-
-```bash
-python server.py
-```
+The managed cluster runs independently of `brew services`, so Hebrew Reader does not stop, restart, reconfigure, or reuse a work PostgreSQL service.
 
 Open:
 
@@ -90,7 +55,70 @@ Open:
 http://127.0.0.1:8000
 ```
 
-Check the database connection:
+### Optional demo data
+
+For a new/empty database:
+
+```bash
+python scripts/start.py --demo
+```
+
+The demo seed creates one short Hebrew text plus a few words, encounters, and starter cards. It is idempotent, and it refuses to seed an already-used database that contains learning data.
+
+The PostgreSQL layer is the foundation for Library, Review/SRS and progress. The current visible flashcard screen still reads its existing browser `localStorage` until the SRS migration step is implemented, so seeded database cards are not shown in that old list yet.
+
+### Later starts
+
+After the first setup:
+
+```bash
+source .venv/bin/activate
+python scripts/start.py
+```
+
+If the managed PostgreSQL cluster was stopped, `start.py` starts it again automatically before launching the app.
+
+`Control + C` stops the web server. The managed PostgreSQL process can stay running between sessions. To stop it too:
+
+```bash
+python scripts/stop_db.py
+```
+
+### Database-only commands
+
+Prepare/start the database without starting the web app:
+
+```bash
+python scripts/bootstrap_db.py
+```
+
+Prepare it and optionally add demo data:
+
+```bash
+python scripts/bootstrap_db.py --demo
+```
+
+Apply only Alembic migrations to the configured `DATABASE_URL`:
+
+```bash
+python scripts/init_db.py
+```
+
+### Using an existing PostgreSQL server
+
+If a user wants to use an existing local or remote PostgreSQL server instead of Hebrew Reader's managed cluster, create `.env` manually:
+
+```text
+DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:PORT/hebrew_reader
+```
+
+When `DATABASE_URL` already exists and there is no Hebrew Reader managed-cluster configuration, the bootstrap uses that database and does not modify any PostgreSQL service or data directory.
+
+The repository contains `.env.example` only as a connection-format example. The real `.env` is ignored by Git, so cloning the repository never downloads another user's database connection or learning data.
+
+### Verify the database
+
+With the app running:
 
 ```bash
 curl http://127.0.0.1:8000/api/database/status
@@ -104,8 +132,6 @@ A healthy database returns:
   "provider": "postgresql"
 }
 ```
-
-Your `.env` is ignored by Git. Someone cloning the repository receives the models, migrations and optional demo seed, but not your texts, cards, review history or any other PostgreSQL data.
 
 ## Default configuration
 
@@ -311,10 +337,15 @@ reader/
 │   └── versions/
 │       └── 0001_learning_data.py
 ├── scripts/
+│   ├── __init__.py
 │   ├── setup.py
+│   ├── bootstrap_db.py
+│   ├── start.py
+│   ├── stop_db.py
 │   ├── init_db.py
 │   └── seed_demo.py
 ├── tests/
+│   ├── test_database_bootstrap.py
 │   └── test_database_schema.py
 ├── services/
 │   ├── flashcardsService.js
