@@ -73,10 +73,10 @@ function buildWordStructure(word, segments, provider) {
 
 /**
  * Requests Hebrew morphological segmentation from the local HebPipe backend.
- * The raw HebPipe segments are preserved even when they cannot be classified
- * as known prefixes, so the UI can show the analyzer result instead of hiding it.
+ * Raw segments are preserved even when they cannot be classified as known
+ * prefixes, so the UI can show the analyzer result instead of hiding it.
  */
-export async function analyzeHebrewMorphology(word, sentence) {
+export async function analyzeHebrewMorphology(word) {
   const cleanWord = stripHebrewMarks(word.trim());
 
   if (!cleanWord) {
@@ -90,10 +90,7 @@ export async function analyzeHebrewMorphology(word, sentence) {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({
-        word: cleanWord,
-        sentence: sentence?.trim() || cleanWord,
-      }),
+      body: JSON.stringify({ word: cleanWord }),
     });
 
     const payload = await response.json().catch(() => ({}));
