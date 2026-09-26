@@ -114,7 +114,7 @@ if len(segments) < 2:
 print("Morphology probe:", "|".join(segments))
 """
     run(python, "-c", probe)
-    run(python, "-m", "unittest", "tests.test_database_schema")
+    run(python, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py")
 
     print()
     print("Setup complete.")
@@ -124,16 +124,11 @@ print("Morphology probe:", "|".join(segments))
     else:
         print("  source .venv/bin/activate")
     print()
-    print("For PostgreSQL-backed learning data:")
-    if os.name == "nt":
-        print("  Copy-Item .env.example .env")
-    else:
-        print("  cp .env.example .env")
-    print("  python scripts/init_db.py")
-    print("  # optional: python scripts/seed_demo.py")
+    print("Then start Hebrew Reader:")
+    print("  python scripts/start.py")
     print()
-    print("Start the app:")
-    print("  python server.py")
+    print("The start script prepares the private PostgreSQL database,")
+    print("applies migrations, and starts the web server.")
 
 
 if __name__ == "__main__":
