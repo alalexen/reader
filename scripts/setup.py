@@ -94,11 +94,15 @@ for target, url, label in downloads:
 
     probe = r"""
 import sklearn
+import pandas
 import flair
 from server import analyze_hebrew_word
 
 if sklearn.__version__ != "1.4.1.post1":
     raise SystemExit(f"Unexpected scikit-learn version: {sklearn.__version__}")
+
+if pandas.__version__ != "2.1.2":
+    raise SystemExit(f"Unexpected Pandas version: {pandas.__version__}")
 
 if flair.__version__ != "0.13.0":
     raise SystemExit(f"Unexpected Flair version: {flair.__version__}")
