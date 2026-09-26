@@ -1,4 +1,4 @@
-import { recognizeHebrewText } from "./services/ocrService.js?v=google-vision-1";
+import { recognizeHebrewText } from "./services/ocrService.js?v=google-vision-2";
 import {
   getGoogleTtsVoices,
   getHebrewVoices,
@@ -121,12 +121,15 @@ async function initializeVoiceSelector() {
     elements.voiceSelect.append(option);
   });
 
-  browserVoices.forEach((voice, index) => {
+  const defaultSystemVoice =
+    browserVoices.find((voice) => voice.default) || preferredVoice;
+
+  browserVoices.forEach((voice) => {
     const option = document.createElement("option");
     option.value = voice.voiceURI;
     option.textContent =
-      googleVoices.length === 0 && index === 0
-        ? `${voice.name} · system · recommended`
+      voice.voiceURI === defaultSystemVoice?.voiceURI
+        ? `${voice.name} · system (default)`
         : `${voice.name} · system`;
     elements.voiceSelect.append(option);
   });
@@ -444,7 +447,7 @@ async function runOcr() {
   elements.ocrProgress.classList.remove("hidden");
 
   try {
-    const text = await recognizeHebrewText(state.selectedImage, (status, progress) => {
+    const result = await recognizeHebrewText(state.selectedImage, (status, progress) => {
       const percentage =
         typeof progress === "number" ? ` ${Math.round(progress * 100)}%` : "";
 
@@ -455,10 +458,12 @@ async function runOcr() {
       elements.ocrStatus.textContent = `${status || "Processing"}${percentage}`;
     });
 
-    elements.editableText.value = text;
+    elements.editableText.value = result.text;
     renderClickableText();
     elements.ocrStatus.textContent =
-      "Hebrew text recognized. Review the text and correct any OCR mistakes if needed.";
+      result.provider === "google-vision"
+        ? "Recognized with Google Vision"
+        : "Recognized with local Tesseract (default)";
   } catch (error) {
     console.error("Hebrew OCR failed:", error);
     elements.ocrStatus.textContent =
