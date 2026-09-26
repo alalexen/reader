@@ -179,7 +179,13 @@ Demo seed никогда не содержит личные данные пол�
 - [x] optional demo seed
 - [x] schema tests without requiring a live DB
 - [x] database health endpoint
-- [ ] создать локальную PostgreSQL database и применить migration на машине разработчика
+- [x] private managed PostgreSQL cluster outside the repository
+- [x] automatic first-run database bootstrap
+- [x] one-command app start via `scripts/start.py`
+- [x] safe managed-database stop helper
+- [x] existing/custom `DATABASE_URL` is respected without touching that PostgreSQL service
+- [x] bootstrap safety tests
+- [x] создать локальную PostgreSQL database и применить migration на машине разработчика
 - [ ] перенести существующие browser flashcards в PostgreSQL в пункте 1
 
 ## Acceptance criteria
@@ -190,6 +196,10 @@ Demo seed никогда не содержит личные данные пол�
 - Схема versioned через Alembic.
 - `alembic upgrade head` / `scripts/init_db.py` создают одинаковую структуру.
 - Demo seed можно безопасно запускать повторно.
+- Первый запуск может подготовить базу без ручных `initdb`, `createdb` и Alembic-команд.
+- Managed PostgreSQL хранится вне Git в `~/.hebrew-reader/postgres`.
+- Managed PostgreSQL не использует и не перезапускает system/work PostgreSQL service.
+- При уже заданном внешнем `DATABASE_URL` bootstrap не управляет PostgreSQL service.
 - Изменения схемы делаются только новой migration.
 - UI не пишет в PostgreSQL напрямую.
 
