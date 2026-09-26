@@ -19,35 +19,23 @@
 
 ---
 
-# 0. Foundation: storage, migrations and tests
+# 0. Foundation: PostgreSQL, migrations and tests
 
-Это нужно сделать до крупных продуктовых функций, иначе Library, SRS, статистика и история быстро превратят localStorage в трудно поддерживаемую структуру.
+Это нужно сделать до крупных продуктовых функций. Все учебные данные должны иметь один постоянный источник правды, который не зависит от конкретного браузера.
 
-## Что меняем
+## Решение
 
-- Оставить `localStorage` для простых пользовательских настроек.
-- Перенести учебные данные в IndexedDB.
-- Ввести один слой доступа к данным, чтобы UI никогда не работал с IndexedDB напрямую.
-- Добавить версионирование схемы и миграции.
-- Мигрировать существующие flashcards из `localStorage` в новую базу при первом запуске.
-- Добавить минимальные автоматические тесты для:
-  - алгоритма повторений;
-  - миграции flashcards;
-  - вычисления daily progress;
-  - нормализации Hebrew words.
+- PostgreSQL — основное хранилище учебных данных.
+- SQLAlchemy 2 — ORM/data layer.
+- Alembic — versioned schema migrations.
+- Psycopg 3 — PostgreSQL driver.
+- `.env` хранит локальный `DATABASE_URL` и не попадает в Git.
+- `.env.example` показывает формат конфигурации.
+- `localStorage` остаётся только для лёгких UI/preferences данных.
+- Авторизация не нужна, пока приложение single-user.
+- IndexedDB не используется.
 
-## Предлагаемая структура
-
-```text
-services/
-  databaseService.js
-  libraryService.js
-  reviewService.js
-  progressService.js
-  backupService.js
-```
-
-## IndexedDB schema v1
+## Текущая schema v1
 
 ### texts
 
@@ -69,7 +57,7 @@ metadata
 
 ### words
 
-Одна запись на нормализованное Hebrew word/lexeme.
+Одна запись на нормализованную Hebrew word form.
 
 ```text
 id
@@ -119,7 +107,7 @@ state
 
 ### reviewEvents
 
-История ответов пользователя. Нужна для статистики и возможности позже улучшить алгоритм.
+История review-ответов.
 
 ```text
 id
@@ -141,13 +129,69 @@ mode                  # read | review | listening | dictation
 textId
 ```
 
+## Data access rule
+
+UI не работает с SQL/SQLAlchemy напрямую.
+
+```text
+Frontend
+   ↓
+HTTP API
+   ↓
+backend service / repository
+   ↓
+SQLAlchemy
+   ↓
+PostgreSQL
+```
+
+Это позволит менять backend implementation, не переписывая UI.
+
+## Demo data
+
+В репозитории должен быть optional idempotent seed script.
+
+Он создаёт:
+
+- один небольшой demo text;
+- несколько Hebrew words;
+- demo translations;
+- starter cards.
+
+Повторный запуск не должен дублировать данные.
+
+Demo seed никогда не содержит личные данные пользователя.
+
+## Existing flashcards
+
+Текущие flashcards пока остаются в browser `localStorage`, чтобы ничего не потерять до реализации Review.
+
+Во время пункта 1 будет сделана одноразовая migration/import существующих карточек в PostgreSQL. После успешной миграции учебные карточки больше не будут зависеть от browser storage.
+
+## Status
+
+- [x] PostgreSQL connection layer
+- [x] SQLAlchemy models
+- [x] Alembic configuration
+- [x] initial schema migration
+- [x] repository layer
+- [x] `.env.example`
+- [x] optional demo seed
+- [x] schema tests without requiring a live DB
+- [x] database health endpoint
+- [ ] создать локальную PostgreSQL database и применить migration на машине разработчика
+- [ ] перенести существующие browser flashcards в PostgreSQL в пункте 1
+
 ## Acceptance criteria
 
-- Существующие сохранённые слова не теряются.
-- Перезагрузка страницы не сбрасывает Library, review schedule и progress.
-- Схема имеет номер версии.
-- Любая следующая миграция может быть выполнена без ручного удаления browser data.
-- Доступ к учебным данным идёт только через service layer.
+- Clone репозитория не содержит пользовательские данные.
+- У каждого пользователя своя PostgreSQL database через собственный `DATABASE_URL`.
+- `.env` не попадает в Git.
+- Схема versioned через Alembic.
+- `alembic upgrade head` / `scripts/init_db.py` создают одинаковую структуру.
+- Demo seed можно безопасно запускать повторно.
+- Изменения схемы делаются только новой migration.
+- UI не пишет в PostgreSQL напрямую.
 
 ---
 
@@ -900,11 +944,14 @@ Seen 4 times in your reading
 
 ## Phase A — data foundation
 
-1. IndexedDB service
-2. schema + migrations
-3. migrate existing flashcards
-4. test foundation
-5. backup primitives
+1. PostgreSQL connection + `.env`
+2. SQLAlchemy schema + Alembic migrations
+3. repository/service layer
+4. database health check
+5. optional idempotent demo seed
+6. schema tests
+7. migrate existing browser flashcards when Review is implemented
+8. backup primitives
 
 ## Phase B — daily learning loop
 
@@ -966,69 +1013,67 @@ Upload/Paste остаются внутри Read, а не занимают вес
 
 # Database decision
 
-Для этого roadmap база данных понадобится.
+Для roadmap используется **PostgreSQL без IndexedDB**.
 
-## Что использовать сейчас
+## Почему PostgreSQL
 
-**IndexedDB в браузере** как основное локальное хранилище.
+Учебные данные должны быть одинаковыми независимо от того, открыт ли интерфейс в Chrome, Safari или другом обычном браузере, если они обращаются к одному backend.
 
-Причины:
+PostgreSQL хранит:
 
-- текущий продукт уже local-first;
-- не нужны аккаунты и backend auth;
-- тексты, review history и sessions сильно превосходят удобный масштаб localStorage;
-- IndexedDB умеет indexes, transactions и structured records;
-- приложение сможет работать локально;
-- это не привязывает учебную модель к Python development server.
+- Library texts;
+- words and encounters;
+- review cards and schedule;
+- review history;
+- study sessions;
+- progress data.
 
-Для текущей архитектуры лучше начать с native IndexedDB, завернув его в один `databaseService.js`. Так не появляется новый build step или обязательная сторонняя runtime dependency.
+## Single-user model
 
-## Что оставить в localStorage
+Пока приложение используется как personal/self-hosted tool:
 
-Только небольшие preferences:
+- таблица users не нужна;
+- login/auth не нужен;
+- все записи принадлежат одному владельцу database;
+- backend подключается к базе через один `DATABASE_URL`.
 
-- provider;
+Если приложение позже станет публично доступным в интернете или multi-user, перед таким deployment понадобится authentication/authorization и ownership columns.
+
+## Что остаётся в localStorage
+
+Только небольшие browser preferences, например:
+
 - selected voice;
-- OCR engine;
+- OCR provider;
+- translation provider;
 - translation languages;
-- daily goal settings;
-- UI preferences.
+- UI preferences;
+- возможно daily goal presentation settings.
 
-## Нужна ли серверная база сейчас
+Учебные данные не должны жить только в browser storage после их миграции.
 
-Нет.
+## Что происходит при clone репозитория
 
-SQLite в Python backend сейчас создал бы ненужную зависимость от запущенного локального сервера для пользовательских данных.
+Git содержит:
 
-PostgreSQL сейчас тоже преждевременен, потому что пока нет:
+- models;
+- migrations;
+- seed script;
+- `.env.example`.
 
-- accounts;
-- login;
-- multi-device sync;
-- shared data.
+Git не содержит:
 
-## Когда понадобится PostgreSQL
+- локальный `.env`;
+- PostgreSQL data directory;
+- личные тексты;
+- review history;
+- реальные flashcards пользователя.
 
-Если появятся:
+Новый пользователь создаёт свою database, указывает свой `DATABASE_URL`, применяет migrations и получает пустой профиль. Demo seed запускается отдельно и только по желанию.
 
-- аккаунты;
-- синхронизация между Mac/phone;
-- cloud backup;
-- web deployment для нескольких пользователей.
+## Backup
 
-Тогда лучше добавить server-side PostgreSQL и sync layer, при этом IndexedDB оставить local cache/offline store.
-
-Идеальная долгосрочная схема:
-
-```text
-UI
-  ↓
-repository/storage service
-  ↓
-IndexedDB ←→ optional sync API ←→ PostgreSQL
-```
-
-UI и learning logic не должны знать, где физически лежат данные.
+Позже backup/restore должен работать на уровне PostgreSQL data через application export/import, а не копированием browser storage.
 
 ---
 
