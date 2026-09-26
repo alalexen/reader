@@ -91,6 +91,7 @@ const translationElements = {
   },
 };
 
+// Mutable UI state. Persistent preferences are delegated to settingsService.
 const state = {
   selectedImage: null,
   originalImage: null,
@@ -111,6 +112,8 @@ function setTranslationPlaceholders(scope) {
     element.textContent = "—";
   });
 }
+
+// Settings UI helpers -------------------------------------------------------
 
 function applyTranslationLanguageVisibility() {
   const selected = new Set(state.settings.translationLanguages);
@@ -210,6 +213,8 @@ function saveSettings() {
   updateSettingsSaveButton();
 }
 
+// Speech --------------------------------------------------------------------
+
 function updateSpeechButtons() {
   const hasText = elements.editableText.value.trim().length > 0;
   elements.speakButton.disabled = !hasText;
@@ -280,6 +285,8 @@ async function speak(text) {
   );
 }
 
+// Selected-word panel -------------------------------------------------------
+
 function updateRememberButton() {
   const hasSelectedWord = Boolean(state.activeWordData?.word);
 
@@ -312,15 +319,35 @@ function renderWordStructure(word) {
   analysis.prefixes.forEach((prefix) => {
     const part = document.createElement("span");
     part.className = "word-structure-part prefix-part";
-    part.dir = "rtl";
-    part.textContent = `${prefix.letter}־  ${prefix.meaning}`;
+
+    const token = document.createElement("strong");
+    token.className = "word-structure-token";
+    token.dir = "rtl";
+    token.lang = "he";
+    token.textContent = `${prefix.letter}־`;
+
+    const meaning = document.createElement("span");
+    meaning.className = "word-structure-meaning";
+    meaning.textContent = prefix.meaning;
+
+    part.append(token, meaning);
     elements.wordStructureParts.append(part);
   });
 
   const base = document.createElement("span");
   base.className = "word-structure-part base-part";
-  base.dir = "rtl";
-  base.textContent = `${analysis.baseWord}  base word`;
+
+  const baseToken = document.createElement("strong");
+  baseToken.className = "word-structure-token";
+  baseToken.dir = "rtl";
+  baseToken.lang = "he";
+  baseToken.textContent = analysis.baseWord;
+
+  const baseLabel = document.createElement("span");
+  baseLabel.className = "word-structure-meaning";
+  baseLabel.textContent = "base word";
+
+  base.append(baseToken, baseLabel);
   elements.wordStructureParts.append(base);
 }
 
@@ -402,6 +429,8 @@ function renderClickableText() {
   splitIntoSentences(text).forEach(appendSentence);
   updateSpeechButtons();
 }
+
+// Image selection and cropping ---------------------------------------------
 
 function setImagePreview(file) {
   if (state.previewUrl) {
@@ -629,6 +658,8 @@ async function runOcr() {
   }
 }
 
+// Translation ---------------------------------------------------------------
+
 async function translate(text, scope, selectionId = null) {
   if (!text.trim()) {
     return null;
@@ -687,6 +718,8 @@ async function translate(text, scope, selectionId = null) {
     elements.translateSentenceButton.disabled = false;
   }
 }
+
+// Flashcards ----------------------------------------------------------------
 
 function createFlashcardElement(card) {
   const article = document.createElement("article");
@@ -884,6 +917,8 @@ function clearApp() {
 }
 
 
+// Session -------------------------------------------------------------------
+
 function initializeSessionTimer() {
   if (!elements.sessionTimer) {
     return;
@@ -910,6 +945,8 @@ function initializeSessionTimer() {
   updateTimer();
   window.setInterval(updateTimer, 1000);
 }
+
+// Event wiring --------------------------------------------------------------
 
 elements.imageInput.addEventListener("change", () => {
   const [file] = elements.imageInput.files;
