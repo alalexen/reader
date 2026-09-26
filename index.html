@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=settings-google-nmt-1" />
+  <link rel="stylesheet" href="styles.css?v=prefix-refactor-1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -211,6 +211,16 @@
         </button>
       </div>
 
+      <section id="wordStructureSection" class="word-structure-section hidden">
+        <div class="translation-heading">
+          <div>
+            <h3>Possible word structure</h3>
+            <p class="section-help">A spelling-based prefix hint, not a dictionary analysis.</p>
+          </div>
+        </div>
+        <div id="wordStructureParts" class="word-structure-parts"></div>
+      </section>
+
       <section class="translation-section word-translation-section">
         <div class="translation-heading">
           <h3>Word translation</h3>
@@ -355,6 +365,6 @@
     </section>
   </div>
 
-  <script type="module" src="app.js?v=settings-google-nmt-1"></script>
+  <script type="module" src="app.js?v=prefix-refactor-1"></script>
 </body>
 </html>
