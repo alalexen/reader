@@ -117,7 +117,7 @@ async function initializeVoiceSelector() {
     option.value = voice.voiceURI;
     option.textContent =
       index === 0
-        ? `${voice.name} · ${voice.gender} · recommended`
+        ? `${voice.name} · ${voice.gender} (default)`
         : `${voice.name} · ${voice.gender}`;
     elements.voiceSelect.append(option);
   });
