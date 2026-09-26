@@ -7,6 +7,11 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
+import { analyzeHebrewPrefixes } from "./services/hebrewPrefixService.js";
+import {
+  loadSettings,
+  saveSettings as persistSettings,
+} from "./services/settingsService.js";
 import { translateIntoLanguages } from "./services/translationService.js?v=google-nmt-1";
 import {
   buildQuizletImportText,
@@ -48,6 +53,8 @@ const elements = {
   closeWordPanelButton: document.querySelector("#closeWordPanelButton"),
   selectedWord: document.querySelector("#selectedWord"),
   selectedSentence: document.querySelector("#selectedSentence"),
+  wordStructureSection: document.querySelector("#wordStructureSection"),
+  wordStructureParts: document.querySelector("#wordStructureParts"),
   speakWordButton: document.querySelector("#speakWordButton"),
   speakSentenceButton: document.querySelector("#speakSentenceButton"),
   rememberWordButton: document.querySelector("#rememberWordButton"),
@@ -84,38 +91,6 @@ const translationElements = {
   },
 };
 
-const SETTINGS_STORAGE_KEY = "hebrewReaderSettings";
-const DEFAULT_SETTINGS = {
-  translationProvider: "google-nmt",
-  ocrEngine: "tesseract",
-  translationLanguages: ["uk", "en", "ru"],
-};
-
-function loadSettings() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "{}");
-    const languages = Array.isArray(saved.translationLanguages)
-      ? saved.translationLanguages.filter((code) => ["uk", "en", "ru"].includes(code))
-      : DEFAULT_SETTINGS.translationLanguages;
-
-    return {
-      translationProvider:
-        saved.translationProvider === "mymemory" ? "mymemory" : "google-nmt",
-      ocrEngine:
-        saved.ocrEngine === "google-vision" ? "google-vision" : "tesseract",
-      translationLanguages: languages.length
-        ? languages.slice(0, 3)
-        : DEFAULT_SETTINGS.translationLanguages,
-    };
-  } catch {
-    return { ...DEFAULT_SETTINGS };
-  }
-}
-
-function saveSettingsToStorage(settings) {
-  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-}
-
 const state = {
   selectedImage: null,
   originalImage: null,
@@ -143,6 +118,14 @@ function applyTranslationLanguageVisibility() {
   document.querySelectorAll("[data-language]").forEach((element) => {
     element.classList.toggle("is-hidden", !selected.has(element.dataset.language));
   });
+}
+
+function appendSelectOption(select, value, label) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  select.append(option);
+  return option;
 }
 
 function cloneVoiceOptionsIntoSettings() {
@@ -215,7 +198,7 @@ function saveSettings() {
     ocrEngine: draft.ocrEngine,
     translationLanguages: draft.translationLanguages,
   };
-  saveSettingsToStorage(state.settings);
+  persistSettings(state.settings);
 
   elements.ocrEngine.value = draft.ocrEngine;
   elements.voiceSelect.value = draft.voiceURI;
@@ -223,6 +206,7 @@ function saveSettings() {
   localStorage.setItem("hebrewReaderVoiceURI", state.preferredVoiceURI);
 
   applyTranslationLanguageVisibility();
+  renderFlashcards();
   updateSettingsSaveButton();
 }
 
@@ -238,40 +222,43 @@ async function initializeVoiceSelector() {
   const preferredVoice = getPreferredHebrewVoice();
   const defaultSystemVoice =
     browserVoices.find((voice) => voice.default) || preferredVoice || null;
-
   const previousSelection =
     state.preferredVoiceURI || defaultSystemVoice?.voiceURI || "";
 
   elements.voiceSelect.replaceChildren();
 
   if (defaultSystemVoice) {
-    const option = document.createElement("option");
-    option.value = defaultSystemVoice.voiceURI;
-    option.textContent = `${defaultSystemVoice.name} · system (default)`;
-    elements.voiceSelect.append(option);
+    appendSelectOption(
+      elements.voiceSelect,
+      defaultSystemVoice.voiceURI,
+      `${defaultSystemVoice.name} · system (default)`,
+    );
   }
 
   browserVoices
     .filter((voice) => voice.voiceURI !== defaultSystemVoice?.voiceURI)
     .forEach((voice) => {
-      const option = document.createElement("option");
-      option.value = voice.voiceURI;
-      option.textContent = `${voice.name} · system`;
-      elements.voiceSelect.append(option);
+      appendSelectOption(
+        elements.voiceSelect,
+        voice.voiceURI,
+        `${voice.name} · system`,
+      );
     });
 
   googleVoices.forEach((voice) => {
-    const option = document.createElement("option");
-    option.value = voice.voiceURI;
-    option.textContent = `${voice.name} · ${voice.gender}`;
-    elements.voiceSelect.append(option);
+    appendSelectOption(
+      elements.voiceSelect,
+      voice.voiceURI,
+      `${voice.name} · ${voice.gender}`,
+    );
   });
 
   if (!browserVoices.length && !googleVoices.length) {
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent = "System Hebrew voice (default)";
-    elements.voiceSelect.append(option);
+    appendSelectOption(
+      elements.voiceSelect,
+      "",
+      "System Hebrew voice (default)",
+    );
   }
 
   const availableValues = [...elements.voiceSelect.options].map(
@@ -284,6 +271,7 @@ async function initializeVoiceSelector() {
 
   state.preferredVoiceURI = elements.voiceSelect.value;
 }
+
 async function speak(text) {
   return speakHebrew(
     text,
@@ -305,8 +293,35 @@ function closeWordPanel() {
   state.wordSelectionId += 1;
   state.activeSentence = "";
   state.activeWordData = null;
+  elements.wordStructureParts.replaceChildren();
+  elements.wordStructureSection.classList.add("hidden");
   elements.wordPanel.classList.add("hidden");
   elements.translationStatus.textContent = "";
+}
+
+function renderWordStructure(word) {
+  const analysis = analyzeHebrewPrefixes(word);
+
+  elements.wordStructureParts.replaceChildren();
+  elements.wordStructureSection.classList.toggle("hidden", !analysis);
+
+  if (!analysis) {
+    return;
+  }
+
+  analysis.prefixes.forEach((prefix) => {
+    const part = document.createElement("span");
+    part.className = "word-structure-part prefix-part";
+    part.dir = "rtl";
+    part.textContent = `${prefix.letter}־  ${prefix.meaning}`;
+    elements.wordStructureParts.append(part);
+  });
+
+  const base = document.createElement("span");
+  base.className = "word-structure-part base-part";
+  base.dir = "rtl";
+  base.textContent = `${analysis.baseWord}  base word`;
+  elements.wordStructureParts.append(base);
 }
 
 async function activateWord(token, sentence) {
@@ -327,13 +342,14 @@ async function activateWord(token, sentence) {
   };
 
   elements.selectedSentence.textContent = state.activeSentence;
+  renderWordStructure(word);
   elements.reversoLink.href =
     `https://context.reverso.net/translation/hebrew-english/${encodeURIComponent(word)}`;
   updateRememberButton();
 
   setTranslationPlaceholders("word");
   setTranslationPlaceholders("sentence");
-  elements.translationStatus.textContent = "Loading word details...";
+  elements.translationStatus.textContent = "";
   elements.wordPanel.classList.remove("hidden");
 
   await translate(word, "word", selectionId);
@@ -583,14 +599,17 @@ async function runOcr() {
       state.selectedImage,
       elements.ocrEngine.value,
       (status, progress) => {
-      const percentage =
-        typeof progress === "number" ? ` ${Math.round(progress * 100)}%` : "";
+        const percentage =
+          typeof progress === "number"
+            ? ` ${Math.round(progress * 100)}%`
+            : "";
 
-      if (typeof progress === "number") {
-        elements.ocrProgress.value = progress;
-      }
+        if (typeof progress === "number") {
+          elements.ocrProgress.value = progress;
+        }
 
-        elements.ocrStatus.textContent = `${status || "Processing"}${percentage}`;
+        elements.ocrStatus.textContent =
+          `${status || "Processing"}${percentage}`;
       },
     );
 
@@ -617,9 +636,7 @@ async function translate(text, scope, selectionId = null) {
 
   const isWordTranslation = scope === "word";
 
-  elements.translationStatus.textContent = isWordTranslation
-    ? "Translating selected word..."
-    : "Translating sentence...";
+  elements.translationStatus.textContent = "";
 
   elements.translateWordButton.disabled = true;
   elements.translateSentenceButton.disabled = true;
@@ -707,11 +724,16 @@ function createFlashcardElement(card) {
 
   const translations = document.createElement("div");
   translations.className = "saved-translations";
-  translations.innerHTML = `
-    <span><b>EN</b> ${escapeText(card.translations?.en || "—")}</span>
-    <span><b>RU</b> ${escapeText(card.translations?.ru || "—")}</span>
-    <span><b>UK</b> ${escapeText(card.translations?.uk || "—")}</span>
-  `;
+
+  const languageLabels = { en: "EN", ru: "RU", uk: "UK" };
+  translations.innerHTML = state.settings.translationLanguages
+    .map(
+      (code) =>
+        `<span><b>${languageLabels[code]}</b> ${escapeText(
+          card.translations?.[code] || "—",
+        )}</span>`,
+    )
+    .join("");
 
   const sourceSentence = document.createElement("div");
   sourceSentence.className = "saved-example";
@@ -798,7 +820,7 @@ async function rememberActiveWord() {
 
     renderFlashcards();
 
-    elements.translationStatus.textContent = "Word saved to My flashcards.";
+    elements.translationStatus.textContent = "";
 
     elements.flashcardsStatus.textContent = `Saved ${data.word}.`;
   } finally {
@@ -952,11 +974,6 @@ elements.translateSentenceButton.addEventListener("click", () => {
 
 elements.copyQuizletButton.addEventListener("click", copyQuizletImport);
 
-elements.voiceSelect.addEventListener("change", () => {
-  state.preferredVoiceURI = elements.voiceSelect.value;
-  localStorage.setItem("hebrewReaderVoiceURI", state.preferredVoiceURI);
-});
-
 elements.closeWordPanelButton.addEventListener("click", closeWordPanel);
 elements.clearButton.addEventListener("click", clearApp);
 
@@ -975,7 +992,7 @@ elements.saveSettingsButton.addEventListener("click", saveSettings);
 
 elements.ocrEngine.addEventListener("change", () => {
   state.settings.ocrEngine = elements.ocrEngine.value;
-  saveSettingsToStorage(state.settings);
+  persistSettings(state.settings);
 
   if (!elements.settingsBackdrop.classList.contains("hidden")) {
     elements.settingsOcrEngine.value = elements.ocrEngine.value;
@@ -984,6 +1001,9 @@ elements.ocrEngine.addEventListener("change", () => {
 });
 
 elements.voiceSelect.addEventListener("change", () => {
+  state.preferredVoiceURI = elements.voiceSelect.value;
+  localStorage.setItem("hebrewReaderVoiceURI", state.preferredVoiceURI);
+
   if (!elements.settingsBackdrop.classList.contains("hidden")) {
     cloneVoiceOptionsIntoSettings();
     updateSettingsSaveButton();
