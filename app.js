@@ -7,7 +7,7 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
-import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-1";
+import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-2";
 import {
   loadSettings,
   saveSettings as persistSettings,
