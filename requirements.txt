@@ -1,2 +1,3 @@
 google-cloud-texttospeech
 google-cloud-vision
+google-cloud-translate
