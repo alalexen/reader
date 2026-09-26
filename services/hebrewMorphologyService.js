@@ -10,6 +10,23 @@ const PREFIX_MEANINGS = Object.freeze({
   "ש": "that / which",
 });
 
+function splitPrefixSegment(segment) {
+  if (!segment) {
+    return [];
+  }
+
+  const letters = [...segment];
+
+  if (!letters.every((letter) => PREFIX_MEANINGS[letter])) {
+    return [];
+  }
+
+  return letters.map((letter) => ({
+    letter,
+    meaning: PREFIX_MEANINGS[letter],
+  }));
+}
+
 function buildWordStructure(word, segments, provider) {
   if (!Array.isArray(segments) || segments.length < 2) {
     return null;
@@ -18,15 +35,14 @@ function buildWordStructure(word, segments, provider) {
   const prefixes = [];
   let index = 0;
 
-  while (
-    index < segments.length - 1 &&
-    segments[index].length === 1 &&
-    PREFIX_MEANINGS[segments[index]]
-  ) {
-    prefixes.push({
-      letter: segments[index],
-      meaning: PREFIX_MEANINGS[segments[index]],
-    });
+  while (index < segments.length - 1) {
+    const segmentPrefixes = splitPrefixSegment(segments[index]);
+
+    if (!segmentPrefixes.length) {
+      break;
+    }
+
+    prefixes.push(...segmentPrefixes);
     index += 1;
   }
 
