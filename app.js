@@ -42,8 +42,10 @@ const elements = {
   clearButton: document.querySelector("#clearButton"),
   ocrStatus: document.querySelector("#ocrStatus"),
   ocrProgress: document.querySelector("#ocrProgress"),
+  textWorkspace: document.querySelector("#textWorkspace"),
   editableText: document.querySelector("#editableText"),
   renderButton: document.querySelector("#renderButton"),
+  resizeTextButton: document.querySelector("#resizeTextButton"),
   reader: document.querySelector("#reader"),
   speakButton: document.querySelector("#speakButton"),
   stopButton: document.querySelector("#stopButton"),
@@ -102,6 +104,8 @@ const state = {
   activeSentence: "",
   activeWordData: null,
   wordSelectionId: 0,
+  readerMode: "edit",
+  isTextWorkspaceExpanded: false,
   preferredVoiceURI: localStorage.getItem("hebrewReaderVoiceURI") || "",
   settings: loadSettings(),
   flashcards: loadFlashcards(),
@@ -215,10 +219,47 @@ function saveSettings() {
 
 // Speech --------------------------------------------------------------------
 
-function updateSpeechButtons() {
+function updateTextWorkspaceControls() {
   const hasText = elements.editableText.value.trim().length > 0;
+
   elements.speakButton.disabled = !hasText;
   elements.stopButton.disabled = !hasText;
+  elements.renderButton.classList.toggle("hidden", !hasText);
+
+  if (!hasText && state.readerMode !== "edit") {
+    setReaderMode("edit");
+  }
+}
+
+function setReaderMode(mode) {
+  const hasText = elements.editableText.value.trim().length > 0;
+  const nextMode = mode === "reader" && hasText ? "reader" : "edit";
+
+  state.readerMode = nextMode;
+  const isReaderMode = nextMode === "reader";
+
+  elements.editableText.classList.toggle("hidden", isReaderMode);
+  elements.reader.classList.toggle("hidden", !isReaderMode);
+  elements.renderButton.textContent = isReaderMode
+    ? "Edit text"
+    : "Make words clickable";
+
+  if (isReaderMode) {
+    renderClickableText();
+  } else {
+    closeWordPanel();
+  }
+}
+
+function toggleTextWorkspaceSize() {
+  state.isTextWorkspaceExpanded = !state.isTextWorkspaceExpanded;
+  elements.textWorkspace.classList.toggle(
+    "is-expanded",
+    state.isTextWorkspaceExpanded,
+  );
+  elements.resizeTextButton.textContent = state.isTextWorkspaceExpanded
+    ? "Collapse"
+    : "Expand";
 }
 
 async function initializeVoiceSelector() {
@@ -417,17 +458,13 @@ function renderClickableText() {
   elements.reader.replaceChildren();
 
   if (!text) {
-    const emptyState = document.createElement("p");
-    emptyState.className = "empty-state";
-    emptyState.textContent = "Your Hebrew text will appear here.";
-    elements.reader.append(emptyState);
     closeWordPanel();
-    updateSpeechButtons();
+    updateTextWorkspaceControls();
     return;
   }
 
   splitIntoSentences(text).forEach(appendSentence);
-  updateSpeechButtons();
+  updateTextWorkspaceControls();
 }
 
 // Image selection and cropping ---------------------------------------------
@@ -643,7 +680,8 @@ async function runOcr() {
     );
 
     elements.editableText.value = result.text;
-    renderClickableText();
+    setReaderMode("edit");
+    updateTextWorkspaceControls();
     elements.ocrStatus.textContent =
       result.provider === "google-vision"
         ? "Recognized with Google Vision"
@@ -905,6 +943,10 @@ function clearApp() {
   elements.cropControls.classList.add("hidden");
   resetCropSelection();
   elements.editableText.value = "";
+  setReaderMode("edit");
+  state.isTextWorkspaceExpanded = false;
+  elements.textWorkspace.classList.remove("is-expanded");
+  elements.resizeTextButton.textContent = "Expand";
   elements.recognizeButton.disabled = true;
   elements.ocrStatus.textContent = "";
   elements.ocrProgress.value = 0;
@@ -1066,4 +1108,5 @@ applyTranslationLanguageVisibility();
 initializeVoiceSelector();
 initializeSessionTimer();
 renderFlashcards();
-renderClickableText();
+setReaderMode("edit");
+updateTextWorkspaceControls();
