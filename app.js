@@ -7,7 +7,7 @@ import {
   speakHebrew,
   stopSpeech,
 } from "./services/speechService.js?v=google-wavenet-1";
-import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-3";
+import { analyzeHebrewMorphology } from "./services/hebrewMorphologyService.js?v=hebpipe-4";
 import {
   loadSettings,
   saveSettings as persistSettings,
@@ -347,11 +347,11 @@ function closeWordPanel() {
   elements.translationStatus.textContent = "";
 }
 
-async function renderWordStructure(word, sentence, selectionId) {
+async function renderWordStructure(word, selectionId) {
   elements.wordStructureParts.replaceChildren();
   elements.wordStructureSection.classList.add("hidden");
 
-  const analysis = await analyzeHebrewMorphology(word, sentence);
+  const analysis = await analyzeHebrewMorphology(word);
 
   if (selectionId !== state.wordSelectionId || !analysis) {
     return;
@@ -434,7 +434,7 @@ async function activateWord(token, sentence) {
   elements.wordPanel.classList.remove("hidden");
 
   await Promise.all([
-    renderWordStructure(word, state.activeSentence, selectionId),
+    renderWordStructure(word, selectionId),
     translate(word, "word", selectionId),
   ]);
   updateRememberButton();
