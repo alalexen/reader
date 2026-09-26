@@ -9,7 +9,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from sqlalchemy import select
+
 from backend.database import session_scope
+from backend.models import Card, ReadingText, Word
 from backend.repositories.learning_repository import (
     create_card,
     create_text,
@@ -27,7 +30,19 @@ def main() -> None:
 
     with session_scope() as session:
         text = get_text_by_title(session, DEMO_TITLE)
+
         if text is None:
+            has_existing_data = any(
+                session.scalar(select(model.id).limit(1)) is not None
+                for model in (ReadingText, Word, Card)
+            )
+            if has_existing_data:
+                print(
+                    "Demo seed skipped: the database already contains learning data. "
+                    "Use the seed on a new/empty database."
+                )
+                return
+
             text = create_text(
                 session,
                 title=DEMO_TITLE,
