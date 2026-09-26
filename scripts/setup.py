@@ -125,9 +125,9 @@ print("Morphology probe:", "|".join(segments))
         print("  source .venv/bin/activate")
     print()
     print("Then start Hebrew Reader:")
-    print("  python scripts/start.py")
+    print("  python scripts/run_hebrew_reader.py")
     print()
-    print("The start script prepares the private PostgreSQL database,")
+    print("The launcher prepares the private PostgreSQL database,")
     print("applies migrations, and starts the web server.")
 
 
