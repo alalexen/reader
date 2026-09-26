@@ -136,87 +136,93 @@ Flashcards are stored in the browser with `localStorage`. Each saved card contai
 
 Quizlet does not currently expose a self-service public API for independent apps to create sets. Hebrew Reader therefore uses Quizlet's supported text-import workflow: click **Copy for Quizlet**, open Quizlet, create a flashcard set, choose **Import**, and paste the copied text.
 
+## System Hebrew voice
 
+Hebrew Reader can use Hebrew voices installed in the operating system through the browser's Web Speech API.
 
+### macOS
 
-## macOS system Hebrew voice
+1. Open **System Settings → Accessibility → Read & Speak**.
+2. Set the speech language to **Hebrew**.
+3. Download a Hebrew system voice if needed.
+4. Fully quit and reopen the browser.
+5. Restart Hebrew Reader and select the Hebrew voice in **Voice**.
 
-Hebrew Reader can use the Hebrew voices provided by macOS through the browser's Web Speech API. This is the default fallback when Google Cloud Text-to-Speech is not configured.
+### Windows
 
-### Install or enable a Hebrew voice on macOS
+1. Open **Settings → Time & language → Speech**.
+2. Add or install a **Hebrew** speech voice if available.
+3. Restart the browser.
+4. Restart Hebrew Reader and select the Hebrew voice in **Voice**.
 
-1. Open **Apple menu → System Settings → Accessibility → Read & Speak**.
-2. Set **System speech language** to **Hebrew** if it is available.
-3. Open **System voice** and download a Hebrew voice if macOS offers one that is not installed yet.
-4. Play the sample in System Settings to confirm that the voice works.
-5. Fully quit and reopen the browser after installing a new voice.
-6. Restart Hebrew Reader and check the **Voice** selector.
+## Google Hebrew voices
 
-You can also inspect the Hebrew voices currently exposed to the browser from DevTools:
+Google Cloud Text-to-Speech is optional. It requires a Google Cloud project with billing enabled.
 
-```js
-speechSynthesis
-  .getVoices()
-  .filter((voice) => voice.lang.toLowerCase().startsWith("he"))
-  .map((voice) => ({
-    name: voice.name,
-    lang: voice.lang,
-    local: voice.localService,
-  }));
-```
+### macOS and Windows
 
-If this returns an empty array immediately after opening the page, wait a moment and run it again because browser voice lists can load asynchronously.
+Install the Google Cloud CLI, then open Terminal on macOS or PowerShell on Windows.
 
-## Optional Google WaveNet Hebrew speech
-
-Hebrew Reader can use Google's Hebrew WaveNet voices:
-
-- `he-IL-Wavenet-A` — female
-- `he-IL-Wavenet-C` — female
-- `he-IL-Wavenet-B` — male
-- `he-IL-Wavenet-D` — male
-
-Google Cloud requires billing to be enabled for Cloud Text-to-Speech. Check the current Google Cloud pricing page before enabling it because usage above the free allowance can be charged automatically.
-
-### Local setup
-
-1. Create or select a Google Cloud project.
-2. Enable **Cloud Text-to-Speech API** for that project.
-3. Install the Google Cloud CLI.
-4. Authenticate your Google account and create local Application Default Credentials:
+Select your Google Cloud project:
 
 ```bash
-gcloud init
+gcloud config set project YOUR_PROJECT_ID
+```
+
+Enable Cloud Text-to-Speech:
+
+```bash
+gcloud services enable texttospeech.googleapis.com
+```
+
+Create local Application Default Credentials:
+
+```bash
 gcloud auth application-default login
 ```
 
-5. If Google asks for a quota project, set it:
+If browser login does not complete correctly, use:
+
+```bash
+gcloud auth application-default login --no-browser
+```
+
+Follow the terminal instructions and complete the Google consent flow.
+
+Set the quota project:
 
 ```bash
 gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 ```
 
-6. Install the Python dependency:
+Verify the credentials:
 
 ```bash
-python3 -m pip install -r requirements.txt
+gcloud auth application-default print-access-token >/dev/null && echo "ADC OK"
 ```
 
-7. Start Hebrew Reader:
+### Run on macOS
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
 python3 server.py
 ```
 
-When credentials are detected, the Voice selector shows the four Google WaveNet Hebrew voices before the system voices. Google credentials stay on the local server and are never sent to the browser.
+### Run on Windows
 
-### Corporate-device note
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python server.py
+```
 
-If you are developing on a company-managed Mac, follow your employer's acceptable-use, software-installation, cloud-service, and data-handling policies before installing the Google Cloud CLI or creating local Application Default Credentials.
+Open:
 
-The local Google setup stores authentication credentials on the workstation so Google client libraries can use them. Do not use company Google credentials, company billing, or company data for a personal project unless your employer has explicitly approved it. Do not send confidential work text, customer information, source code, or other company data to Google Cloud Text-to-Speech unless that use is approved by your organization.
+```text
+http://localhost:8000
+```
 
-For a personal project on a managed laptop, the safest options are:
-
-- use the built-in macOS Hebrew voice only; or
-- use Google Cloud TTS from a personal device and personal Google Cloud project after confirming that personal development tools and external cloud services are allowed on the company laptop.
+When Google credentials are available, the **Voice** selector shows the Google Hebrew voices before the system voices.
