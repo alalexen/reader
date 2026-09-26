@@ -15,7 +15,7 @@ You also need:
 - Git
 - optional: Google Cloud credentials for Google Vision OCR, WaveNet TTS, and Google Translation
 
-No model training is required. The setup script downloads the pretrained Hebrew segmentation model automatically.
+No model training is required. The setup script downloads the pretrained Hebrew segmentation models automatically.
 
 ## Quick start
 
@@ -184,9 +184,9 @@ Images are sent to Google only when Google Vision OCR is selected. Text is sent 
 
 Direct Python dependencies are declared in `requirements.txt`.
 
-HebPipe 4.0.2.0 is installed separately with `--no-deps` by `scripts/setup.py` because Hebrew Reader does not use HebPipe's full NLP dependency stack. This avoids unnecessary heavyweight packages and upstream dependency conflicts involving Stanza and DiaParser.
+HebPipe 4.0.2.0 is installed separately with `--no-deps` by `scripts/setup.py`. Hebrew Reader does not use HebPipe's full NLP pipeline, but the selected Hebrew segmentation model itself uses RFTokenizer + Flair/BERT features. For reproducibility, the compatible ML versions are pinned in `requirements.txt`, including scikit-learn 1.4.1.post1, Flair 0.13.0, Torch 2.2.1, and Transformers 4.35.2. Stanza and DiaParser are not required by the app's segmentation path.
 
-The setup script also downloads the pretrained `heb.sm3` Hebrew segmentation model and runs a real morphology probe before reporting success.
+The setup script downloads both pretrained Hebrew morphology assets used by the model: `heb.sm3` (RFTokenizer segmentation model) and `heb.seg` (Flair segmentation model), then runs a real morphology probe before reporting success.
 
 ## Third-party licenses
 
