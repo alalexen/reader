@@ -56,13 +56,14 @@ export async function recognizeHebrewText(image, onProgress = () => {}) {
 
     if (text) {
       onProgress("Google Vision OCR complete", 1);
-      return text;
+      return { text, provider: "google-vision" };
     }
 
     throw new Error("Google Vision returned no text.");
   } catch (error) {
     console.warn("Google Vision OCR failed, using Tesseract.js:", error);
     onProgress("Google Vision unavailable. Using local OCR", 0);
-    return recognizeWithTesseract(image, onProgress);
+    const text = await recognizeWithTesseract(image, onProgress);
+    return { text, provider: "tesseract" };
   }
 }
