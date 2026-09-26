@@ -512,9 +512,7 @@ async function translate(text, scope, selectionId = null) {
       updateRememberButton();
     }
 
-    elements.translationStatus.textContent = isWordTranslation
-      ? ""
-      : "Sentence translated.";
+    elements.translationStatus.textContent = "";
 
     return translations;
   } catch (error) {
