@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="A playful browser-based Hebrew reading assistant." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=crop-hero-20260926-1" />
+  <link rel="stylesheet" href="styles.css?v=ui-refine-20260926-1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -66,6 +66,9 @@
           <button id="cropImageButton" type="button" class="secondary">
             Crop image
           </button>
+          <button id="clearButton" type="button" class="secondary clear-image-button">
+            Clear
+          </button>
         </div>
 
         <div id="cropControls" class="crop-controls hidden">
@@ -78,14 +81,16 @@
         </div>
       </div>
 
-      <div class="actions">
+      <div class="ocr-controls">
         <label for="ocrEngine">OCR</label>
-        <select id="ocrEngine">
+        <select id="ocrEngine" class="ocr-select">
           <option value="tesseract" selected>Local Tesseract (default)</option>
           <option value="google-vision">Google Vision</option>
         </select>
+      </div>
+
+      <div class="recognize-row">
         <button id="recognizeButton" type="button" disabled>Recognize Hebrew text</button>
-        <button id="clearButton" type="button" class="secondary">Clear</button>
       </div>
 
       <div id="ocrStatus" class="status" aria-live="polite"></div>
@@ -273,6 +278,6 @@
   </main>
 
 
-  <script type="module" src="app.js?v=voice-default-1"></script>
+  <script type="module" src="app.js?v=ui-refine-20260926-1"></script>
 </body>
 </html>
