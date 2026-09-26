@@ -15,8 +15,10 @@ from backend.database import session_scope
 from backend.models import Card, ReadingText, Word
 from backend.repositories.learning_repository import (
     create_card,
+    create_encounter,
     create_text,
     create_word,
+    get_encounter,
     get_text_by_title,
     get_word_by_normalized,
 )
@@ -94,6 +96,22 @@ def main() -> None:
                     status="learning",
                 )
                 created.append(f"word:{item['normalized']}")
+
+            existing_encounter = get_encounter(
+                session,
+                word_id=word.id,
+                text_id=text.id,
+                sentence=item["sentence"],
+            )
+            if existing_encounter is None:
+                create_encounter(
+                    session,
+                    word=word,
+                    text=text,
+                    sentence=item["sentence"],
+                )
+                word.seen_count += 1
+                created.append(f"encounter:{item['normalized']}")
 
             existing_card = next(
                 (
