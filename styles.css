@@ -1963,13 +1963,25 @@ progress::-webkit-progress-value {
 .word-structure-part {
   display: inline-flex;
   align-items: center;
+  gap: 0.45rem;
   min-height: 38px;
   padding: 0.5rem 0.75rem;
   border: 1px solid rgba(90, 25, 20, 0.15);
   border-radius: 999px;
   background: #fffaf4;
   color: var(--text);
+}
+
+.word-structure-token {
+  color: inherit;
   font-family: "Arial Hebrew", Arial, sans-serif;
+  font-size: 1.05rem;
+}
+
+.word-structure-meaning {
+  direction: ltr;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .prefix-part {
