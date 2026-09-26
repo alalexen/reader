@@ -4,6 +4,7 @@ import json
 from http.server import SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 
+from .database import check_database_connection
 from .google_cloud import (
     GOOGLE_HEBREW_VOICES,
     get_google_translate_client,
@@ -74,6 +75,21 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+
+        if path == "/api/database/status":
+            try:
+                self.send_json(200, check_database_connection())
+            except Exception as error:
+                self.send_json(
+                    200,
+                    {
+                        "available": False,
+                        "provider": "postgresql",
+                        "reason": "unavailable",
+                        "detail": type(error).__name__,
+                    },
+                )
+            return
 
         if path == "/api/tts/status":
             self.send_cloud_status(
