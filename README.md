@@ -10,7 +10,7 @@ Hebrew Reader is a free browser-based learning tool for reading Hebrew from phot
 - Render Hebrew text right-to-left
 - Click individual Hebrew words
 - Speak the full text or one selected word
-- Select from Hebrew voices exposed by the browser or operating system
+- Use Google Hebrew WaveNet voices when Google Cloud TTS is configured, with browser Hebrew voices as a fallback
 - Use speech speeds of 0.5×, 1×, 1.5×, and 2×
 - Translate words and sentences into Ukrainian, English, and Russian
 - Open the selected word directly on the Reverso Context website
@@ -104,10 +104,11 @@ Edit the files in VS Code or another editor and refresh `http://localhost:8000` 
 - CSS
 - Vanilla JavaScript with ES modules
 - Tesseract.js
-- Web Speech API
+- Google Cloud Text-to-Speech (optional WaveNet backend)
+- Web Speech API fallback
 - MyMemory Translation API
 
-No paid backend or private API key is required for the current MVP.
+The core app still works without a paid backend. Google Cloud Text-to-Speech is optional and requires a Google Cloud project with billing enabled. When it is not configured, Hebrew Reader falls back to the browser's Hebrew voices.
 
 ## Translation behavior
 
@@ -135,3 +136,47 @@ Flashcards are stored in the browser with `localStorage`. Each saved card contai
 
 Quizlet does not currently expose a self-service public API for independent apps to create sets. Hebrew Reader therefore uses Quizlet's supported text-import workflow: click **Copy for Quizlet**, open Quizlet, create a flashcard set, choose **Import**, and paste the copied text.
 
+
+
+## Optional Google WaveNet Hebrew speech
+
+Hebrew Reader can use Google's Hebrew WaveNet voices:
+
+- `he-IL-Wavenet-A` — female
+- `he-IL-Wavenet-C` — female
+- `he-IL-Wavenet-B` — male
+- `he-IL-Wavenet-D` — male
+
+Google Cloud requires billing to be enabled for Cloud Text-to-Speech. Check the current Google Cloud pricing page before enabling it because usage above the free allowance can be charged automatically.
+
+### Local setup
+
+1. Create or select a Google Cloud project.
+2. Enable **Cloud Text-to-Speech API** for that project.
+3. Install the Google Cloud CLI.
+4. Authenticate your Google account and create local Application Default Credentials:
+
+```bash
+gcloud init
+gcloud auth application-default login
+```
+
+5. If Google asks for a quota project, set it:
+
+```bash
+gcloud auth application-default set-quota-project YOUR_PROJECT_ID
+```
+
+6. Install the Python dependency:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+7. Start Hebrew Reader:
+
+```bash
+python3 server.py
+```
+
+When credentials are detected, the Voice selector shows the four Google WaveNet Hebrew voices before the system voices. Google credentials stay on the local server and are never sent to the browser.
