@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 HOST = "127.0.0.1"
 PORT = 8000
+MAX_JSON_REQUEST_BYTES = 64_000
 MAX_OCR_IMAGE_BYTES = 15_000_000
 
 GOOGLE_HEBREW_VOICES = {
@@ -74,101 +75,75 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def read_request_body(self, max_bytes):
+        """Read and validate a request body against a strict size limit."""
+        content_length = int(self.headers.get("Content-Length", "0"))
+
+        if content_length <= 0 or content_length > max_bytes:
+            raise ValueError("Invalid request size.")
+
+        return self.rfile.read(content_length)
+
+    def read_json_payload(self):
+        """Read a small UTF-8 JSON request body."""
+        return json.loads(
+            self.read_request_body(MAX_JSON_REQUEST_BYTES).decode("utf-8")
+        )
+
+    def send_cloud_status(self, provider, client_factory, extra=None):
+        """Return a consistent availability response for optional Google services."""
+        try:
+            client_factory()
+            payload = {
+                "available": True,
+                "provider": provider,
+            }
+            if extra:
+                payload.update(extra)
+            self.send_json(200, payload)
+        except ImportError:
+            self.send_json(
+                200,
+                {
+                    "available": False,
+                    "provider": provider,
+                    "reason": "dependency_missing",
+                },
+            )
+        except Exception as error:
+            self.send_json(
+                200,
+                {
+                    "available": False,
+                    "provider": provider,
+                    "reason": "credentials_missing",
+                    "detail": type(error).__name__,
+                },
+            )
+
     def do_GET(self):
         path = urlparse(self.path).path
 
         if path == "/api/tts/status":
-            try:
-                get_google_tts_client()
-                self.send_json(
-                    200,
-                    {
-                        "available": True,
-                        "provider": "google",
-                        "voices": sorted(GOOGLE_HEBREW_VOICES),
-                    },
-                )
-            except ImportError:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "google",
-                        "reason": "dependency_missing",
-                    },
-                )
-            except Exception as error:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "google",
-                        "reason": "credentials_missing",
-                        "detail": type(error).__name__,
-                    },
-                )
+            self.send_cloud_status(
+                "google",
+                get_google_tts_client,
+                {"voices": sorted(GOOGLE_HEBREW_VOICES)},
+            )
             return
 
         if path == "/api/translate/status":
-            try:
-                get_google_translate_client()
-                self.send_json(
-                    200,
-                    {
-                        "available": True,
-                        "provider": "google-nmt",
-                    },
-                )
-            except ImportError:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "google-nmt",
-                        "reason": "dependency_missing",
-                    },
-                )
-            except Exception as error:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "google-nmt",
-                        "reason": "credentials_missing",
-                        "detail": type(error).__name__,
-                    },
-                )
+            self.send_cloud_status(
+                "google-nmt",
+                get_google_translate_client,
+            )
             return
 
         if path == "/api/ocr/status":
-            try:
-                get_google_vision_client()
-                self.send_json(
-                    200,
-                    {
-                        "available": True,
-                        "provider": "google-vision",
-                    },
-                )
-            except ImportError:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "google-vision",
-                        "reason": "dependency_missing",
-                    },
-                )
-            except Exception as error:
-                self.send_json(
-                    200,
-                    {
-                        "available": False,
-                        "provider": "google-vision",
-                        "reason": "credentials_missing",
-                        "detail": type(error).__name__,
-                    },
-                )
+            self.send_cloud_status(
+                "google-vision",
+                get_google_vision_client,
+            )
             return
 
         super().do_GET()
@@ -192,11 +167,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def handle_tts(self):
         try:
-            content_length = int(self.headers.get("Content-Length", "0"))
-            if content_length <= 0 or content_length > 64_000:
-                raise ValueError("Invalid request size.")
-
-            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            payload = self.read_json_payload()
             text = str(payload.get("text", "")).strip()
             voice_name = str(payload.get("voice", "he-IL-Wavenet-A"))
             speaking_rate = float(payload.get("rate", 1))
@@ -256,15 +227,11 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def handle_ocr(self):
         try:
-            content_length = int(self.headers.get("Content-Length", "0"))
-            if content_length <= 0 or content_length > MAX_OCR_IMAGE_BYTES:
-                raise ValueError("Invalid image size.")
-
             content_type = self.headers.get("Content-Type", "")
             if not content_type.startswith("image/"):
                 raise ValueError("An image is required.")
 
-            image_bytes = self.rfile.read(content_length)
+            image_bytes = self.read_request_body(MAX_OCR_IMAGE_BYTES)
             client, vision = get_google_vision_client()
 
             response = client.document_text_detection(
@@ -306,11 +273,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def handle_translate(self):
         try:
-            content_length = int(self.headers.get("Content-Length", "0"))
-            if content_length <= 0 or content_length > 64_000:
-                raise ValueError("Invalid request size.")
-
-            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            payload = self.read_json_payload()
             text = str(payload.get("text", "")).strip()
             target_language = str(payload.get("target", "")).strip().lower()
 
