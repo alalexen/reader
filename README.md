@@ -144,14 +144,20 @@ OCR providers, or Study workflow.
 - Alternatively, open **Settings → Appearance → Light / Dark**, then save.
 - The selected theme is stored with the existing browser settings and restored
   before the page is painted. No account or new backend API is needed.
-- Approved gothic artwork is preserved as **two high-density WebP images with
-  soft alpha-faded edges** (`assets/dark-sidebar-seamless.webp` and
-  `assets/dark-castle-seamless.webp`). They blend into the same `#090e13`
-  background on both sides; this removes rectangular picture boundaries without
-  flattening functional buttons and inputs into a screenshot. The original light
-  and dark designs use the **same DOM, sidebar width, main column and timer position**.
-  The castle retains its proportions, and the books are unlettered. There is no
-  dark-only header or extra rabbit icon beside the brand.
+- The gothic scene is **one continuous background**, with separate high-density
+  compositions for wide desktop and taller laptop viewports:
+  `assets/dark-scene-wide.webp` (3840 × 2160) and
+  `assets/dark-scene-laptop.webp` (2896 × 2172).
+  They are assembled from the approved source illustrations
+  `assets/dark-sidebar-seamless.webp` and
+  `assets/dark-castle-seamless.webp`, kept as editable source artwork.
+  The main layout supplies the background once; sidebar and headings are
+  transparent above it, so no separately positioned images can form seams.
+  This does not rasterize any buttons, labels or editable Hebrew text.
+  The original warm light design and dark design share the **same DOM, sidebar
+  width, main column and timer position**.
+  Castle and book proportions are preserved, and the books have no labels.
+  There is no dark-only header or redundant rabbit beside the brand.
 - The sidebar skeleton rabbit has no trailing blood effect.
 - The former “Read. Understand. Remember.” tagline is intentionally omitted.
 
@@ -168,8 +174,8 @@ node --test tests/*.mjs
 ```
 
 GitHub Actions also checks frontend syntax, equal layout and timer coordinates
-in both themes, high-resolution asset decoding, transparent image corners,
-a unified sidebar/page background, theme preference persistence,
+in both themes, unified high-density background loading, the absence of
+independent sidebar/heading scenic layers, theme preference persistence,
 real Chromium navigation at desktop/mobile widths, answer reveal and rating,
 selected word controls, settings, and layout screenshots for both themes.
 A final smoke test with a real local PostgreSQL database is required before
