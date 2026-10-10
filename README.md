@@ -345,9 +345,9 @@ reader/
 │   ├── features.css
 │   └── editorial.css        # Sidebar, word list, planner, study styling
 ├── assets/
-│   ├── white-rabbit.webp
-│   ├── sidebar-landscape.svg
-│   └── still-life.svg
+│   ├── rabbit-watercolor.svg
+│   ├── sidebar-artwork.svg
+│   └── still-life-watercolor.svg
 ├── ui/
 │   ├── navigationController.js
 │   ├── vocabularyController.js
