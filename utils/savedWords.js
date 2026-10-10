@@ -1,4 +1,5 @@
 /** All date grouping uses the browser's local calendar, not UTC boundaries. */
+/** Converts a timestamp into a date key in the reader's local timezone. */
 export function localDayKey(value) {
   if (value === null || value === undefined || value === "") return null;
   const date = new Date(value);
@@ -9,6 +10,7 @@ export function localDayKey(value) {
   return `${year}-${month}-${day}`;
 }
 
+/** Formats a date key as a readable English calendar label. */
 export function dateTitle(key) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(key || "")) return "Undated";
   const [year, month, day] = key.split("-").map(Number);
@@ -18,6 +20,7 @@ export function dateTitle(key) {
   });
 }
 
+/** Groups cards by their original save date. */
 export function groupBySavedDay(cards) {
   const groups = new Map();
   for (const card of cards) {
@@ -28,6 +31,7 @@ export function groupBySavedDay(cards) {
   return groups;
 }
 
+/** Sorts a copy of the saved-word list by timestamp. */
 export function sortSavedCards(cards, order = "newest") {
   const result = [...cards];
   result.sort((a, b) => {
