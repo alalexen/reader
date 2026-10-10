@@ -149,6 +149,42 @@ try {
     await page.locator("#studyDayButton").click();
     await page.locator("#studyView:not(.hidden)").waitFor();
     await check("Study", "study.png");
+    // Verify that appearance is a real persisted preference on every screen.
+    await page.locator("#themeToggle").click();
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+    assert.equal(await page.locator("#themeToggle").getAttribute("aria-pressed"), "true");
+    const darkSurface = await page.locator("#studyCard").evaluate((element) =>
+      getComputedStyle(element).backgroundColor);
+    assert.notEqual(darkSurface, "rgb(255, 253, 249)");
+    await check("Dark Study", "dark-study.png");
+
+    await page.locator("#navRead").click();
+    await check("Dark Read", "dark-read.png");
+    await page.locator("#navSaved").click();
+    await check("Dark Saved Words", "dark-saved-words.png");
+    await page.locator("#navCalendar").click();
+    await check("Dark Calendar", "dark-calendar.png");
+    await page.locator(".calendar-day.has-words").first().click();
+    await check("Dark Day words", "dark-day-words.png");
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+    const [masthead, sidebarArt, logoArt] = await Promise.all(
+      ["dark-masthead.webp", "dark-sidebar.webp", "dark-skeleton-logo.webp"].map(
+        (name) => page.evaluate(async (file) =>
+          (await fetch("/assets/" + file)).ok, name),
+      ),
+    );
+    assert.ok(masthead && sidebarArt && logoArt, "Dark theme assets must be available.");
+
+    // Modal appearance setting must also update the global theme and remain in sync.
+    await page.locator("#openSettingsButton").click();
+    await page.locator('input[name="appearance"][value="light"]').check();
+    await page.locator("#saveSettingsButton").click();
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+    assert.equal(await page.locator("#themeToggle").getAttribute("aria-pressed"), "false");
+    await page.locator("#closeSettingsButton").click();
+
     assert.deepEqual(errors, [], `${width}px browser errors`);
     await context.close();
     console.log(`✓ ${width}px: Read → Saved Words → Calendar → Day → Study; assets and layout valid.`);
