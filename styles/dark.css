@@ -196,7 +196,7 @@ html[data-theme="dark"] .card {
   border: 1px solid #343a40;
   box-shadow: 0 14px 30px rgba(0,0,0,.2);
 }
-html[data-theme="dark"] button:not(.sidebar-link):not(.theme-toggle):not(.text-button):not(.vocab-icon-button):not(.vocab-open),
+html[data-theme="dark"] button:not(.sidebar-link):not(.theme-toggle):not(.text-button):not(.vocab-icon-button):not(.vocab-open):not(.calendar-day):not(.calendar-arrow):not(.study-arrow):not([data-rating]),
 html[data-theme="dark"] .context-button {
   border: 1px solid #ee4553; color: #fff4f2;
   background: linear-gradient(160deg,#aa2436,#6b1827);
@@ -425,4 +425,28 @@ html[data-theme="dark"] .status { color:#e2bbb8; }
   html[data-theme="dark"] .theme-toggle { width:37px; height:37px; }
   html[data-theme="dark"] .page-heading h1 { font-size:30px; }
   html[data-theme="dark"] .read-inputs { grid-template-columns:1fr; }
+}
+
+/* A planner cell is not a primary action: keep low-activity days neutral. */
+html[data-theme="dark"] .calendar-grid button.calendar-day {
+  color: #eae0db; background:#12181d; border-color:#353c42;
+  box-shadow:none;
+}
+html[data-theme="dark"] .calendar-grid button.calendar-day.has-words { background:#281c24; }
+html[data-theme="dark"] .calendar-grid button.calendar-day.is-busy { background:#43232e; }
+html[data-theme="dark"] .calendar-grid button.calendar-day:hover:not(:disabled) {
+  background:#38212d; color:#fff;
+  box-shadow:inset 0 0 0 2px #f05060;
+}
+html[data-theme="dark"] .calendar-day:not(.has-words) .calendar-day-count {
+  color:#a9a9ac; background:#262d34;
+}
+html[data-theme="dark"] .calendar-day.has-words .calendar-day-count {
+  color:#ffd5d8; background:#70303d;
+}
+html[data-theme="dark"] button.calendar-arrow,
+html[data-theme="dark"] button.study-arrow { background:#1b2228; color:#e9dfe1; border-color:#3b444b; }
+html[data-theme="dark"] button.calendar-arrow:hover:not(:disabled),
+html[data-theme="dark"] button.study-arrow:hover:not(:disabled) {
+  background:#303039; color:#fff;
 }
