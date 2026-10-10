@@ -90,7 +90,11 @@ try {
       for (const image of dimensions.image) {
         assert.ok(image.ready && image.width > 0, "Broken design image: " + image.src);
       }
-      if (width === 1448) await page.screenshot({ path: `${output}/${filename}`, fullPage: true });
+      // Preserve comparison renders at both reference and wide desktop sizes.
+      if (width === 1448 || (width === 2048 && filename === "dark-read.png")) {
+        const name = width === 2048 ? "dark-read-2048.png" : filename;
+        await page.screenshot({ path: `${output}/${name}`, fullPage: true });
+      }
     }
 
     const paintedAssets = await page.evaluate(async () => {
