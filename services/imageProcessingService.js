@@ -5,6 +5,7 @@
  * and contrast enhancement. This improves recognition while preserving Hebrew
  * letter shapes better than aggressive thresholding.
  */
+/** Prepares an image for text recognition without altering its source file. */
 export async function preprocessImageForOcr(file) {
   const bitmap = await createImageBitmap(file);
 
