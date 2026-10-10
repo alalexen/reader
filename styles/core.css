@@ -544,9 +544,6 @@ progress::-webkit-progress-value {
   font-size: 0.86rem;
 }
 
-
-
-
 .text-link {
   flex: 0 0 auto;
   color: var(--cyan);
@@ -633,10 +630,6 @@ progress::-webkit-progress-value {
   box-shadow: 0 7px 0 rgba(30, 101, 54, 0.48);
 }
 
-@media (max-width: 720px) {
-}
-
-
 /*
  * Center the sticky selected-word panel against the app viewport column.
  * Explicit positioning avoids visual drift caused by scrollbar gutter space.
@@ -647,15 +640,6 @@ progress::-webkit-progress-value {
   margin-right: 0;
   transform: translateX(-50%);
 }
-
-
-
-@media (max-width: 720px) {
-}
-
-@media (prefers-reduced-motion: reduce) {
-}
-
 
 /* Keep interface text LTR while Hebrew content remains explicitly RTL. */
 body,
