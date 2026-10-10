@@ -6,6 +6,7 @@ import {
 import { elements, translationElements } from "./ui/elements.js";
 import { createFlashcardsController } from "./ui/flashcardsController.js";
 import { createImageController } from "./ui/imageController.js";
+import { createReviewController } from "./ui/reviewController.js";
 import { createReaderController } from "./ui/readerController.js";
 import { createSettingsController } from "./ui/settingsController.js";
 import { createSpeechController } from "./ui/speechController.js";
@@ -39,6 +40,11 @@ const flashcards = createFlashcardsController({
   elements,
   state,
   reader,
+  speak: speech.speak,
+});
+
+const review = createReviewController({
+  elements,
   speak: speech.speak,
 });
 
@@ -171,6 +177,11 @@ settings.applyTranslationLanguageVisibility();
 speech.initializeVoiceSelector();
 initializeSessionTimer(elements.sessionTimer);
 flashcards.renderFlashcards();
-flashcards.initialize().catch((error) => console.error("Flashcards initialization failed:", error));
+flashcards.initialize()
+  .then(() => review.refresh())
+  .catch((error) => {
+    console.error("Flashcards initialization failed:", error);
+    elements.reviewStatus.textContent = "Reviews unavailable until flashcards load.";
+  });
 reader.setReaderMode("edit");
 reader.updateTextWorkspaceControls();
