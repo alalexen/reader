@@ -10,6 +10,8 @@ from .flashcards import (
     import_flashcards,
     list_flashcards,
     save_flashcard,
+    due_flashcards,
+    rate_flashcard,
 )
 from .google_cloud import (
     GOOGLE_HEBREW_VOICES,
@@ -81,6 +83,14 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+
+        if path == "/api/review/due":
+            try:
+                self.send_json(200, due_flashcards())
+            except Exception as error:
+                print(f"Review queue failed: {error}")
+                self.send_json(503, {"error": "Review database is unavailable."})
+            return
 
         if path == "/api/flashcards":
             try:
@@ -157,6 +167,23 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
+
+        if path.startswith("/api/review/"):
+            try:
+                identifier = path.removeprefix("/api/review/")
+                if not identifier.isdecimal():
+                    raise ValueError("Invalid card ID.")
+                payload = self.read_json_payload()
+                if not isinstance(payload, dict):
+                    raise ValueError("Invalid rating payload.")
+                result = rate_flashcard(int(identifier), payload.get("rating"))
+                self.send_json(200 if result else 404, result or {"error": "Card not found."})
+            except (ValueError, TypeError, json.JSONDecodeError) as error:
+                self.send_json(400, {"error": str(error)})
+            except Exception as error:
+                print(f"Review rating failed: {error}")
+                self.send_json(503, {"error": "Review database is unavailable."})
+            return
 
         if path in {"/api/flashcards", "/api/flashcards/import"}:
             try:
