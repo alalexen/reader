@@ -161,6 +161,18 @@ OCR providers, or Study workflow.
 - The sidebar skeleton rabbit has no trailing blood effect.
 - The former “Read. Understand. Remember.” tagline is intentionally omitted.
 
+The castle-to-background transition is softened **inside the generated
+images** (rather than with a new CSS overlay). To reproduce the artwork from
+the retained transparent sources, install optional design-time dependencies
+`Pillow` and `NumPy`, then run:
+
+```bash
+python scripts/build_dark_scene.py
+```
+
+The script updates both full-resolution dark scene variants without changing
+the artwork's placement, other elements, or the light theme.
+
 Implementation lives in `ui/themeController.js` and `styles/dark.css`,
 with theme parsing in `services/settingsService.js`. Keep dark-only overrides
 scoped under `html[data-theme="dark"]` so changes cannot unintentionally
