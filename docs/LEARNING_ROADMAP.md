@@ -209,6 +209,14 @@ Demo seed никогда не содержит личные данные пол�
 
 # 1. Spaced repetition review
 
+## Implementation status
+
+- [x] Review UI: word, context, translations, reveal, skip, grading and speech.
+- [x] Persistent backend scheduling and review event history.
+- [x] Due queue and deterministic scheduler unit tests.
+- [ ] Run full test suite against a local PostgreSQL instance.
+- [ ] Verify real review sessions in the browser and merge PR #5.
+
 ## Цель
 
 Сделать flashcards активной учебной системой, а не архивом сохранённых слов.
