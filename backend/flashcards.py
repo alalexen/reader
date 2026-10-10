@@ -1,5 +1,7 @@
 """Persistent flashcard operations for the local single-user API."""
 
+from datetime import datetime
+
 from sqlalchemy import select
 
 from .database import session_scope
