@@ -14,6 +14,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def main() -> None:
+    """Initialize the application schema using the configured database."""
     config = Config(str(PROJECT_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(PROJECT_ROOT / "migrations"))
     command.upgrade(config, "head")
