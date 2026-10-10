@@ -157,16 +157,44 @@
     </section>
 
 
+    <section class="card review-card" id="reviewSection" aria-labelledby="reviewTitle">
+      <div class="section-heading">
+        <div class="section-copy">
+          <div class="section-title-row"><div><span class="step-badge">3</span><h2 id="reviewTitle">Review words</h2></div></div>
+          <p>Recall the meaning, reveal the answer, and choose when to review again.</p>
+        </div>
+        <button id="reviewRefreshButton" type="button" class="secondary">Refresh reviews</button>
+      </div>
+      <div class="review-meta"><span><strong id="reviewCount">0</strong> words due</span><span id="reviewProgress" aria-live="polite"></span></div>
+      <p id="reviewStatus" class="status" role="status" aria-live="polite"></p>
+      <p id="reviewEmpty" class="empty-state">Loading review words...</p>
+      <div id="reviewSession" class="review-session hidden">
+        <div class="review-word-row"><strong id="reviewWord" dir="rtl" lang="he"></strong><button id="reviewSpeakWord" type="button" class="secondary">Speak word</button></div>
+        <div class="review-context"><p id="reviewSentence" dir="rtl" lang="he"></p><button id="reviewSpeakSentence" type="button" class="secondary">Speak sentence</button></div>
+        <div id="reviewAnswer" class="review-answer hidden"></div>
+        <div class="review-actions">
+          <button id="revealReviewButton" type="button">Reveal answer</button>
+          <div id="reviewRatingButtons" class="review-ratings hidden" aria-label="How well did you remember?">
+            <button type="button" data-review-rating="again" class="secondary">Again</button>
+            <button type="button" data-review-rating="hard" class="secondary">Hard</button>
+            <button type="button" data-review-rating="good">Good</button>
+            <button type="button" data-review-rating="easy" class="secondary">Easy</button>
+          </div>
+          <button id="reviewSkipButton" type="button" class="secondary">Skip</button>
+        </div>
+      </div>
+    </section>
+
     <section class="card flashcards-card">
       <div class="section-heading">
         <div class="section-copy">
           <div class="section-title-row">
             <div>
-              <span class="step-badge">3</span>
+              <span class="step-badge">4</span>
               <h2>My flashcards</h2>
             </div>
           </div>
-          <p>Words you choose to remember stay saved in this browser.</p>
+          <p>Saved words and translations are stored in PostgreSQL.</p>
         </div>
 
         <div class="flashcard-toolbar">
