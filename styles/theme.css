@@ -388,16 +388,7 @@ progress::-webkit-progress-value {
     max-width: none;
   }
 }
-#reviewWord {
-  color: #5a1914;
-  font-family: "Arial Hebrew", Arial, sans-serif;
-  font-size: clamp(2.4rem, 6vw, 3.8rem);
-}
-#reviewSentence {
-  flex: 1 1 280px;
-  margin: 0;
-  text-align: right;
-  font-size: 1.15rem;
-}
+
+
 @media (max-width: 720px) {
 }
