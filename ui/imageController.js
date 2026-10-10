@@ -1,6 +1,8 @@
 import { recognizeHebrewText } from "../services/ocrService.js";
 
+/** Coordinates image selection, cropping and recognition. */
 export function createImageController({ elements, state, reader }) {
+  /** Replaces the preview URL and releases the old one. */
   function setImagePreview(file) {
     if (state.previewUrl) {
       URL.revokeObjectURL(state.previewUrl);
@@ -11,6 +13,7 @@ export function createImageController({ elements, state, reader }) {
     elements.imageWorkspace.classList.remove("hidden");
   }
 
+  /** Clears the crop geometry and selection controls. */
   function resetCropSelection() {
     state.cropSelection = null;
     state.cropDragStart = null;
@@ -19,6 +22,7 @@ export function createImageController({ elements, state, reader }) {
     elements.applyCropButton.disabled = true;
   }
 
+  /** Enables crop interaction or resets it when disabled. */
   function setCropMode(enabled) {
     state.isCropping = enabled;
     state.cropDragStart = null;
@@ -30,6 +34,7 @@ export function createImageController({ elements, state, reader }) {
     }
   }
 
+  /** Clamps pointer coordinates to the displayed image. */
   function getCropPoint(event) {
     const rect = elements.imagePreview.getBoundingClientRect();
 
@@ -41,6 +46,7 @@ export function createImageController({ elements, state, reader }) {
     };
   }
 
+  /** Draws a crop rectangle from the drag coordinates. */
   function updateCropSelection(start, current) {
     const left = Math.min(start.x, current.x);
     const top = Math.min(start.y, current.y);
@@ -60,6 +66,7 @@ export function createImageController({ elements, state, reader }) {
     elements.applyCropButton.disabled = width < 12 || height < 12;
   }
 
+  /** Begins a crop on a primary pointer gesture. */
   function startCropDrag(event) {
     if (!state.isCropping || event.button > 0) {
       return;
@@ -72,6 +79,7 @@ export function createImageController({ elements, state, reader }) {
     elements.imagePreviewFrame.setPointerCapture?.(event.pointerId);
   }
 
+  /** Updates the crop rectangle while dragging. */
   function moveCropDrag(event) {
     if (!state.isCropping || !state.cropDragStart) {
       return;
@@ -81,6 +89,7 @@ export function createImageController({ elements, state, reader }) {
     updateCropSelection(state.cropDragStart, getCropPoint(event));
   }
 
+  /** Releases pointer capture when a crop gesture ends. */
   function endCropDrag(event) {
     if (!state.cropDragStart) {
       return;
@@ -94,6 +103,7 @@ export function createImageController({ elements, state, reader }) {
     }
   }
 
+  /** Restores the original image for OCR. */
   function useFullImage() {
     if (!state.originalImage) {
       return;
@@ -107,6 +117,7 @@ export function createImageController({ elements, state, reader }) {
       "Full image selected. Ready to recognize Hebrew text.";
   }
 
+  /** Enters manual image crop selection. */
   function enterCropMode() {
     resetCropSelection();
     setCropMode(true);
@@ -114,12 +125,14 @@ export function createImageController({ elements, state, reader }) {
       "Crop mode: drag across the image to select the text area.";
   }
 
+  /** Leaves crop mode without changing the source image. */
   function cancelCrop() {
     setCropMode(false);
     elements.ocrStatus.textContent =
       "Crop cancelled. Current image is ready for recognition.";
   }
 
+  /** Loads the newly chosen image for cropping or recognition. */
   function handleFileSelection() {
     const [file] = elements.imageInput.files;
 
@@ -136,6 +149,7 @@ export function createImageController({ elements, state, reader }) {
       "Image loaded. Use it as is, or crop it before recognition.";
   }
 
+  /** Creates a cropped image from display-space coordinates. */
   async function applyImageCrop() {
     const selection = state.cropSelection;
 
@@ -212,6 +226,7 @@ export function createImageController({ elements, state, reader }) {
     }
   }
 
+  /** Recognizes the selected page and writes extracted text to the editor. */
   async function runOcr() {
     if (!state.selectedImage) {
       return;
@@ -257,6 +272,7 @@ export function createImageController({ elements, state, reader }) {
     }
   }
 
+  /** Releases image resources and resets temporary OCR state. */
   function clear() {
     if (state.previewUrl) {
       URL.revokeObjectURL(state.previewUrl);
