@@ -71,8 +71,6 @@ html[data-theme="dark"] {
 }
 html[data-theme="dark"] body::before { content: none; }
 
-html[data-theme="dark"] .brand-block img { display: none; }
-
 
 html[data-theme="dark"] .sidebar-navigation { gap: 7px; }
 
@@ -318,42 +316,6 @@ html[data-theme="dark"] .status { color:#e2bbb8; }
   html[data-theme="dark"] *::before,
   html[data-theme="dark"] *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
-@media (max-width: 920px) {
-  html[data-theme="dark"] .workspace-layout { grid-template-columns:205px minmax(0,1fr); }
-  html[data-theme="dark"] .workspace-sidebar { width:205px; padding:18px 10px; }
-  html[data-theme="dark"] .workspace-main.app-shell { width:calc(100% - 35px); }
-  html[data-theme="dark"] .dark-masthead-title { font-size:39px; }
-}
-@media (max-width: 700px) {
-  html[data-theme="dark"] .workspace-layout {
-    display:block; padding-top:103px; background:#090c11;
-  }
-  html[data-theme="dark"] .dark-masthead {
-    position:absolute; top:0; left:0; right:0;
-    height:103px; background-position:center; background-size:cover;
-    display:flex;
-  }
-  html[data-theme="dark"] .dark-masthead-title { font-size:25px; margin-right:70px; }
-  html[data-theme="dark"] .workspace-sidebar {
-    position:sticky; top:0; z-index:12;
-    display:flex; flex-direction:row;
-    width:100%; height:auto; padding:8px 9px; overflow-x:auto;
-    border-right:0; border-bottom:1px solid #353b42;
-  }
-  html[data-theme="dark"] .brand-block { margin:0; }
-  html[data-theme="dark"] .brand-block::before { width:33px; height:38px; flex-basis:33px; }
-  html[data-theme="dark"] .brand-block span { font-size:12px; }
-  html[data-theme="dark"] .sidebar-navigation { display:flex; gap:3px; }
-  html[data-theme="dark"] .workspace-sidebar .sidebar-link { font-size:11px; padding:8px 5px; }
-  html[data-theme="dark"] .sidebar-footer { display:none; }
-  html[data-theme="dark"] .workspace-main.app-shell { width:calc(100% - 24px); padding-top:70px; }
-  html[data-theme="dark"] .workspace-topbar { top:-168px; right:4px; }
-  html[data-theme="dark"] .workspace-topbar .session-timer { display:none; }
-  html[data-theme="dark"] .theme-toggle { width:37px; height:37px; }
-  html[data-theme="dark"] .page-heading h1 { font-size:30px; }
-  html[data-theme="dark"] .read-inputs { grid-template-columns:1fr; }
-}
-
 /* A planner cell is not a primary action: keep low-activity days neutral. */
 html[data-theme="dark"] .calendar-grid button.calendar-day {
   color: #eae0db; background:#12181d; border-color:#353c42;
