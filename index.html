@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Read real Hebrew, save new words, and revisit them using a vocabulary calendar." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=editorial-2" />
+  <link rel="stylesheet" href="styles.css?v=editorial-3" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="workspace-layout">
     <aside class="workspace-sidebar" aria-label="Main navigation">
       <div class="brand-block">
-        <img src="assets/white-rabbit.webp" alt="" width="66" height="66" />
+        <img src="assets/rabbit-watercolor.svg" alt="" width="66" height="66" />
         <span>Hebrew<br />Reader</span>
       </div>
       <nav class="sidebar-navigation" aria-label="Main">
-        <button id="navRead" data-nav="read" class="sidebar-link is-active" aria-current="page" type="button"><span aria-hidden="true">▤</span> Read</button>
-        <button id="navSaved" data-nav="saved" class="sidebar-link" type="button"><span aria-hidden="true">♧</span> Saved Words</button>
-        <button id="navCalendar" data-nav="calendar" class="sidebar-link" type="button"><span aria-hidden="true">▦</span> Calendar</button>
-        <button id="openSettingsButton" class="sidebar-link" type="button"><span aria-hidden="true">⚙</span> Settings</button>
+        <button id="navRead" data-nav="read" class="sidebar-link is-active" aria-current="page" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6c-3.1-2-6.1-2.1-10-1v14c3.7-1 6.5-.9 10 1 3.5-1.9 6.3-2 10-1V5c-3.9-1.1-6.9-1-10 1Z"/><path d="M12 6v14"/></svg></span> Read</button>
+        <button id="navSaved" data-nav="saved" class="sidebar-link" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 4.5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2V21L12 16.2 5.5 21V4.5Z"/></svg></span> Saved Words</button>
+        <button id="navCalendar" data-nav="calendar" class="sidebar-link" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 10h18M8 14h2M14 14h2M8 18h2"/></svg></span> Calendar</button>
+        <button id="openSettingsButton" class="sidebar-link" type="button"><span class="nav-icon"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 2.8h3l.65 2.1q.8.2 1.5.65l2-.95 2.1 2.1-.95 2q.4.7.65 1.5l2.1.65v3l-2.1.65q-.2.8-.65 1.5l.95 2-2.1 2.1-2-.95q-.7.4-1.5.65l-.65 2.1h-3l-.65-2.1q-.8-.2-1.5-.65l-2 .95-2.1-2.1.95-2q.4-.7.65-1.5l-2.1-.65v-3l2.1-.65q.2-.8.65-1.5l-.95-2 2.1-2.1 2 .95q.7-.4 1.5-.65Z"/><circle cx="12" cy="12" r="3"/></svg></span> Settings</button>
       </nav>
       <div class="sidebar-footer" aria-hidden="true">
         <div class="sidebar-illustration">
-          <img src="assets/sidebar-landscape.svg" alt="" />
+          <img src="assets/sidebar-artwork.svg" alt="" />
         </div>
         <p>A kinder way<br />to read Hebrew.</p><span class="sidebar-underline"></span>
       </div>
@@ -43,7 +43,7 @@
           <div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
             <div><h1 lang="he" dir="rtl">שלום!</h1><p>Upload a page or paste Hebrew text below to start reading.</p></div>
           </div>
-          <img class="reading-still-life" src="assets/still-life.svg" alt="" />
+          <img class="reading-still-life" src="assets/still-life-watercolor.svg" alt="" />
         </header>
         <div class="read-inputs">
           <section class="card upload-card">
@@ -280,7 +280,7 @@
           <div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
             <div><h1 id="savedTitle">Saved Words</h1><p>Your vocabulary from the Hebrew texts you’ve read.</p></div>
           </div>
-          <img class="reading-still-life" src="assets/still-life.svg" alt="" />
+          <img class="reading-still-life" src="assets/still-life-watercolor.svg" alt="" />
         </header>
         <div class="vocab-toolbar">
           <label class="vocab-search-label"><span aria-hidden="true">⌕</span><input id="savedSearch" type="search" placeholder="Search your saved words…" aria-label="Search saved words" /></label>
@@ -325,8 +325,8 @@
         <button id="dayBack" class="text-button back-link" type="button">← Back to Calendar</button>
         <header class="page-heading page-heading-day"><div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
           <div><h1 id="dayWordsTitle">Words added on this day</h1><p id="dayWordsSubtitle"></p></div>
-        </div><img class="reading-still-life" src="assets/still-life.svg" alt="" /></header>
-        <div class="card day-toolbar"><span aria-hidden="true">▦</span><strong>Saved on this date</strong>
+        </div><img class="reading-still-life" src="assets/still-life-watercolor.svg" alt="" /></header>
+        <div class="card day-toolbar"><span aria-hidden="true">▦</span><strong id="dayToolbarDate">Selected date</strong>
           <button id="studyDayButton" type="button">Study these words →</button>
         </div>
         <div id="dayWordsList" class="vocab-group-list day-words-list"></div>
@@ -335,7 +335,7 @@
       <section class="page-view hidden" data-page="study" id="studyView" aria-labelledby="studyTitle">
         <header class="page-heading"><div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
           <div><h1 id="studyTitle">Study saved words</h1><p>Recall the meaning before revealing the translations.</p></div>
-        </div><img class="reading-still-life" src="assets/still-life.svg" alt="" /></header>
+        </div><img class="reading-still-life" src="assets/still-life-watercolor.svg" alt="" /></header>
         <div class="study-header"><button id="studyBack" type="button" class="text-button">← Back to words</button><span id="studySource"></span></div>
         <p id="studyStatus" class="status" role="status" aria-live="polite"></p>
         <p id="studyComplete" class="study-complete hidden" aria-live="polite"></p>
@@ -433,6 +433,6 @@
   </div>
 
 
-  <script type="module" src="app.js?v=editorial-2"></script>
+  <script type="module" src="app.js?v=editorial-3"></script>
 </body>
 </html>
