@@ -162,12 +162,22 @@ try {
       getComputedStyle(element).backgroundColor);
     assert.notEqual(darkSurface, "rgb(255, 253, 249)");
     await check("Dark Study", "dark-study.png");
+    await page.locator("#studyReveal").click();
+    await page.locator('[data-rating="good"]').waitFor({ state: "visible" });
+    await check("Dark Study answer", "dark-study-answer.png");
+    await page.locator('[data-rating="good"]').click();
+    await page.locator("#studyProgressLabel").getByText("2 of 2").waitFor();
 
     await page.locator("#navRead").click();
     await check("Dark Read", "dark-read.png");
     await page.locator("#navSaved").click();
     await check("Dark Saved Words", "dark-saved-words.png");
     await page.locator("#navCalendar").click();
+    const quietDay = await page.locator(".calendar-day:not(.has-words)").first()
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+    const colorChannels = (quietDay.match(/\\d+/g) || []).map(Number);
+    assert.ok(colorChannels.slice(0, 3).every((channel) => channel < 75),
+      "Inactive calendar cells must remain dark, not action-red: " + quietDay);
     await check("Dark Calendar", "dark-calendar.png");
     await page.locator(".calendar-day.has-words").first().click();
     await check("Dark Day words", "dark-day-words.png");
