@@ -65,7 +65,7 @@ from pathlib import Path
 from urllib.request import urlretrieve
 
 def package_dir(name):
-    """Find the package location used by the setup command."""
+    # Locate the installed package directory needed to download the model.
     spec = importlib.util.find_spec(name)
     if spec is None or not spec.submodule_search_locations:
         raise SystemExit(f"{name} package was not found after installation.")
