@@ -1,10 +1,12 @@
 const translationCache = new Map();
 const TRANSLATION_ENDPOINT = "https://api.mymemory.translated.net/get";
 
+/** Checks whether content contains Hebrew characters. */
 function containsHebrew(text) {
   return /[\u0590-\u05FF]/u.test(text);
 }
 
+/** Requests one translation from the MyMemory provider. */
 async function requestMyMemoryTranslation(text, sourceLanguage, targetLanguage) {
   const cacheKey = `mymemory:${sourceLanguage}:${targetLanguage}:${text}`;
 
@@ -39,6 +41,7 @@ async function requestMyMemoryTranslation(text, sourceLanguage, targetLanguage) 
   return translatedText;
 }
 
+/** Translates selected text through MyMemory. */
 async function translateWithMyMemory(text, targetLanguage) {
   const cleanText = text.trim();
 
@@ -68,6 +71,7 @@ async function translateWithMyMemory(text, targetLanguage) {
   return requestMyMemoryTranslation(englishTranslation, "en", targetLanguage);
 }
 
+/** Requests translation via the configured Google provider. */
 async function translateWithGoogle(text, targetLanguage) {
   const cacheKey = `google-nmt:he:${targetLanguage}:${text}`;
 
@@ -115,6 +119,7 @@ async function translateWithGoogle(text, targetLanguage) {
  * Translates Hebrew into multiple target languages.
  * Google NMT falls back to MyMemory when the local Google backend is unavailable.
  */
+/** Collects translations in the enabled interface languages. */
 export async function translateIntoLanguages(
   text,
   targetLanguages,

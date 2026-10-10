@@ -42,6 +42,7 @@ def port_is_free(port: int = WEB_PORT) -> bool:
 
 
 def _posix_listening_pids(port: int) -> list[int]:
+    """Identify local processes bound to a port on POSIX systems."""
     lsof = shutil_which("lsof")
     if not lsof:
         if port_is_free(port):
@@ -74,6 +75,7 @@ def _posix_listening_pids(port: int) -> list[int]:
 
 
 def _windows_listening_pids(port: int) -> list[int]:
+    """Identify listening processes on supported Windows systems."""
     result = subprocess.run(
         ["netstat", "-ano", "-p", "tcp"],
         cwd=PROJECT_ROOT,
@@ -103,6 +105,7 @@ def _windows_listening_pids(port: int) -> list[int]:
 
 
 def listening_pids(port: int = WEB_PORT) -> list[int]:
+    """Resolve current listeners using the host platform's implementation."""
     if os.name == "nt":
         return _windows_listening_pids(port)
     return _posix_listening_pids(port)
@@ -140,6 +143,7 @@ def process_label(pid: int) -> str:
 
 
 def terminate_process(pid: int, *, force: bool = False) -> None:
+    """Request a process stop with a bounded timeout."""
     if pid == os.getpid():
         raise RunnerError("Refusing to terminate the current launcher process.")
 
@@ -178,6 +182,7 @@ def terminate_process(pid: int, *, force: bool = False) -> None:
 
 
 def wait_until_port_free(port: int, timeout: float) -> bool:
+    """Wait briefly for a previous web listener to release its port."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if port_is_free(port):
@@ -226,6 +231,7 @@ def clear_web_port(port: int = WEB_PORT) -> None:
 
 
 def main() -> None:
+    """Prepare the database and start the local Reader server."""
     parser = argparse.ArgumentParser(
         description=(
             "Prepare Hebrew Reader's PostgreSQL database and run the local app."

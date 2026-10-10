@@ -1,18 +1,26 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Read real Hebrew, save new words, and revisit them using a vocabulary calendar." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=editorial-4" />
+  <script>
+    // Apply the stored appearance before CSS paints to avoid flashing the wrong theme.
+    try {
+      const saved = JSON.parse(localStorage.getItem("hebrewReaderSettings") || "{}");
+      document.documentElement.dataset.theme = saved.theme === "dark" ? "dark" : "light";
+    } catch {
+      document.documentElement.dataset.theme = "light";
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css?v=brand-text-v1" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="workspace-layout">
     <aside class="workspace-sidebar" aria-label="Main navigation">
       <div class="brand-block">
-        <img src="assets/rabbit-hq.webp" alt="" width="66" height="66" />
         <span>Hebrew<br />Reader</span>
       </div>
       <nav class="sidebar-navigation" aria-label="Main">
@@ -35,7 +43,14 @@
           <span aria-hidden="true" class="clock-symbol">◷</span>
           <div><time id="sessionTimer" datetime="PT0S">00:00:00</time><span class="session-timer-label">Reading session</span></div>
         </div>
-        <span class="sun-decoration" aria-hidden="true">☼</span>
+        <button
+          id="themeToggle"
+          class="theme-toggle"
+          type="button"
+          aria-pressed="false"
+          aria-label="Switch to dark mode"
+          title="Dark mode"
+        ><span class="theme-toggle-icon" aria-hidden="true">☀</span></button>
       </div>
 
       <div class="page-view" data-page="read" id="readView">
@@ -385,6 +400,14 @@
         >×</button>
       </div>
 
+      <fieldset class="appearance-settings">
+        <legend>Appearance</legend>
+        <div class="appearance-options">
+          <label><input type="radio" name="appearance" value="light" checked /><span aria-hidden="true">☀</span> Light</label>
+          <label><input type="radio" name="appearance" value="dark" /><span aria-hidden="true">☾</span> Dark</label>
+        </div>
+      </fieldset>
+
       <div class="settings-grid">
         <label class="settings-field">
           <span>Translation model</span>
@@ -434,6 +457,6 @@
   </div>
 
 
-  <script type="module" src="app.js?v=editorial-4"></script>
+  <script type="module" src="app.js?v=castle-edge-v3"></script>
 </body>
 </html>

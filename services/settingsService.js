@@ -8,8 +8,11 @@ const DEFAULT_SETTINGS = Object.freeze({
   ocrEngine: "tesseract",
   translationLanguages: [...SUPPORTED_TRANSLATION_LANGUAGES],
   voiceURI: "",
+  theme: "light",
 });
 
+/** Keep only supported languages while preserving their selected order. */
+/** Keeps valid translation languages in stable order. */
 function normalizeLanguages(value) {
   if (!Array.isArray(value)) {
     return [...DEFAULT_SETTINGS.translationLanguages];
@@ -27,6 +30,7 @@ function normalizeLanguages(value) {
 /**
  * Loads and validates user preferences stored in the browser.
  */
+/** Loads validated user preferences with backwards-compatible defaults. */
 export function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -37,6 +41,7 @@ export function loadSettings() {
       ocrEngine:
         saved.ocrEngine === "google-vision" ? "google-vision" : "tesseract",
       translationLanguages: normalizeLanguages(saved.translationLanguages),
+      theme: saved.theme === "dark" ? "dark" : "light",
       voiceURI:
         typeof saved.voiceURI === "string"
           ? saved.voiceURI
@@ -55,6 +60,7 @@ export function loadSettings() {
 /**
  * Persists already validated settings.
  */
+/** Persists current preferences and cleans obsolete voice storage. */
 export function saveSettings(settings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   localStorage.removeItem(LEGACY_VOICE_STORAGE_KEY);

@@ -77,7 +77,11 @@ try {
       }));
       assert.ok(dimensions.document <= dimensions.viewport + 2,
         `${width}px ${view}: page overflows horizontally (${dimensions.document}px)`);
-      if (width === 1448) assert.ok(Math.abs(dimensions.sidebar - 270) < 2);
+      if (width === 1448) {
+        const expectedSidebar = 270;
+        assert.ok(Math.abs(dimensions.sidebar - expectedSidebar) < 2,
+          `${view}: expected ${expectedSidebar}px sidebar, got ${dimensions.sidebar}px`);
+      }
       if (width > 700) {
         assert.ok(dimensions.main.x >= dimensions.sidebar,
           `${width}px ${view}: main is hidden behind sidebar`);
@@ -86,12 +90,16 @@ try {
       for (const image of dimensions.image) {
         assert.ok(image.ready && image.width > 0, "Broken design image: " + image.src);
       }
-      if (width === 1448) await page.screenshot({ path: `${output}/${filename}`, fullPage: true });
+      // Preserve comparison renders at both reference and wide desktop sizes.
+      if (width === 1448 || (width === 2048 && filename === "dark-read.png")) {
+        const name = width === 2048 ? "dark-read-2048.png" : filename;
+        await page.screenshot({ path: `${output}/${name}`, fullPage: true });
+      }
     }
 
     const paintedAssets = await page.evaluate(async () => {
       const output = [];
-      for (const selector of [".brand-block img", ".sidebar-illustration img", ".read-heading .reading-still-life"]) {
+      for (const selector of [".sidebar-illustration img", ".read-heading .reading-still-life"]) {
         const element = document.querySelector(selector);
         if (!element) throw new Error("Missing design artwork: " + selector);
         await element.decode();
@@ -136,6 +144,8 @@ try {
       }
     }
 
+    // The logo consists only of live brand text, in both appearance modes.
+    assert.equal(await page.locator(".brand-block img").count(), 0);
     await check("Read", "read.png");
     await page.locator("#navSaved").click();
     await page.locator("#savedWordsGroups .vocab-row").first().waitFor();
@@ -149,6 +159,114 @@ try {
     await page.locator("#studyDayButton").click();
     await page.locator("#studyView:not(.hidden)").waitFor();
     await check("Study", "study.png");
+    // Theme changes only appearance. The layout and timer must not jump.
+    const sharedGeometry = async () => page.evaluate(() => {
+      const bounds = (selector) => {
+        const element = document.querySelector(selector);
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      };
+      return {
+        timer: bounds(".workspace-topbar"),
+        sessionTimer: bounds(".session-timer"),
+        brandText: bounds(".brand-block span"),
+        sidebar: bounds(".workspace-sidebar"),
+        main: bounds(".workspace-main"),
+      };
+    });
+    const beforeTheme = await sharedGeometry();
+    await page.locator("#themeToggle").click();
+    const afterTheme = await sharedGeometry();
+    for (const key of Object.keys(beforeTheme)) {
+      for (const field of ["x", "y", "width", "height"]) {
+        assert.ok(Math.abs(beforeTheme[key][field] - afterTheme[key][field]) < 1.1,
+          `${width}px ${key}.${field} moved when switching themes: ${beforeTheme[key][field]} → ${afterTheme[key][field]}`);
+      }
+    }
+    assert.equal(await page.locator(".dark-masthead").count(), 0);
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+    assert.equal(await page.locator("#themeToggle").getAttribute("aria-pressed"), "true");
+    const darkSurface = await page.locator("#studyCard").evaluate((element) =>
+      getComputedStyle(element).backgroundColor);
+    assert.notEqual(darkSurface, "rgb(255, 253, 249)");
+    await check("Dark Study", "dark-study.png");
+    await page.locator("#studyReveal").click();
+    await page.locator('[data-rating="good"]').waitFor({ state: "visible" });
+    await check("Dark Study answer", "dark-study-answer.png");
+    await page.locator('[data-rating="good"]').click();
+    await page.locator("#studyProgressLabel").getByText("2 of 2").waitFor();
+
+    await page.locator("#navRead").click();
+    await check("Dark Read", "dark-read.png");
+    await page.locator("#pasteText").fill("שלום עולם. אני קורא ספר.");
+    await page.locator("#loadPasteButton").click();
+    await page.locator("#reader .word-token").first().click();
+    await page.locator("#wordPanel:not(.hidden)").waitFor();
+    if (width === 1448) await page.screenshot({ path: `${output}/dark-word-panel.png`, fullPage: true });
+    await page.locator("#closeWordPanelButton").click();
+    await page.locator("#navSaved").click();
+    await check("Dark Saved Words", "dark-saved-words.png");
+    await page.locator("#navCalendar").click();
+    const quietDay = await page.locator(".calendar-day:not(.has-words)").first()
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+    const colorChannels = (quietDay.match(/\\d+/g) || []).map(Number);
+    assert.ok(colorChannels.slice(0, 3).every((channel) => channel < 75),
+      "Inactive calendar cells must remain dark, not action-red: " + quietDay);
+    await check("Dark Calendar", "dark-calendar.png");
+    await page.locator(".calendar-day.has-words").first().click();
+    await check("Dark Day words", "dark-day-words.png");
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+    // A single scene owns both illustrations; no sidebar/header cutout remains.
+    await page.locator("#navRead").click();
+    const scene = await page.evaluate(async () => {
+      const layout = getComputedStyle(document.querySelector(".workspace-layout"));
+      const sidebar = getComputedStyle(document.querySelector(".workspace-sidebar"));
+      const readHeading = getComputedStyle(document.querySelector(".read-heading"), "::after");
+      const source = window.innerWidth > 920
+        ? (window.innerWidth / window.innerHeight <= 1.5
+          ? "dark-scene-laptop.webp" : "dark-scene-wide.webp")
+        : null;
+      let image = null;
+      if (source) {
+        const element = new Image();
+        element.src = "/assets/" + source;
+        await element.decode();
+        image = { width: element.naturalWidth, height: element.naturalHeight };
+      }
+      return {
+        image,
+        source,
+        background: layout.backgroundImage,
+        sidebarBackground: sidebar.backgroundImage,
+        sidebarColor: sidebar.backgroundColor,
+        readDecorContent: readHeading.content,
+      };
+    });
+    if (width > 920) {
+      assert.match(scene.background, /dark-scene-(wide|laptop)[.]webp/);
+      assert.ok(scene.image.width >= width * 1.8,
+        `Unified scene lacks high-density source pixels: ${JSON.stringify(scene)}`);
+      assert.ok(scene.image.height >= 1800);
+    } else {
+      assert.equal(scene.background, "none", "Avoid desktop illustrations on narrow screens");
+    }
+    assert.equal(scene.sidebarBackground, "none", "Sidebar must not draw a second image");
+    assert.equal(scene.sidebarColor, "rgba(0, 0, 0, 0)",
+      "Sidebar must reveal the continuous background rather than an opaque rectangle");
+    assert.equal(scene.readDecorContent, "none",
+      "Read heading must not draw its own independent castle layer");
+
+    // Modal appearance setting must also update the global theme and remain in sync.
+    await page.locator("#openSettingsButton").click();
+    if (width === 1448) await page.screenshot({ path: `${output}/dark-settings.png`, fullPage: true });
+    await page.locator('input[name="appearance"][value="light"]').check();
+    await page.locator("#saveSettingsButton").click();
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+    assert.equal(await page.locator("#themeToggle").getAttribute("aria-pressed"), "false");
+    await page.locator("#closeSettingsButton").click();
+
     assert.deepEqual(errors, [], `${width}px browser errors`);
     await context.close();
     console.log(`✓ ${width}px: Read → Saved Words → Calendar → Day → Study; assets and layout valid.`);

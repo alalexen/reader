@@ -2,6 +2,7 @@ import { saveFlashcard } from "../services/flashcardsService.js";
 
 /** Keeps the reader's Remember word action independent of the vocabulary pages. */
 export function createWordSaveController({ elements, state, reader, onChanged }) {
+  /** Saves the selected word and notifies vocabulary screens. */
   async function rememberActiveWord() {
     const data = state.activeWordData;
     if (!data?.word) return;

@@ -46,6 +46,7 @@ def get_engine():
 
 
 def get_session_factory():
+    """Create the database session factory."""
     global _session_factory
 
     if _session_factory is None:

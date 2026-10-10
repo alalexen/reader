@@ -6,17 +6,20 @@ import {
   splitIntoSentences,
 } from "../utils/hebrew.js";
 
+/** Coordinates editable Hebrew text, clickable words and translation. */
 export function createReaderController({
   elements,
   translationElements,
   state,
 }) {
+  /** Clears translations for a new selection. */
   function setTranslationPlaceholders(scope) {
     Object.values(translationElements[scope]).forEach((element) => {
       element.textContent = "—";
     });
   }
 
+  /** Enables saving only for an active word selection. */
   function updateRememberButton() {
     const hasSelectedWord = Boolean(state.activeWordData?.word);
 
@@ -26,6 +29,7 @@ export function createReaderController({
       : "Select a Hebrew word first";
   }
 
+  /** Closes the panel and invalidates pending word requests. */
   function closeWordPanel() {
     state.wordSelectionId += 1;
     state.activeSentence = "";
@@ -37,6 +41,7 @@ export function createReaderController({
     updateRememberButton();
   }
 
+  /** Keeps speech and reader controls synchronized with text content. */
   function updateTextWorkspaceControls() {
     const hasText = elements.editableText.value.trim().length > 0;
 
@@ -49,6 +54,7 @@ export function createReaderController({
     }
   }
 
+  /** Switches between editing and interactive Hebrew reading. */
   function setReaderMode(mode) {
     const hasText = elements.editableText.value.trim().length > 0;
     const nextMode = mode === "reader" && hasText ? "reader" : "edit";
@@ -69,6 +75,7 @@ export function createReaderController({
     }
   }
 
+  /** Expands or collapses the reading area. */
   function toggleTextWorkspaceSize() {
     state.isTextWorkspaceExpanded = !state.isTextWorkspaceExpanded;
     elements.textWorkspace.classList.toggle(
@@ -80,6 +87,7 @@ export function createReaderController({
       : "Expand";
   }
 
+  /** Shows morphology only for the current selected word. */
   async function renderWordStructure(word, selectionId) {
     elements.wordStructureParts.replaceChildren();
     elements.wordStructureSection.classList.add("hidden");
@@ -90,6 +98,7 @@ export function createReaderController({
       return;
     }
 
+    /** Displays one segmentation token without interpreting content as HTML. */
     const appendPart = (tokenText, meaningText, className = "") => {
       const part = document.createElement("span");
       part.className = `word-structure-part ${className}`.trim();
@@ -138,6 +147,7 @@ export function createReaderController({
     elements.wordStructureSection.classList.remove("hidden");
   }
 
+  /** Fetches multilingual translations and ignores stale selections. */
   async function translate(text, scope, selectionId = null) {
     if (!text.trim()) {
       return null;
@@ -193,6 +203,7 @@ export function createReaderController({
     }
   }
 
+  /** Selects a token and displays its word and sentence context. */
   async function activateWord(token, sentence) {
     const word = normalizeHebrewWord(token);
 
@@ -227,6 +238,7 @@ export function createReaderController({
     updateRememberButton();
   }
 
+  /** Adds keyboard-accessible Hebrew tokens to the reader. */
   function appendSentence(sentence) {
     const tokens = sentence.split(/(\s+)/u);
 
@@ -242,6 +254,7 @@ export function createReaderController({
       wordElement.setAttribute("role", "button");
       wordElement.textContent = token;
 
+      /** Associates a clicked token with its containing sentence. */
       const activate = () => activateWord(token, sentence);
 
       wordElement.addEventListener("click", activate);
@@ -256,6 +269,7 @@ export function createReaderController({
     });
   }
 
+  /** Builds an interactive reader from the current editable text. */
   function renderClickableText() {
     const text = elements.editableText.value.trim();
     elements.reader.replaceChildren();
@@ -270,6 +284,7 @@ export function createReaderController({
     updateTextWorkspaceControls();
   }
 
+  /** Resets the current reading session without touching saved words. */
   function clear() {
     state.activeSentence = "";
     state.activeWordData = null;

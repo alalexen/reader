@@ -134,6 +134,65 @@ A healthy database returns:
 }
 ```
 
+## Appearance and dark mode
+
+Reader supports **Light** (the original warm editorial design) and **Dark**
+(the gothic design) without changing the underlying text, saved words, calendar,
+OCR providers, or Study workflow.
+
+- Use the sun/moon button in the header for an immediate theme switch.
+- Alternatively, open **Settings → Appearance → Light / Dark**, then save.
+- The selected theme is stored with the existing browser settings and restored
+  before the page is painted. No account or new backend API is needed.
+- The gothic scene is **one continuous background**, with separate high-density
+  compositions for wide desktop and taller laptop viewports:
+  `assets/dark-scene-wide.webp` (3840 × 2160) and
+  `assets/dark-scene-laptop.webp` (2896 × 2172).
+  They are assembled from the approved source illustrations
+  `assets/dark-sidebar-seamless.webp` and
+  `assets/dark-castle-seamless.webp`, kept as editable source artwork.
+  The main layout supplies the background once; sidebar and headings are
+  transparent above it, so no separately positioned images can form seams.
+  This does not rasterize any buttons, labels or editable Hebrew text.
+  The original warm light design and dark design share the **same DOM, sidebar
+  width, main column and timer position**.
+  Castle and book proportions are preserved, and the books have no labels.
+  There is no dark-only header or redundant rabbit beside the brand.
+- The sidebar skeleton rabbit has no trailing blood effect.
+- The former “Read. Understand. Remember.” tagline is intentionally omitted.
+
+The castle-to-background transition is softened **inside the generated
+images** (rather than with a new CSS overlay). To reproduce the artwork from
+the retained transparent sources, install optional design-time dependencies
+`Pillow` and `NumPy`, then run:
+
+```bash
+python scripts/build_dark_scene.py
+```
+
+The script updates both full-resolution dark scene variants without changing
+the artwork's placement, other elements, or the light theme.
+
+Implementation lives in `ui/themeController.js` and `styles/dark.css`,
+with theme parsing in `services/settingsService.js`. Keep dark-only overrides
+scoped under `html[data-theme="dark"]` so changes cannot unintentionally
+affect the existing light appearance.
+
+### Quality verification
+
+```bash
+python -m unittest discover -s tests -v
+node --test tests/*.mjs
+```
+
+GitHub Actions also checks frontend syntax, equal layout and timer coordinates
+in both themes, unified high-density background loading, the absence of
+independent sidebar/heading scenic layers, theme preference persistence,
+real Chromium navigation at desktop/mobile widths, answer reveal and rating,
+selected word controls, settings, and layout screenshots for both themes.
+A final smoke test with a real local PostgreSQL database is required before
+merging the implementation.
+
 ## Pages and navigation
 
 The home page is **Read** only: upload an image, optionally crop it, recognize Hebrew or paste Hebrew text, then click words to translate and save them. The old inline flashcard and review sections have been removed.
@@ -345,7 +404,6 @@ reader/
 │   ├── features.css
 │   └── editorial.css        # Sidebar, word list, planner, study styling
 ├── assets/
-│   ├── rabbit-hq.webp
 │   ├── sidebar-landscape-hq.webp
 │   └── still-life-hq.webp
 ├── ui/

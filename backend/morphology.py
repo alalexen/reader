@@ -39,6 +39,7 @@ def load_hebpipe_segmentation_runtime():
     whitespace_path = package_dir / "lib" / "whitespace_tokenize.py"
 
     def load_module(name, path):
+        """Import one Hebrew segmentation module by its path."""
         spec = importlib.util.spec_from_file_location(name, path)
         if spec is None or spec.loader is None:
             raise ImportError(f"Could not load HebPipe module: {path.name}")

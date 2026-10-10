@@ -6,6 +6,7 @@ RATINGS = frozenset({"again", "hard", "good", "easy"})
 
 
 def schedule_review(card, rating, now=None):
+    """Update interval and next due timestamp for one graded card."""
     if rating not in RATINGS:
         raise ValueError("Rating must be again, hard, good or easy.")
     now = now or datetime.now(timezone.utc)

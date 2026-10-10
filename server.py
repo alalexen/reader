@@ -10,6 +10,7 @@ PORT = 8000
 
 
 def main():
+    """Start the HTTP handler with application-specific server settings."""
     server = ThreadingHTTPServer((HOST, PORT), HebrewReaderHandler)
     print(f"Hebrew Reader is running at http://{HOST}:{PORT}")
     print(

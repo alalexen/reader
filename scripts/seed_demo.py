@@ -28,6 +28,7 @@ DEMO_TEXT = "אני לומד עברית כל יום. אני קורא ספר וש
 
 
 def main() -> None:
+    """Add demonstration records to an initialized database."""
     created = []
 
     with session_scope() as session:

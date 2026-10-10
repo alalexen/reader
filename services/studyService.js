@@ -1,4 +1,5 @@
 /** Backend scheduling is authoritative: rating is persisted before advancing. */
+/** Persists a valid spaced-repetition grade before advancing a study session. */
 export async function gradeWord(cardId, rating) {
   if (!Number.isInteger(cardId) || cardId < 1) throw new Error("Invalid card.");
   if (!["again", "hard", "good", "easy"].includes(rating)) {

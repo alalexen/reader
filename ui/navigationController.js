@@ -1,9 +1,11 @@
 /** Lightweight page navigation. Reading state remains mounted between views. */
 const VIEWS = ["read", "saved", "calendar", "day", "study"];
 
+/** Switches page visibility without unmounting reading state. */
 export function createNavigationController({ elements, onLeaveRead }) {
   let currentView = "read";
 
+  /** Activates the requested page and updates navigation semantics. */
   function show(view) {
     if (!VIEWS.includes(view)) throw new Error("Unknown page: " + view);
     if (currentView === "read" && view !== "read") onLeaveRead();
@@ -29,5 +31,5 @@ export function createNavigationController({ elements, onLeaveRead }) {
   elements.navRead.addEventListener("click", () => show("read"));
   elements.navSaved.addEventListener("click", () => show("saved"));
   elements.navCalendar.addEventListener("click", () => show("calendar"));
-  return { show, getCurrentView: () => currentView };
+  return { show };
 }

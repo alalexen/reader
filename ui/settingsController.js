@@ -1,6 +1,8 @@
 import { saveSettings } from "../services/settingsService.js";
 
-export function createSettingsController({ elements, state }) {
+/** Keeps the existing settings dialog in sync with saved application preferences. */
+export function createSettingsController({ elements, state, onThemeChanged = () => {} }) {
+  /** Shows only the translation languages selected in settings. */
   function applyTranslationLanguageVisibility() {
     const selected = new Set(state.settings.translationLanguages);
 
@@ -12,6 +14,7 @@ export function createSettingsController({ elements, state }) {
     });
   }
 
+  /** Copies available speech voices into the modal without moving the original options. */
   function cloneVoiceOptionsIntoSettings() {
     elements.settingsVoiceSelect.replaceChildren();
 
@@ -22,8 +25,10 @@ export function createSettingsController({ elements, state }) {
     elements.settingsVoiceSelect.value = elements.voiceSelect.value;
   }
 
+  /** Reads the editable settings fields without mutating persisted preferences. */
   function getDraftSettings() {
     return {
+      theme: elements.appearanceInputs.find((input) => input.checked)?.value || state.settings.theme,
       translationProvider: elements.settingsTranslationProvider.value,
       ocrEngine: elements.settingsOcrEngine.value,
       translationLanguages: elements.translationLanguageInputs
@@ -33,6 +38,7 @@ export function createSettingsController({ elements, state }) {
     };
   }
 
+  /** Disables Save when values are unchanged or no translation language is selected. */
   function updateSaveButton() {
     const draft = getDraftSettings();
     const current = state.settings;
@@ -42,11 +48,15 @@ export function createSettingsController({ elements, state }) {
       !hasLanguage || JSON.stringify(draft) === JSON.stringify(current);
   }
 
+  /** Populates and opens the existing settings modal. */
   function open() {
     elements.settingsTranslationProvider.value =
       state.settings.translationProvider;
     elements.settingsOcrEngine.value = state.settings.ocrEngine;
     cloneVoiceOptionsIntoSettings();
+    elements.appearanceInputs.forEach((input) => {
+      input.checked = input.value === state.settings.theme;
+    });
 
     elements.translationLanguageInputs.forEach((input) => {
       input.checked = state.settings.translationLanguages.includes(input.value);
@@ -57,15 +67,18 @@ export function createSettingsController({ elements, state }) {
     updateSaveButton();
   }
 
+  /** Hides the modal without saving the draft. */
   function close() {
     elements.settingsBackdrop.classList.add("hidden");
     elements.settingsBackdrop.setAttribute("aria-hidden", "true");
   }
 
+  /** Returns whether the settings modal is visible. */
   function isOpen() {
     return !elements.settingsBackdrop.classList.contains("hidden");
   }
 
+  /** Persists valid settings and immediately applies changes to the reader. */
   function save() {
     const draft = getDraftSettings();
 
@@ -75,6 +88,7 @@ export function createSettingsController({ elements, state }) {
 
     state.settings = draft;
     saveSettings(state.settings);
+    onThemeChanged(draft.theme);
 
     elements.ocrEngine.value = draft.ocrEngine;
     elements.voiceSelect.value = draft.voiceURI;

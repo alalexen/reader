@@ -13,6 +13,7 @@ from bootstrap_db import BootstrapError, DATA_DIR, find_postgres_bin_dir, run
 
 
 def main() -> None:
+    """Stop only the private PostgreSQL instance managed by Reader."""
     if not (DATA_DIR / "PG_VERSION").exists():
         print("No managed Hebrew Reader PostgreSQL cluster was found.")
         return

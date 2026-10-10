@@ -10,6 +10,7 @@ const PREFIX_MEANINGS = Object.freeze({
   "ש": "that / which",
 });
 
+/** Splits a possible Hebrew prefix from its remaining base. */
 function splitPrefixSegment(segment) {
   if (!segment) {
     return [];
@@ -27,6 +28,7 @@ function splitPrefixSegment(segment) {
   }));
 }
 
+/** Converts morphology data to the tokens displayed in the reader. */
 function buildWordStructure(word, segments, provider) {
   const normalizedSegments = Array.isArray(segments)
     ? segments.filter(Boolean)
@@ -76,6 +78,7 @@ function buildWordStructure(word, segments, provider) {
  * Raw segments are preserved even when they cannot be classified as known
  * prefixes, so the UI can show the analyzer result instead of hiding it.
  */
+/** Requests Hebrew segmentation and normalizes the response. */
 export async function analyzeHebrewMorphology(word) {
   const cleanWord = stripHebrewMarks(word.trim());
 
