@@ -1,5 +1,6 @@
 import {
   buildQuizletImportText,
+  initializeFlashcards,
   removeFlashcard,
   saveFlashcard,
 } from "../services/flashcardsService.js";
@@ -42,9 +43,16 @@ export function createFlashcardsController({
     deleteButton.type = "button";
     deleteButton.className = "secondary danger-button";
     deleteButton.textContent = "Delete";
-    deleteButton.addEventListener("click", () => {
-      state.flashcards = removeFlashcard(card.id);
-      renderFlashcards();
+    deleteButton.addEventListener("click", async () => {
+      deleteButton.disabled = true;
+      try {
+        state.flashcards = await removeFlashcard(card.id);
+        renderFlashcards();
+      } catch (error) {
+        console.error("Could not delete flashcard:", error);
+        elements.flashcardsStatus.textContent = "Could not delete the card. Try again.";
+        deleteButton.disabled = false;
+      }
     });
 
     actions.append(speakWordButton, deleteButton);
@@ -130,7 +138,7 @@ export function createFlashcardsController({
         }
       }
 
-      state.flashcards = saveFlashcard({
+      state.flashcards = await saveFlashcard({
         word: data.word,
         translations: data.translations || {
           uk: "—",
@@ -146,7 +154,7 @@ export function createFlashcardsController({
     } catch (error) {
       console.error("Could not save flashcard:", error);
       elements.flashcardsStatus.textContent =
-        "Could not save this word in the browser.";
+        "Could not save this word in the database. Try again.";
     } finally {
       elements.rememberWordButton.textContent = "Remember word";
       reader.updateRememberButton();
@@ -172,7 +180,20 @@ export function createFlashcardsController({
     }
   }
 
+  async function initialize() {
+    try {
+      state.flashcards = await initializeFlashcards();
+      renderFlashcards();
+    } catch (error) {
+      console.error("Flashcard migration/loading failed:", error);
+      elements.flashcardsStatus.textContent =
+        "Could not load flashcards from PostgreSQL. Your original browser cards are still preserved. Restart the server and reload.";
+      throw error;
+    }
+  }
+
   return {
+    initialize,
     copyQuizletImport,
     rememberActiveWord,
     renderFlashcards,
