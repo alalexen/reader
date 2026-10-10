@@ -48,6 +48,7 @@ let activeAudioUrl = "";
 let activeRequestController = null;
 let speechSessionId = 0;
 
+/** Ranks a voice according to the preferred Hebrew voice characteristics. */
 function scoreHebrewVoice(voice) {
   const language = voice.lang.toLowerCase();
   const name = voice.name.toLowerCase();
@@ -84,6 +85,7 @@ function scoreHebrewVoice(voice) {
 /**
  * Returns Hebrew voices exposed by the browser.
  */
+/** Returns the browser's available Hebrew voices. */
 export function getHebrewVoices() {
   return window.speechSynthesis
     .getVoices()
@@ -99,6 +101,7 @@ export function getHebrewVoices() {
 /**
  * Returns the best local Hebrew voice currently exposed by the browser.
  */
+/** Selects the most appropriate built-in Hebrew voice. */
 export function getPreferredHebrewVoice() {
   return getHebrewVoices()[0] || null;
 }
@@ -106,6 +109,7 @@ export function getPreferredHebrewVoice() {
 /**
  * Checks whether the local server has Google Cloud TTS credentials.
  */
+/** Loads optional available Google text-to-speech voices. */
 export async function getGoogleTtsVoices() {
   try {
     const response = await fetch("/api/tts/status", {
@@ -129,10 +133,12 @@ export async function getGoogleTtsVoices() {
 /**
  * Subscribes to browser voice-list changes.
  */
+/** Registers a callback for changes in browser speech voices. */
 export function onVoicesChanged(callback) {
   window.speechSynthesis.addEventListener?.("voiceschanged", callback);
 }
 
+/** Uses the browser speech synthesizer to read Hebrew. */
 function speakWithBrowser(text, rate = 1, voiceURI = "") {
   const utterance = new SpeechSynthesisUtterance(text);
   const voices = getHebrewVoices();
@@ -152,6 +158,7 @@ function speakWithBrowser(text, rate = 1, voiceURI = "") {
   window.speechSynthesis.speak(utterance);
 }
 
+/** Splits long Hebrew text into chunks safe for the speech API. */
 function splitForGoogleTts(text, maxLength = 1800) {
   const normalized = text.replace(/\r\n/g, "\n").trim();
 
@@ -200,6 +207,7 @@ function splitForGoogleTts(text, maxLength = 1800) {
   return chunks;
 }
 
+/** Waits for audio playback to finish or fail. */
 function waitForAudio(audio, sessionId) {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
@@ -231,6 +239,7 @@ function waitForAudio(audio, sessionId) {
   });
 }
 
+/** Reads Hebrew via the optional Google speech backend. */
 async function speakWithGoogle(text, rate, voiceURI, sessionId) {
   const voiceName = voiceURI.replace(/^google:/, "");
   const chunks = splitForGoogleTts(text);
@@ -291,6 +300,7 @@ async function speakWithGoogle(text, rate, voiceURI, sessionId) {
  * Speaks Hebrew using Google WaveNet when a Google voice is selected.
  * If Google is unavailable, it falls back to the browser Hebrew voice.
  */
+/** Selects an available speech implementation for the requested voice. */
 export async function speakHebrew(text, rate = 1, voiceURI = "") {
   const cleanText = text.trim();
 
@@ -323,6 +333,7 @@ export async function speakHebrew(text, rate = 1, voiceURI = "") {
   return { provider: "browser" };
 }
 
+/** Stops currently playing speech without resetting reader state. */
 export function stopSpeech() {
   speechSessionId += 1;
 
