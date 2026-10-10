@@ -89,6 +89,35 @@ try {
       if (width === 1448) await page.screenshot({ path: `${output}/${filename}`, fullPage: true });
     }
 
+    const paintedAssets = await page.evaluate(async () => {
+      const output = [];
+      for (const selector of [".brand-block img", ".sidebar-illustration img", ".read-heading .reading-still-life"]) {
+        const element = document.querySelector(selector);
+        if (!element) throw new Error("Missing design artwork: " + selector);
+        await element.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = 48;
+        canvas.height = 48;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(element, 0, 0, 48, 48);
+        const pixels = context.getImageData(0, 0, 48, 48).data;
+        let painted = 0;
+        const tones = new Set();
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i + 3] > 60) {
+            painted += 1;
+            tones.add([pixels[i] >> 4, pixels[i + 1] >> 4, pixels[i + 2] >> 4].join("-"));
+          }
+        }
+        output.push({ selector, painted, uniqueTones: tones.size });
+      }
+      return output;
+    });
+    for (const asset of paintedAssets) {
+      assert.ok(asset.painted > 250 && asset.uniqueTones > 12,
+        `Artwork is missing visible painted pixels: ${JSON.stringify(asset)}`);
+    }
+
     await check("Read", "read.png");
     await page.locator("#navSaved").click();
     await page.locator("#savedWordsGroups .vocab-row").first().waitFor();
