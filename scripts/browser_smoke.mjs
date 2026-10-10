@@ -170,6 +170,12 @@ try {
 
     await page.locator("#navRead").click();
     await check("Dark Read", "dark-read.png");
+    await page.locator("#pasteText").fill("שלום עולם. אני קורא ספר.");
+    await page.locator("#loadPasteButton").click();
+    await page.locator("#reader .word-token").first().click();
+    await page.locator("#wordPanel:not(.hidden)").waitFor();
+    if (width === 1448) await page.screenshot({ path: `${output}/dark-word-panel.png`, fullPage: true });
+    await page.locator("#closeWordPanelButton").click();
     await page.locator("#navSaved").click();
     await check("Dark Saved Words", "dark-saved-words.png");
     await page.locator("#navCalendar").click();
@@ -194,6 +200,7 @@ try {
 
     // Modal appearance setting must also update the global theme and remain in sync.
     await page.locator("#openSettingsButton").click();
+    if (width === 1448) await page.screenshot({ path: `${output}/dark-settings.png`, fullPage: true });
     await page.locator('input[name="appearance"][value="light"]').check();
     await page.locator("#saveSettingsButton").click();
     assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
