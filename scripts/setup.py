@@ -18,16 +18,19 @@ VENV_DIR = PROJECT_ROOT / ".venv"
 
 
 def run(*args: str) -> None:
+    """Run a setup command and surface nonzero exit status."""
     subprocess.run(args, cwd=PROJECT_ROOT, check=True)
 
 
 def get_venv_python() -> Path:
+    """Resolve the Python interpreter inside the project's virtual environment."""
     if os.name == "nt":
         return VENV_DIR / "Scripts" / "python.exe"
     return VENV_DIR / "bin" / "python"
 
 
 def main() -> None:
+    """Install required dependencies and prepare the local development environment."""
     if sys.version_info[:2] != REQUIRED_PYTHON:
         version = ".".join(map(str, sys.version_info[:3]))
         raise SystemExit(
@@ -62,6 +65,7 @@ from pathlib import Path
 from urllib.request import urlretrieve
 
 def package_dir(name):
+    """Find the package location used by the setup command."""
     spec = importlib.util.find_spec(name)
     if spec is None or not spec.submodule_search_locations:
         raise SystemExit(f"{name} package was not found after installation.")
