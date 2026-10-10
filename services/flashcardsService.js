@@ -49,14 +49,3 @@ export async function removeFlashcard(id) {
   return request("/api/flashcards");
 }
 
-export function buildQuizletImportText(cards) {
-  return cards.map((card) => {
-    const definitionParts = [
-      `English: ${card.translations?.en || "—"}`,
-      `Russian: ${card.translations?.ru || "—"}`,
-      `Ukrainian: ${card.translations?.uk || "—"}`,
-      card.sentence ? `From text: ${card.sentence}` : "",
-    ].filter(Boolean);
-    return `${card.word}\t${definitionParts.join(" | ")}`;
-  }).join("\n");
-}
