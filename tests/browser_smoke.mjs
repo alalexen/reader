@@ -62,7 +62,7 @@ try {
       });
     });
     await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-    await page.locator("#savedWordsCount").getByText("2 words saved").waitFor({ timeout: 15000 });
+    await page.waitForFunction(() => document.querySelector("#savedWordsCount")?.textContent?.includes("2 words saved"), { timeout: 15000 });
 
     async function check(view, filename) {
       const dimensions = await page.evaluate(() => ({
