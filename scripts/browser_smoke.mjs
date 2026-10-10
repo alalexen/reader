@@ -109,13 +109,31 @@ try {
             tones.add([pixels[i] >> 4, pixels[i + 1] >> 4, pixels[i + 2] >> 4].join("-"));
           }
         }
-        output.push({ selector, painted, uniqueTones: tones.size });
+        output.push({
+          selector,
+          painted,
+          uniqueTones: tones.size,
+          naturalWidth: element.naturalWidth,
+          displayWidth: element.getBoundingClientRect().width,
+          cornerAlpha: pixels[3],
+        });
       }
       return output;
     });
     for (const asset of paintedAssets) {
       assert.ok(asset.painted > 250 && asset.uniqueTones > 12,
         `Artwork is missing visible painted pixels: ${JSON.stringify(asset)}`);
+    }
+
+    for (const asset of paintedAssets) {
+      if (width > 700) {
+        assert.ok(asset.naturalWidth >= asset.displayWidth * 2,
+          `Artwork must be at least 2× display resolution: ${JSON.stringify(asset)}`);
+      }
+      if (asset.selector !== ".read-heading .reading-still-life") {
+        assert.ok(asset.cornerAlpha < 25,
+          `Watercolor art must have transparent corners, not a colored rectangle: ${JSON.stringify(asset)}`);
+      }
     }
 
     await check("Read", "read.png");
