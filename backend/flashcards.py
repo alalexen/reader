@@ -4,11 +4,9 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
-from .review_scheduler import schedule_review
-from .models import ReviewEvent
-
 from .database import session_scope
-from .models import Card, Word
+from .models import Card, ReviewEvent, Word
+from .review_scheduler import schedule_review
 
 MAX_IMPORT_CARDS = 5000
 
@@ -31,7 +29,22 @@ def validate_card(payload):
         if not isinstance(value, str) or len(value) > 4000:
             raise ValueError("Invalid translation.")
         cleaned[code] = value
-    return {"word": word.strip(), "sentence": sentence, "translations": cleaned}
+    saved_at = payload.get("savedAt")
+    try:
+        original_date = (
+            datetime.fromisoformat(saved_at.replace("Z", "+00:00"))
+            if isinstance(saved_at, str) else None
+        )
+        if original_date is not None and original_date.tzinfo is None:
+            original_date = None
+    except ValueError:
+        original_date = None
+    return {
+        "word": word.strip(),
+        "sentence": sentence,
+        "translations": cleaned,
+        "saved_at": original_date,
+    }
 
 
 def serialize(card):
@@ -41,6 +54,8 @@ def serialize(card):
         "sentence": card.sentence,
         "translations": card.translations,
         "savedAt": card.created_at.isoformat() if card.created_at else None,
+        "state": card.state,
+        "nextReviewAt": card.next_review_at.isoformat() if card.next_review_at else None,
     }
 
 
@@ -55,7 +70,7 @@ def list_flashcards():
         return [serialize(card) for card in all_cards(session)]
 
 
-def upsert(session, data, *, overwrite):
+def upsert(session, data, *, overwrite, import_legacy=False):
     word = session.scalar(select(Word).where(Word.normalized == data["word"]))
     if word is None:
         word = Word(surface=data["word"], normalized=data["word"], status="learning")
@@ -64,6 +79,8 @@ def upsert(session, data, *, overwrite):
     card = session.scalar(select(Card).where(Card.word_id == word.id).order_by(Card.id))
     if card is None:
         card = Card(word=word, sentence=data["sentence"], translations=data["translations"], state="new")
+        if import_legacy and data.get("saved_at") is not None:
+            card.created_at = data["saved_at"]
         session.add(card)
         session.flush()
     elif overwrite:
@@ -91,7 +108,7 @@ def import_flashcards(payload):
     validated = [validate_card(card) for card in cards]
     with session_scope() as session:
         for card in validated:
-            upsert(session, card, overwrite=False)
+            upsert(session, card, overwrite=False, import_legacy=True)
         return [serialize(card) for card in all_cards(session)]
 
 
