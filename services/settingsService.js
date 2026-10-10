@@ -8,8 +8,10 @@ const DEFAULT_SETTINGS = Object.freeze({
   ocrEngine: "tesseract",
   translationLanguages: [...SUPPORTED_TRANSLATION_LANGUAGES],
   voiceURI: "",
+  theme: "light",
 });
 
+/** Keep only supported languages while preserving their selected order. */
 function normalizeLanguages(value) {
   if (!Array.isArray(value)) {
     return [...DEFAULT_SETTINGS.translationLanguages];
@@ -37,6 +39,7 @@ export function loadSettings() {
       ocrEngine:
         saved.ocrEngine === "google-vision" ? "google-vision" : "tesseract",
       translationLanguages: normalizeLanguages(saved.translationLanguages),
+      theme: saved.theme === "dark" ? "dark" : "light",
       voiceURI:
         typeof saved.voiceURI === "string"
           ? saved.voiceURI
