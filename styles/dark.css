@@ -386,7 +386,7 @@ html[data-theme="dark"] body {
   background: var(--dark-scene-base);
 }
 html[data-theme="dark"] .workspace-layout {
-  background: var(--dark-scene-base) url("../assets/dark-scene-wide.webp?v=castle-feather-2")
+  background: var(--dark-scene-base) url("../assets/dark-scene-wide.webp?v=castle-edge-v3")
     center top / 100% auto no-repeat;
 }
 /* A transparent sidebar reveals the SAME background as the reader area. */
@@ -408,7 +408,7 @@ html[data-theme="dark"] .sidebar-illustration {
 /* The narrower composition is independently laid out, never distorted. */
 @media (max-aspect-ratio: 3/2) and (min-width: 921px) {
   html[data-theme="dark"] .workspace-layout {
-    background-image: url("../assets/dark-scene-laptop.webp?v=castle-feather-2");
+    background-image: url("../assets/dark-scene-laptop.webp?v=castle-edge-v3");
   }
 }
 @media (max-width: 920px) {
