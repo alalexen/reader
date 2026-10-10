@@ -26,6 +26,7 @@ MAX_OCR_IMAGE_BYTES = 15_000_000
 
 class HebrewReaderHandler(SimpleHTTPRequestHandler):
     def send_json(self, status, payload):
+        """Send a JSON response with the requested HTTP status."""
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -81,6 +82,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
 
     def do_GET(self):
+        """Route read-only HTTP requests to supported endpoints."""
         path = urlparse(self.path).path
 
         if path == "/api/flashcards":
@@ -157,6 +159,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
+        """Route authenticated local write operations to their handlers."""
         path = urlparse(self.path).path
 
         if path.startswith("/api/review/"):
@@ -213,6 +216,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
         self.send_error(404)
 
     def do_DELETE(self):
+        """Delete a saved card through the local API."""
         path = urlparse(self.path).path
         if not path.startswith("/api/flashcards/"):
             self.send_error(404)
@@ -230,6 +234,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             self.send_json(503, {"error": "Flashcards database is unavailable."})
 
     def handle_tts(self):
+        """Generate Hebrew speech from the configured service."""
         try:
             payload = self.read_json_payload()
             text = str(payload.get("text", "")).strip()
@@ -290,6 +295,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
 
     def handle_ocr(self):
+        """Extract Hebrew text from a submitted image."""
         try:
             content_type = self.headers.get("Content-Type", "")
             if not content_type.startswith("image/"):
@@ -335,6 +341,7 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             )
 
     def handle_translate(self):
+        """Translate requested text into the enabled languages."""
         try:
             payload = self.read_json_payload()
             text = str(payload.get("text", "")).strip()
