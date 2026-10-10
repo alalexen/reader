@@ -134,6 +134,39 @@ A healthy database returns:
 }
 ```
 
+## Appearance and dark mode
+
+Reader supports **Light** (the original warm editorial design) and **Dark**
+(the gothic design) without changing the underlying text, saved words, calendar,
+OCR providers, or Study workflow.
+
+- Use the sun/moon button in the header for an immediate theme switch.
+- Alternatively, open **Settings → Appearance → Light / Dark**, then save.
+- The selected theme is stored with the existing browser settings and restored
+  before the page is painted. No account or new backend API is needed.
+- Gothic artwork is decorative; visible controls are real accessible HTML
+  elements. There is no static screenshot masquerading as an interface.
+- The right-side running skeleton rabbit has no trailing blood effect.
+- The former “Read. Understand. Remember.” tagline is intentionally omitted.
+
+Implementation lives in `ui/themeController.js` and `styles/dark.css`,
+with theme parsing in `services/settingsService.js`. Keep dark-only overrides
+scoped under `html[data-theme="dark"]` so changes cannot unintentionally
+affect the existing light appearance.
+
+### Quality verification
+
+```bash
+python -m unittest discover -s tests -v
+node --test tests/*.mjs
+```
+
+GitHub Actions also checks frontend syntax, theme preference persistence,
+real Chromium navigation at desktop/mobile widths, answer reveal and rating,
+selected word controls, settings, and layout screenshots for both themes.
+A final smoke test with a real local PostgreSQL database is required before
+merging the implementation.
+
 ## Pages and navigation
 
 The home page is **Read** only: upload an image, optionally crop it, recognize Hebrew or paste Hebrew text, then click words to translate and save them. The old inline flashcard and review sections have been removed.
