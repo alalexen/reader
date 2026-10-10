@@ -3,47 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A playful browser-based Hebrew reading assistant." />
+  <meta name="description" content="Read real Hebrew, save new words, and revisit them using a vocabulary calendar." />
   <title>Hebrew Reader</title>
-  <link rel="stylesheet" href="styles.css?v=refactor-1" />
+  <link rel="stylesheet" href="styles.css?v=editorial-2" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <main class="app-shell">
-    <header class="hero card hero-card">
-      <button
-        id="openSettingsButton"
-        type="button"
-        class="settings-gear"
-        aria-label="Open settings"
-        title="Settings"
-      >⚙</button>
-      <div class="hero-copy">
-        <p class="eyebrow">Hebrew learning tool</p>
-        <h1>Hebrew Reader</h1>
-        <div class="hero-activity-row">
-          <div class="monster-walk-track" aria-label="A white rabbit walking back and forth">
-            <span class="monster-track-line" aria-hidden="true"></span>
-            <img
-              class="walking-monster walking-rabbit"
-              src="assets/white-rabbit.webp"
-              alt=""
-              aria-hidden="true"
-            />
-          </div>
-          <div class="session-timer" aria-label="Time spent on this page">
-            <span class="session-timer-label">TIME HERE</span>
-            <time id="sessionTimer" datetime="PT0S">00:00:00</time>
-          </div>
+  <div class="workspace-layout">
+    <aside class="workspace-sidebar" aria-label="Main navigation">
+      <div class="brand-block">
+        <img src="assets/white-rabbit.webp" alt="" width="66" height="66" />
+        <span>Hebrew<br />Reader</span>
+      </div>
+      <nav class="sidebar-navigation" aria-label="Main">
+        <button id="navRead" data-nav="read" class="sidebar-link is-active" aria-current="page" type="button"><span aria-hidden="true">▤</span> Read</button>
+        <button id="navSaved" data-nav="saved" class="sidebar-link" type="button"><span aria-hidden="true">♧</span> Saved Words</button>
+        <button id="navCalendar" data-nav="calendar" class="sidebar-link" type="button"><span aria-hidden="true">▦</span> Calendar</button>
+        <button id="openSettingsButton" class="sidebar-link" type="button"><span aria-hidden="true">⚙</span> Settings</button>
+      </nav>
+      <div class="sidebar-footer" aria-hidden="true">
+        <div class="sidebar-illustration">
+          <img src="assets/sidebar-landscape.svg" alt="" />
         </div>
+        <p>A kinder way<br />to read Hebrew.</p><span class="sidebar-underline"></span>
+      </div>
+    </aside>
+
+    <main class="app-shell workspace-main" id="mainContent">
+      <div class="workspace-topbar">
+        <div class="session-timer" aria-label="Time spent on this page">
+          <span aria-hidden="true" class="clock-symbol">◷</span>
+          <div><time id="sessionTimer" datetime="PT0S">00:00:00</time><span class="session-timer-label">Reading session</span></div>
+        </div>
+        <span class="sun-decoration" aria-hidden="true">☼</span>
       </div>
 
-    </header>
-
-    <section class="card upload-card">
+      <div class="page-view" data-page="read" id="readView">
+        <header class="page-heading read-heading">
+          <div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
+            <div><h1 lang="he" dir="rtl">שלום!</h1><p>Upload a page or paste Hebrew text below to start reading.</p></div>
+          </div>
+          <img class="reading-still-life" src="assets/still-life.svg" alt="" />
+        </header>
+        <div class="read-inputs">
+          <section class="card upload-card">
       <div class="section-title-row">
         <div>
-          <span class="step-badge">1</span>
+          <span class="form-icon" aria-hidden="true">↥</span>
           <h2>Upload a page</h2>
         </div>
       </div>
@@ -103,17 +109,23 @@
       <div id="ocrStatus" class="status" aria-live="polite"></div>
       <progress id="ocrProgress" class="hidden" max="1" value="0"></progress>
     </section>
-
-    <section class="card reader-card">
+          <section class="card paste-card" aria-labelledby="pasteTitle">
+            <div class="section-title-row"><div><span class="form-icon" aria-hidden="true">▧</span><h2 id="pasteTitle">Paste text</h2></div></div>
+            <p>Paste Hebrew text from any source.</p>
+            <textarea id="pasteText" dir="rtl" lang="he" placeholder="הדבק כאן טקסט בעברית..." aria-label="Paste Hebrew text"></textarea>
+            <button id="loadPasteButton" type="button">Load text →</button>
+          </section>
+        </div>
+        <section class="card reader-card">
       <div class="section-heading">
         <div class="section-copy">
           <div class="section-title-row">
             <div>
-              <span class="step-badge">2</span>
-              <h2>Read the text</h2>
+              <span class="form-icon" aria-hidden="true">▤</span>
+              <h2>Reading</h2>
             </div>
           </div>
-          <p>Edit the text, then switch it to clickable reading mode.</p>
+          <p>Edit your text, then click any word to see translations and save it.</p>
         </div>
 
         <div class="speech-controls">
@@ -155,71 +167,7 @@
         </button>
       </div>
     </section>
-
-
-    <section class="card review-card" id="reviewSection" aria-labelledby="reviewTitle">
-      <div class="section-heading">
-        <div class="section-copy">
-          <div class="section-title-row"><div><span class="step-badge">3</span><h2 id="reviewTitle">Review words</h2></div></div>
-          <p>Recall the meaning, reveal the answer, and choose when to review again.</p>
-        </div>
-        <button id="reviewRefreshButton" type="button" class="secondary">Refresh reviews</button>
-      </div>
-      <div class="review-meta"><span><strong id="reviewCount">0</strong> words due</span><span id="reviewProgress" aria-live="polite"></span></div>
-      <p id="reviewStatus" class="status" role="status" aria-live="polite"></p>
-      <p id="reviewEmpty" class="empty-state">Loading review words...</p>
-      <div id="reviewSession" class="review-session hidden">
-        <div class="review-word-row"><strong id="reviewWord" dir="rtl" lang="he"></strong><button id="reviewSpeakWord" type="button" class="secondary">Speak word</button></div>
-        <div class="review-context"><p id="reviewSentence" dir="rtl" lang="he"></p><button id="reviewSpeakSentence" type="button" class="secondary">Speak sentence</button></div>
-        <div id="reviewAnswer" class="review-answer hidden"></div>
-        <div class="review-actions">
-          <button id="revealReviewButton" type="button">Reveal answer</button>
-          <div id="reviewRatingButtons" class="review-ratings hidden" aria-label="How well did you remember?">
-            <button type="button" data-review-rating="again" class="secondary">Again</button>
-            <button type="button" data-review-rating="hard" class="secondary">Hard</button>
-            <button type="button" data-review-rating="good">Good</button>
-            <button type="button" data-review-rating="easy" class="secondary">Easy</button>
-          </div>
-          <button id="reviewSkipButton" type="button" class="secondary">Skip</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="card flashcards-card">
-      <div class="section-heading">
-        <div class="section-copy">
-          <div class="section-title-row">
-            <div>
-              <span class="step-badge">4</span>
-              <h2>My flashcards</h2>
-            </div>
-          </div>
-          <p>Saved words and translations are stored in PostgreSQL.</p>
-        </div>
-
-        <div class="flashcard-toolbar">
-          <button id="copyQuizletButton" type="button" class="secondary">
-            Copy for Quizlet
-          </button>
-          <a
-            class="context-button"
-            href="https://quizlet.new"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open Quizlet
-          </a>
-        </div>
-      </div>
-
-      <p id="flashcardsStatus" class="status" aria-live="polite"></p>
-
-      <div id="flashcardsList" class="flashcards-list">
-        <p class="empty-state">No saved words yet.</p>
-      </div>
-    </section>
-
-    <aside id="wordPanel" class="card word-panel hidden">
+        <aside id="wordPanel" class="card word-panel hidden">
       <div class="word-panel-header">
         <div>
           <p class="eyebrow">Selected word</p>
@@ -325,9 +273,95 @@
 
       <p id="translationStatus" class="status" aria-live="polite"></p>
     </aside>
-  </main>
+      </div>
 
+      <section class="page-view hidden" data-page="saved" id="savedWordsView" aria-labelledby="savedTitle">
+        <header class="page-heading">
+          <div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
+            <div><h1 id="savedTitle">Saved Words</h1><p>Your vocabulary from the Hebrew texts you’ve read.</p></div>
+          </div>
+          <img class="reading-still-life" src="assets/still-life.svg" alt="" />
+        </header>
+        <div class="vocab-toolbar">
+          <label class="vocab-search-label"><span aria-hidden="true">⌕</span><input id="savedSearch" type="search" placeholder="Search your saved words…" aria-label="Search saved words" /></label>
+          <label class="toolbar-field">Sort by <select id="savedSort"><option value="newest">Date added (newest)</option><option value="oldest">Date added (oldest)</option></select></label>
+          <label class="toolbar-field">Show <select id="savedFilter"><option value="all">All words</option><option value="due">Due to review</option><option value="learning">New &amp; learning</option></select></label>
+          <button id="studySavedButton" type="button" disabled>Study saved words</button>
+        </div>
+        <div class="vocab-subtoolbar"><span id="savedWordsCount">0 words saved</span><button id="savedCalendarButton" type="button" class="text-button">View as calendar →</button></div>
+        <p id="savedWordsStatus" class="status" role="status" aria-live="polite"></p>
+        <div id="savedWordsGroups" class="vocab-groups"></div>
+      </section>
 
+      <section class="page-view hidden" data-page="calendar" id="calendarView" aria-labelledby="calendarPageTitle">
+        <header class="page-heading"><div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
+          <div><h1 id="calendarPageTitle">Word Calendar</h1><p>See when you saved new words and revisit them anytime.</p></div>
+        </div></header>
+        <p id="calendarStatus" class="status" role="status" aria-live="polite"></p>
+        <div class="calendar-layout">
+          <div class="card calendar-panel">
+            <header class="calendar-controls">
+              <div class="month-navigation">
+                <button id="calendarPrevious" class="secondary calendar-arrow" type="button" aria-label="Previous month">‹</button>
+                <h2 id="calendarTitle">Month</h2>
+                <button id="calendarNext" class="secondary calendar-arrow" type="button" aria-label="Next month">›</button>
+              </div>
+              <button id="calendarToday" class="secondary" type="button">Today</button>
+            </header>
+            <div id="calendarGrid" class="calendar-grid" aria-label="Saved word calendar"></div>
+          </div>
+          <aside class="calendar-insights" aria-label="Monthly summary">
+            <div class="card calendar-summary"><h2>This month</h2>
+              <div><strong id="calendarMonthlyWords">0</strong><span>Words added this month</span></div>
+              <div><strong id="calendarPeak">0 words</strong><span>Most words in a day</span></div>
+              <div><strong id="calendarActiveDays">0</strong><span>Days with new words</span></div>
+              <p>Select a date to open its word list and study those words.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page-view hidden" data-page="day" id="dayView" aria-labelledby="dayWordsTitle">
+        <button id="dayBack" class="text-button back-link" type="button">← Back to Calendar</button>
+        <header class="page-heading page-heading-day"><div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
+          <div><h1 id="dayWordsTitle">Words added on this day</h1><p id="dayWordsSubtitle"></p></div>
+        </div><img class="reading-still-life" src="assets/still-life.svg" alt="" /></header>
+        <div class="card day-toolbar"><span aria-hidden="true">▦</span><strong>Saved on this date</strong>
+          <button id="studyDayButton" type="button">Study these words →</button>
+        </div>
+        <div id="dayWordsList" class="vocab-group-list day-words-list"></div>
+      </section>
+
+      <section class="page-view hidden" data-page="study" id="studyView" aria-labelledby="studyTitle">
+        <header class="page-heading"><div class="page-heading-text"><span class="sprig" aria-hidden="true">❧</span>
+          <div><h1 id="studyTitle">Study saved words</h1><p>Recall the meaning before revealing the translations.</p></div>
+        </div><img class="reading-still-life" src="assets/still-life.svg" alt="" /></header>
+        <div class="study-header"><button id="studyBack" type="button" class="text-button">← Back to words</button><span id="studySource"></span></div>
+        <p id="studyStatus" class="status" role="status" aria-live="polite"></p>
+        <p id="studyComplete" class="study-complete hidden" aria-live="polite"></p>
+        <div id="studyCard" class="card study-card hidden">
+          <div class="study-card-top">
+            <button id="studyPrevious" class="secondary study-arrow" type="button" aria-label="Previous word">‹</button>
+            <div class="study-counter"><span id="studyProgressLabel">1 of 1</span><progress id="studyProgress" max="100" value="0"></progress></div>
+            <button id="studyNext" class="secondary study-arrow" type="button" aria-label="Next word (skip)">›</button>
+          </div>
+          <div class="study-prompt">
+            <div class="study-big-word"><strong id="studyWord" dir="rtl" lang="he"></strong><button id="studyListenWord" class="secondary study-sound" type="button" aria-label="Listen to word">♪</button></div>
+            <p id="studySentence" dir="rtl" lang="he"></p>
+            <button id="studyListenSentence" type="button" class="text-button">Listen to sentence</button>
+          </div>
+          <button id="studyReveal" type="button" class="study-reveal">Reveal answer</button>
+          <div id="studyAnswer" class="study-answer hidden" aria-label="Translations"><div class="study-answer-symbol" aria-hidden="true">▤</div><div id="studyTranslations" class="study-translations"></div></div>
+          <div id="studyRatingButtons" class="study-ratings hidden" aria-label="How well did you remember?">
+            <button type="button" data-rating="again" class="rating-again"><span aria-hidden="true">☹</span>Again</button>
+            <button type="button" data-rating="hard" class="rating-hard"><span aria-hidden="true">◑</span>Hard</button>
+            <button type="button" data-rating="good" class="rating-good"><span aria-hidden="true">☺</span>Good</button>
+            <button type="button" data-rating="easy" class="rating-easy"><span aria-hidden="true">☻</span>Easy</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
   <div id="settingsBackdrop" class="settings-backdrop hidden" aria-hidden="true">
     <section
       id="settingsModal"
@@ -398,6 +432,7 @@
     </section>
   </div>
 
-  <script type="module" src="app.js?v=refactor-1"></script>
+
+  <script type="module" src="app.js?v=editorial-2"></script>
 </body>
 </html>
