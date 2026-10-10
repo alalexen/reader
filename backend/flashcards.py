@@ -1,7 +1,5 @@
 """Persistent flashcard operations for the local single-user API."""
 
-from datetime import datetime, timezone
-
 from sqlalchemy import select
 
 from .database import session_scope
@@ -122,16 +120,6 @@ def delete_flashcard(card_id):
         session.delete(card)
         return True
 
-
-def due_flashcards():
-    now = datetime.now(timezone.utc)
-    with session_scope() as session:
-        cards = session.scalars(
-            select(Card).join(Word).where(
-                (Card.next_review_at.is_(None)) | (Card.next_review_at <= now)
-            ).order_by(Card.next_review_at.asc().nullsfirst(), Card.created_at.asc())
-        ).all()
-        return [serialize(card) for card in cards]
 
 
 def rate_flashcard(card_id, rating):
