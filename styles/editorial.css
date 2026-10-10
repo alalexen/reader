@@ -561,3 +561,42 @@ html, body { width: 100%; overflow-x: clip; }
 @media (max-width: 1040px) {
   .read-inputs .upload-intro { min-height: 0; }
 }
+
+/* Page-specific rhythm follows the approved planner and study mockups. */
+#calendarView .calendar-layout { margin-top: 23px; }
+#dayView .page-heading-day {
+  min-height: 177px;
+  padding-top: 32px;
+  margin-bottom: 13px;
+}
+#dayView .page-heading-day .page-heading-text {
+  max-width: calc(100% - 345px);
+}
+#dayView .page-heading-day .reading-still-life {
+  width: 345px;
+  height: 180px;
+  top: -7px;
+  right: -5px;
+  opacity: 1;
+  mask-image: linear-gradient(90deg, transparent, #000 28%);
+}
+#dayView .day-toolbar {
+  min-height: 86px;
+  padding: 18px 25px;
+  margin-bottom: 24px;
+}
+#dayView .day-words-list .vocab-row-main { min-height: 98px; }
+#studyView .study-header { margin-top: 17px; margin-bottom: 42px; }
+#studyView .study-card { min-height: 540px; }
+@media (max-width: 1040px) {
+  #dayView .page-heading-day .page-heading-text { max-width: 100%; }
+  #dayView .page-heading-day .reading-still-life { opacity: .28; }
+}
+@media (max-width: 700px) {
+  #calendarView .calendar-layout { margin-top: 12px; }
+  #dayView .page-heading-day { min-height: 110px; padding-top: 0; }
+  #dayView .page-heading-day .reading-still-life { display:none; }
+  #dayView .day-toolbar { min-height: 0; padding: 15px; }
+  #studyView .study-header { margin-top: 0; margin-bottom: 15px; }
+  #studyView .study-card { min-height: 0; }
+}
