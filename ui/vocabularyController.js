@@ -184,7 +184,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
 
   function renderDay() {
     const cards = wordsOnDay(selectedDay);
-    elements.dayWordsTitle.textContent = "Words added on " + dateTitle(selectedDay).replace(/, \\d{4}$/, "");
+    elements.dayWordsTitle.textContent = "Words added on " + dateTitle(selectedDay).replace(/, \d{4}$/, "");
     elements.dayToolbarDate.textContent = dateTitle(selectedDay);
     elements.dayWordsSubtitle.textContent = wordCount(cards.length) + " saved from your reading on " + dateTitle(selectedDay) + ".";
     elements.dayWordsList.replaceChildren();
