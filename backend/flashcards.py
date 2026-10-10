@@ -12,6 +12,7 @@ MAX_IMPORT_CARDS = 5000
 
 
 def validate_card(payload):
+    """Validate and normalize one incoming saved-word payload."""
     if not isinstance(payload, dict):
         raise ValueError("Card must be an object.")
     word = payload.get("word")
@@ -48,6 +49,7 @@ def validate_card(payload):
 
 
 def serialize(card):
+    """Convert a stored card into the public response shape."""
     return {
         "id": card.id,
         "word": card.word.surface,
@@ -60,17 +62,20 @@ def serialize(card):
 
 
 def all_cards(session):
+    """Read saved cards in stable newest-first order."""
     return session.scalars(
         select(Card).join(Word).order_by(Card.created_at.desc(), Card.id.desc())
     ).all()
 
 
 def list_flashcards():
+    """Read all saved cards from the database."""
     with session_scope() as session:
         return [serialize(card) for card in all_cards(session)]
 
 
 def upsert(session, data, *, overwrite, import_legacy=False):
+    """Create or update a saved word without duplicating an imported card."""
     word = session.scalar(select(Word).where(Word.normalized == data["word"]))
     if word is None:
         word = Word(surface=data["word"], normalized=data["word"], status="learning")
@@ -92,6 +97,7 @@ def upsert(session, data, *, overwrite, import_legacy=False):
 
 
 def save_flashcard(payload):
+    """Save a card transactionally and return the refreshed list."""
     data = validate_card(payload)
     with session_scope() as session:
         upsert(session, data, overwrite=True)
@@ -99,6 +105,7 @@ def save_flashcard(payload):
 
 
 def import_flashcards(payload):
+    """Import validated legacy cards in one transaction."""
     if not isinstance(payload, dict) or not isinstance(payload.get("cards"), list):
         raise ValueError("Expected a cards array.")
     cards = payload["cards"]
@@ -113,6 +120,7 @@ def import_flashcards(payload):
 
 
 def delete_flashcard(card_id):
+    """Delete a card by identifier in a database transaction."""
     if not isinstance(card_id, int) or card_id < 1:
         raise ValueError("Invalid card ID.")
     with session_scope() as session:
@@ -125,6 +133,7 @@ def delete_flashcard(card_id):
 
 
 def rate_flashcard(card_id, rating):
+    """Record a validated review grade and update its schedule."""
     if not isinstance(card_id, int) or card_id < 1:
         raise ValueError("Invalid card ID.")
     with session_scope() as session:
