@@ -1,79 +1,51 @@
 const STORAGE_KEY = "hebrewReaderFlashcards";
+const MIGRATED_KEY = "hebrewReaderFlashcardsImportedToPostgresV1";
 
-/**
- * Loads saved flashcards from localStorage.
- */
-export function loadFlashcards() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const cards = raw ? JSON.parse(raw) : [];
+/** Preserve the original browser cards as a backup after migration. */
+export function loadLegacyFlashcards() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return [];
+  const cards = JSON.parse(raw);
+  if (!Array.isArray(cards)) throw new Error("Invalid legacy flashcards format.");
+  return cards.map(({ example, ...card }) => card);
+}
 
-    if (!Array.isArray(cards)) {
-      return [];
-    }
-
-    return cards.map(({ example, ...card }) => card);
-  } catch (error) {
-    console.error("Failed to read saved flashcards:", error);
-    return [];
+async function request(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options.headers },
+  });
+  if (!response.ok) {
+    let detail = "";
+    try { detail = (await response.json()).error || ""; } catch {}
+    throw new Error(detail || `Flashcards API failed (HTTP ${response.status}).`);
   }
+  return response.json();
 }
 
-/**
- * Saves one flashcard. Existing cards with the same Hebrew word are updated
- * instead of duplicated.
- */
-export function saveFlashcard(card) {
-  const cards = loadFlashcards();
-  const existingIndex = cards.findIndex((item) => item.word === card.word);
-
-  const { example, ...cardWithoutExample } = card;
-  const normalizedCard = {
-    ...cardWithoutExample,
-    id: card.id || crypto.randomUUID(),
-    savedAt: new Date().toISOString(),
-  };
-
-  if (existingIndex >= 0) {
-    cards[existingIndex] = {
-      ...cards[existingIndex],
-      ...normalizedCard,
-      id: cards[existingIndex].id,
-    };
-  } else {
-    cards.unshift(normalizedCard);
+/** Retry unfinished imports, but never re-import after a confirmed migration. */
+export async function initializeFlashcards() {
+  if (localStorage.getItem(MIGRATED_KEY) !== "true") {
+    const legacy = loadLegacyFlashcards();
+    // One server transaction; the acknowledgement is written only after success.
+    await request("/api/flashcards/import", {
+      method: "POST",
+      body: JSON.stringify({ cards: legacy }),
+    });
+    localStorage.setItem(MIGRATED_KEY, "true");
   }
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-  return cards;
+  return request("/api/flashcards");
 }
 
-/**
- * Removes one flashcard by id.
- */
-export function removeFlashcard(cardId) {
-  const cards = loadFlashcards().filter((card) => card.id !== cardId);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-  return cards;
+export async function saveFlashcard(card) {
+  return request("/api/flashcards", {
+    method: "POST",
+    body: JSON.stringify(card),
+  });
 }
 
-/**
- * Builds a tab-separated list that can be pasted into Quizlet's Import tool.
- *
- * Quizlet treats each line as one card and the tab as the separator between
- * the term and definition.
- */
-export function buildQuizletImportText(cards) {
-  return cards
-    .map((card) => {
-      const definitionParts = [
-        `English: ${card.translations?.en || "—"}`,
-        `Russian: ${card.translations?.ru || "—"}`,
-        `Ukrainian: ${card.translations?.uk || "—"}`,
-        card.sentence ? `From text: ${card.sentence}` : "",
-      ].filter(Boolean);
-
-      return `${card.word}\t${definitionParts.join(" | ")}`;
-    })
-    .join("\n");
+export async function removeFlashcard(id) {
+  await request(`/api/flashcards/${encodeURIComponent(id)}`, { method: "DELETE" });
+  return request("/api/flashcards");
 }
+

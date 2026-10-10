@@ -1,10 +1,6 @@
 import { saveSettings } from "../services/settingsService.js";
 
-export function createSettingsController({
-  elements,
-  state,
-  renderFlashcards,
-}) {
+export function createSettingsController({ elements, state }) {
   function applyTranslationLanguageVisibility() {
     const selected = new Set(state.settings.translationLanguages);
 
@@ -84,7 +80,6 @@ export function createSettingsController({
     elements.voiceSelect.value = draft.voiceURI;
 
     applyTranslationLanguageVisibility();
-    renderFlashcards();
     updateSaveButton();
   }
 

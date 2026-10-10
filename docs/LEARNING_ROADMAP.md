@@ -1,5 +1,22 @@
 # Hebrew Reader — product and implementation roadmap
 
+## Implemented design direction (October 10, 2026)
+
+The approved editorial mockups supersede the earlier idea of placing reviews and a long flashcard list under the reading page.
+
+- Left sidebar: **Read / Saved Words / Calendar / Settings**.
+- **Read** only on the home page; the user keeps OCR, cropping, pasting, clickable Hebrew words and translations.
+- **Saved Words** is a date-grouped, searchable vocabulary index (newest first, with optional sort/filter and selection).
+- **Study saved words** opens a focused flashcard view with Reveal and SRS ratings, never an inline block below Read.
+- **Word Calendar** is a large monthly planner, with the real count of words saved on each local day.
+- Clicking a day opens its words only, plus **Study these words**.
+- Books in decorative imagery are intentionally unlettered; greeting on Read is **שלום!**.
+- PostgreSQL is the source of saved words and review history; existing localStorage cards are imported once and preserved as backup.
+
+Implementation is present on `feature/postgres-flashcards` in PR #5, with Node/Python CI tests. A final visual and database check on the developer's Mac is required before merging into `main`.
+
+
+
 Этот файл фиксирует план развития приложения после текущего MVP. Главная цель — превратить Hebrew Reader из удобного инструмента для OCR/чтения в приложение, к которому есть понятная причина возвращаться каждый день.
 
 ## Основная идея
@@ -164,9 +181,9 @@ Demo seed никогда не содержит личные данные пол�
 
 ## Existing flashcards
 
-Текущие flashcards пока остаются в browser `localStorage`, чтобы ничего не потерять до реализации Review.
+Existing browser cards are migrated into PostgreSQL on first load. The original browser data remains as a backup, but new saved words and study ratings are stored in PostgreSQL.
 
-Во время пункта 1 будет сделана одноразовая migration/import существующих карточек в PostgreSQL. После успешной миграции учебные карточки больше не будут зависеть от browser storage.
+The import is idempotent for existing words and preserves the original saved date when available.
 
 ## Status
 
@@ -187,7 +204,8 @@ Demo seed никогда не содержит личные данные пол�
 - [x] existing/custom `DATABASE_URL` is respected without touching that PostgreSQL service
 - [x] bootstrap safety tests
 - [x] создать локальную PostgreSQL database и применить migration на машине разработчика
-- [ ] перенести существующие browser flashcards в PostgreSQL в пункте 1
+- [x] реализован безопасный импорт browser flashcards в PostgreSQL (ветка feature/postgres-flashcards; требуется локальная проверка) 
+- [ ] проверить миграцию и новый интерфейс в браузере на существующих карточках и объединить ветку в main
 
 ## Acceptance criteria
 
@@ -207,6 +225,14 @@ Demo seed никогда не содержит личные данные пол�
 ---
 
 # 1. Spaced repetition review
+
+## Implementation status
+
+- [x] Review UI: word, context, translations, reveal, skip, grading and speech.
+- [x] Persistent backend scheduling and review event history.
+- [x] Due queue and deterministic scheduler unit tests.
+- [ ] Run full test suite against a local PostgreSQL instance.
+- [ ] Verify real review sessions in the browser and merge PR #5.
 
 ## Цель
 

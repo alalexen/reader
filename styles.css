@@ -1,3 +1,5 @@
-@import url("./styles/core.css?v=refactor-1");
-@import url("./styles/theme.css?v=refactor-1");
-@import url("./styles/features.css?v=refactor-1");
+@import url("./styles/core.css?v=editorial-4");
+@import url("./styles/theme.css?v=editorial-4");
+@import url("./styles/features.css?v=editorial-4");
+
+@import url("./styles/editorial.css?v=editorial-4");

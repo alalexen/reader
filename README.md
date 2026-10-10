@@ -66,7 +66,7 @@ python scripts/run_hebrew_reader.py --demo
 
 The demo seed creates one short Hebrew text plus a few words, encounters, and starter cards. It is idempotent, and it refuses to seed an already-used database that contains learning data.
 
-The PostgreSQL layer is the foundation for Library, Review/SRS and progress. The current visible flashcard screen still reads its existing browser `localStorage` until the SRS migration step is implemented, so seeded database cards are not shown in that old list yet.
+The Saved Words, Calendar and Study pages are implemented in `feature/postgres-flashcards` (PR #5), pending final local browser verification. On first load, old browser cards are imported into PostgreSQL in one transaction. Original `localStorage` cards remain as a backup; new saves, deletes and ratings are stored in PostgreSQL.
 
 ### Later starts
 
@@ -134,6 +134,25 @@ A healthy database returns:
 }
 ```
 
+## Pages and navigation
+
+The home page is **Read** only: upload an image, optionally crop it, recognize Hebrew or paste Hebrew text, then click words to translate and save them. The old inline flashcard and review sections have been removed.
+
+The left sidebar contains **Read**, **Saved Words**, **Calendar**, and **Settings**:
+
+- **Saved Words** groups words by their original saved date, newest first. Search, sorting, translations, word audio, deletion, filtering and study for all/selected words are available.
+- **Calendar** is a monthly planner showing how many words were added each day. Selecting a day opens its own word list and a **Study these words** action.
+- **Study** shows one saved word at a time, its original Hebrew sentence, optional audio, Reveal answer and **Again / Hard / Good / Easy** buttons. Review ratings are persisted in PostgreSQL.
+
+Run tests after updating the branch:
+
+```bash
+python -m unittest discover -s tests -v
+node --test tests/*.mjs
+```
+
+GitHub Actions checks backend tests, JavaScript syntax and HTML/JS element consistency. A real PostgreSQL and browser visual check is still required before merging.
+
 ## Default configuration
 
 The application can run without Google Cloud credentials.
@@ -144,7 +163,7 @@ The application can run without Google Cloud credentials.
 | Voice | Hebrew voice exposed by the browser / operating system | The app automatically prefers an available Hebrew voice. Voice quality and availability depend on the machine and browser. |
 | Translation | Google NMT is selected in Settings; if the local Google backend is unavailable, the app falls back to MyMemory | The fallback keeps translation usable without credentials, but results can be less consistent than Google Cloud Translation. |
 | Word structure | Local HebPipe segmentation | This is an automatic possible decomposition, not a definitive linguistic analysis. |
-| Flashcards | Browser localStorage (temporary during the current MVP) | Existing cards remain there until the Review/SRS migration step moves learning data into PostgreSQL. |
+| Saved Words and Study | PostgreSQL API (feature branch, pending verification) | The original localStorage cards are imported once and retained as a backup. |
 
 ### Using the default voice
 
@@ -208,7 +227,7 @@ gcloud auth application-default set-quota-project YOUR_PROJECT_ID
 Restart the local server after configuring credentials:
 
 ```bash
-python server.py
+python scripts/run_hebrew_reader.py
 ```
 
 Then reload the browser page.
@@ -305,7 +324,7 @@ When a Google WaveNet voice is selected, long text is split into smaller chunks 
 
 ## Local data and privacy
 
-PostgreSQL is the persistent store for the new learning-data model: texts, words, encounters, review cards/history and study sessions. The current MVP flashcard UI still uses browser `localStorage` until the SRS migration is implemented; this avoids losing existing cards during the transition.
+PostgreSQL is the persistent store for the new learning-data model: texts, words, encounters, review cards/history and study sessions. On the flashcard migration branch, the UI reads and writes cards through PostgreSQL. Original browser `localStorage` cards remain untouched as a backup after a confirmed import.
 
 Small UI/preferences data can remain in browser `localStorage`.
 
@@ -317,64 +336,37 @@ The database itself is not committed to Git. `.env` is ignored, while `.env.exam
 
 ```text
 reader/
-├── app.js
-├── index.html
-├── server.py
-├── requirements.txt
-├── alembic.ini
-├── .env.example
-├── THIRD_PARTY_NOTICES.md
-├── backend/
-│   ├── __init__.py
-│   ├── database.py
-│   ├── models.py
-│   ├── google_cloud.py
-│   ├── http_handler.py
-│   ├── morphology.py
-│   └── repositories/
-│       └── learning_repository.py
-├── migrations/
-│   ├── env.py
-│   └── versions/
-│       └── 0001_learning_data.py
-├── scripts/
-│   ├── __init__.py
-│   ├── setup.py
-│   ├── bootstrap_db.py
-│   ├── run_hebrew_reader.py
-│   ├── stop_db.py
-│   ├── init_db.py
-│   └── seed_demo.py
-├── tests/
-│   ├── test_app_runner.py
-│   ├── test_database_bootstrap.py
-│   └── test_database_schema.py
-├── services/
-│   ├── flashcardsService.js
-│   ├── hebrewMorphologyService.js
-│   ├── imageProcessingService.js
-│   ├── ocrService.js
-│   ├── settingsService.js
-│   ├── speechService.js
-│   └── translationService.js
-├── ui/
-│   ├── elements.js
-│   ├── flashcardsController.js
-│   ├── imageController.js
-│   ├── readerController.js
-│   ├── sessionTimer.js
-│   ├── settingsController.js
-│   └── speechController.js
+├── index.html               # Read, Saved Words, Calendar, Day and Study views
+├── app.js                   # App composition and event bindings
 ├── styles.css
 ├── styles/
 │   ├── core.css
 │   ├── theme.css
-│   └── features.css
-└── utils/
-    └── hebrew.js
+│   ├── features.css
+│   └── editorial.css        # Sidebar, word list, planner, study styling
+├── assets/
+│   ├── rabbit-hq.webp
+│   ├── sidebar-landscape-hq.webp
+│   └── still-life-hq.webp
+├── ui/
+│   ├── navigationController.js
+│   ├── vocabularyController.js
+│   ├── wordSaveController.js
+│   ├── readerController.js
+│   ├── imageController.js
+│   ├── speechController.js
+│   ├── settingsController.js
+│   ├── sessionTimer.js
+│   └── elements.js
+├── services/                # API, OCR, speech, translation, settings
+├── utils/                   # Hebrew and local-date grouping helpers
+├── backend/                 # SQLAlchemy models and APIs
+├── migrations/              # Database revisions
+├── scripts/                 # Setup, bootstrap and launcher
+└── tests/                   # Python and Node tests
 ```
 
-`app.js` is the composition root and wires the UI controllers together. Browser/API integrations live in `services/`, DOM-focused behavior lives in `ui/`, and the Python backend is separated into request handling, Google Cloud clients, and Hebrew morphology.
+Controllers own their respective screens. Saved Word CRUD and study ratings use the Python API and PostgreSQL; legacy inline flashcard and review controllers were removed.
 
 ## Dependency notes
 
