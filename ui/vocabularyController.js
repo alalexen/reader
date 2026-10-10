@@ -5,6 +5,7 @@ import { dateTitle, groupBySavedDay, localDayKey, sortSavedCards } from "../util
 const LANGUAGE_NAMES = { en: "English", ru: "Russian", uk: "Ukrainian" };
 const RATING_LABELS = { again: "Again", hard: "Hard", good: "Good", easy: "Easy" };
 
+/** Creates a DOM node with safe text content. */
 function node(tag, className = "", value = null) {
   const element = document.createElement(tag);
   if (className) element.className = className;
@@ -12,10 +13,12 @@ function node(tag, className = "", value = null) {
   return element;
 }
 
+/** Formats a count using the correct English plural. */
 function wordCount(count) {
   return `${count} ${count === 1 ? "word" : "words"}`;
 }
 
+/** Renders relative names for recent saved dates. */
 function displayDay(key) {
   const today = localDayKey(new Date());
   const previous = new Date();
@@ -25,6 +28,7 @@ function displayDay(key) {
   return dateTitle(key);
 }
 
+/** Coordinates the saved list, calendar and study screens. */
 export function createVocabularyController({ elements, state, speak, navigate }) {
   let search = "";
   let sort = "newest";
@@ -35,6 +39,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
   let session = null;
   let busy = false;
 
+  /** Replaces cached saved words and refreshes dependent screens. */
   function updateCards(cards) {
     state.flashcards = cards;
     const available = new Set(cards.map((card) => card.id));
@@ -44,11 +49,13 @@ export function createVocabularyController({ elements, state, speak, navigate })
     if (selectedDay) renderDay();
   }
 
+  /** Displays database problems in the vocabulary views. */
   function showError(message) {
     elements.savedWordsStatus.textContent = message;
     elements.calendarStatus.textContent = message;
   }
 
+  /** Filters and sorts the visible saved-word collection. */
   function filteredCards() {
     const needle = search.trim().toLocaleLowerCase();
     const now = Date.now();
@@ -68,6 +75,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     }), sort);
   }
 
+  /** Builds expandable translations and deletion controls. */
   function translationsPanel(card) {
     const panel = node("div", "vocab-expanded hidden");
     panel.id = "word-details-" + card.id;
@@ -96,6 +104,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     return panel;
   }
 
+  /** Renders one saved word and its optional selection control. */
   function createRow(card, { selectable = false } = {}) {
     const article = node("article", "vocab-row");
     const top = node("div", "vocab-row-main");
@@ -147,6 +156,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     return article;
   }
 
+  /** Reflects the current selection in the study action. */
   function updateStudyButton() {
     const count = selectedIds.size;
     elements.studySavedButton.textContent = count
@@ -154,6 +164,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     elements.studySavedButton.disabled = state.flashcards.length === 0;
   }
 
+  /** Groups filtered words by their saved date. */
   function renderSavedWords() {
     const cards = filteredCards();
     elements.savedWordsGroups.replaceChildren();
@@ -178,10 +189,12 @@ export function createVocabularyController({ elements, state, speak, navigate })
     }
   }
 
+  /** Returns only words saved on a particular local day. */
   function wordsOnDay(key) {
     return sortSavedCards(state.flashcards.filter((card) => localDayKey(card.savedAt) === key), "newest");
   }
 
+  /** Refreshes the selected day's words and study action. */
   function renderDay() {
     const cards = wordsOnDay(selectedDay);
     elements.dayWordsTitle.textContent = "Words added on " + dateTitle(selectedDay).replace(/, \d{4}$/, "");
@@ -193,12 +206,14 @@ export function createVocabularyController({ elements, state, speak, navigate })
     if (!cards.length) elements.dayWordsList.append(node("p", "vocab-empty", "No words were saved on this date."));
   }
 
+  /** Navigates to a day chosen in the calendar. */
   function openDay(key) {
     selectedDay = key;
     renderDay();
     navigate("day");
   }
 
+  /** Builds a month planner from persisted saved dates. */
   function renderCalendar() {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
@@ -250,6 +265,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     elements.calendarPeak.textContent = wordCount(peak);
   }
 
+  /** Renders the current card and hidden answer state. */
   function showStudy() {
     if (!session) return;
     const current = session.cards[session.index];
@@ -283,6 +299,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     if (rated) elements.studyStatus.textContent = "Already reviewed in this session.";
   }
 
+  /** Starts a session from exactly the requested word set. */
   function startStudy(cards, source, returnPage) {
     if (!cards.length) return;
     session = {
@@ -296,6 +313,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     navigate("study");
   }
 
+  /** Persists a study rating before advancing. */
   async function rate(rating) {
     if (busy || !session) return;
     const card = session.cards[session.index];
@@ -319,6 +337,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     }
   }
 
+  /** Shows translations without changing scheduling data. */
   function revealAnswer() {
     if (busy || !session?.cards[session.index]) return;
     elements.studyAnswer.classList.remove("hidden");
@@ -326,6 +345,7 @@ export function createVocabularyController({ elements, state, speak, navigate })
     elements.studyRatingButtons.classList.remove("hidden");
   }
 
+  /** Navigates between study cards without grading. */
   function moveStudy(direction) {
     if (busy || !session) return;
     const next = session.index + direction;
