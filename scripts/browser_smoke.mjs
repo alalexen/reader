@@ -99,7 +99,7 @@ try {
 
     const paintedAssets = await page.evaluate(async () => {
       const output = [];
-      for (const selector of [".brand-block img", ".sidebar-illustration img", ".read-heading .reading-still-life"]) {
+      for (const selector of [".sidebar-illustration img", ".read-heading .reading-still-life"]) {
         const element = document.querySelector(selector);
         if (!element) throw new Error("Missing design artwork: " + selector);
         await element.decode();
@@ -144,6 +144,8 @@ try {
       }
     }
 
+    // The logo consists only of live brand text, in both appearance modes.
+    assert.equal(await page.locator(".brand-block img").count(), 0);
     await check("Read", "read.png");
     await page.locator("#navSaved").click();
     await page.locator("#savedWordsGroups .vocab-row").first().waitFor();
@@ -167,6 +169,7 @@ try {
       return {
         timer: bounds(".workspace-topbar"),
         sessionTimer: bounds(".session-timer"),
+        brandText: bounds(".brand-block span"),
         sidebar: bounds(".workspace-sidebar"),
         main: bounds(".workspace-main"),
       };
