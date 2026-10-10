@@ -1,6 +1,11 @@
 """Persistent flashcard operations for the local single-user API."""
 
+from datetime import datetime, timezone
+
 from sqlalchemy import select
+
+from .review_scheduler import schedule_review
+from .models import ReviewEvent
 
 from .database import session_scope
 from .models import Card, Word
@@ -99,3 +104,32 @@ def delete_flashcard(card_id):
             return False
         session.delete(card)
         return True
+
+
+def due_flashcards():
+    now = datetime.now(timezone.utc)
+    with session_scope() as session:
+        cards = session.scalars(
+            select(Card).join(Word).where(
+                (Card.next_review_at.is_(None)) | (Card.next_review_at <= now)
+            ).order_by(Card.next_review_at.asc().nullsfirst(), Card.created_at.asc())
+        ).all()
+        return [serialize(card) for card in cards]
+
+
+def rate_flashcard(card_id, rating):
+    if not isinstance(card_id, int) or card_id < 1:
+        raise ValueError("Invalid card ID.")
+    with session_scope() as session:
+        card = session.get(Card, card_id)
+        if card is None:
+            return None
+        previous, interval = schedule_review(card, rating)
+        session.add(ReviewEvent(
+            card=card,
+            rating=rating,
+            previous_interval=previous,
+            next_interval=interval,
+        ))
+        session.flush()
+        return serialize(card)
