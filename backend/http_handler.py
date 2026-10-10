@@ -42,10 +42,10 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
         return self.rfile.read(content_length)
 
-    def read_json_payload(self):
+    def read_json_payload(self, max_bytes=MAX_JSON_REQUEST_BYTES):
         """Read a small UTF-8 JSON request body."""
         return json.loads(
-            self.read_request_body(MAX_JSON_REQUEST_BYTES).decode("utf-8")
+            self.read_request_body(max_bytes).decode("utf-8")
         )
 
     def send_cloud_status(self, provider, client_factory, extra=None):
@@ -160,7 +160,9 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
         if path in {"/api/flashcards", "/api/flashcards/import"}:
             try:
-                payload = self.read_json_payload()
+                payload = self.read_json_payload(
+                    max_bytes=2_000_000 if path.endswith("/import") else MAX_JSON_REQUEST_BYTES
+                )
                 cards = (
                     import_flashcards(payload)
                     if path.endswith("/import")
