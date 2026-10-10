@@ -287,3 +287,229 @@ button:focus-visible, .sidebar-link:focus-visible { outline: 3px solid #a66a48; 
   .day-toolbar { flex-wrap: wrap; }
   .day-toolbar button { width: 100%; margin: 0; }
 }
+
+
+/* Pixel-matched desktop layout. Keep the decorative art out of the interaction layer. */
+html, body { width: 100%; overflow-x: clip; }
+.workspace-layout {
+  grid-template-columns: 270px minmax(0, 1fr);
+  width: 100%;
+  isolation: isolate;
+}
+.workspace-sidebar {
+  width: 270px;
+  padding: 33px 34px 25px;
+  background: #faf5ee;
+  overflow-x: hidden;
+  flex-shrink: 0;
+}
+.brand-block { margin-bottom: 46px; gap: 12px; }
+.brand-block img { width: 72px; height: 84px; object-fit: contain; mix-blend-mode: multiply; }
+.brand-block span { font-size: 26px; line-height: 1.04; }
+.sidebar-navigation { gap: 11px; }
+.workspace-sidebar .sidebar-link {
+  padding: 16px 14px;
+  font-size: 17px;
+  gap: 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.sidebar-link .nav-icon { display: flex; width: 26px; height: 26px; align-items: center; justify-content: center; flex: none; }
+.sidebar-link .nav-icon svg { display: block; width: 23px; height: 23px; }
+.sidebar-illustration { height: 306px; margin: 0 -34px; }
+.sidebar-illustration img { object-fit: cover; object-position: bottom center; height: 100%; }
+.sidebar-footer p { margin: 11px 0 14px 19px; font-size: 16px; }
+.workspace-main.app-shell {
+  width: min(1135px, calc(100% - 68px));
+  max-width: 1135px;
+  margin-inline: auto;
+  padding: 43px 0 72px;
+  min-width: 0;
+}
+.page-heading {
+  min-height: 104px;
+  margin: 0 0 12px;
+}
+.page-heading-text {
+  max-width: calc(100% - 250px);
+  gap: 12px;
+}
+.page-heading h1 {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: clamp(32px, 3vw, 49px);
+  line-height: 1.16;
+  letter-spacing: -.035em;
+  margin: 0 0 9px;
+  overflow-wrap: anywhere;
+}
+.page-heading p { font-size: 17px; line-height: 1.45; max-width: 645px; }
+.page-heading h1[lang="he"] {
+  font-size: clamp(38px, 3.8vw, 58px);
+  width: auto;
+  font-family: "Times New Roman", "Arial Hebrew", serif;
+}
+.sprig { display: flex; flex: 0 0 36px; width: 36px; height: 50px; transform: none; margin-top: -5px; }
+.sprig svg { display:block; height:49px; width:36px; }
+.read-heading { overflow: visible; }
+.read-heading .page-heading-text { max-width: 750px; }
+.read-heading .reading-still-life {
+  width: 370px;
+  height: 322px;
+  top: 84px;
+  right: -34px;
+  border-radius: 18px;
+  z-index: 0;
+  opacity: 1;
+  object-fit: cover;
+  object-position: 54% 50%;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
+  pointer-events: none;
+}
+.page-heading:not(.read-heading) {
+  overflow: hidden;
+  border-radius: 12px;
+}
+.page-heading:not(.read-heading) .reading-still-life {
+  width: 260px;
+  height: 130px;
+  top: -8px;
+  right: -4px;
+  object-fit: cover;
+  object-position: 55% 62%;
+  opacity: .7;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 38%);
+  pointer-events: none;
+}
+.workspace-topbar { top: -3px; right: 0; }
+.workspace-topbar .session-timer { min-width: 190px; padding: 13px 16px; }
+.page-view { min-width: 0; max-width: 100%; }
+.read-inputs {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 710px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 19px;
+}
+.read-inputs > .card { padding: 21px; min-height: 310px; }
+.read-inputs .section-title-row { justify-content: flex-start; }
+.read-inputs .section-title-row h2 { font-size: 22px; }
+.read-inputs .upload-zone {
+  min-height: 96px;
+  margin-top: 12px;
+  border-radius: 10px;
+  border: 1px solid #e7d4c6;
+  background: #fbf6ef;
+}
+.read-inputs .upload-zone:hover { background:#f6eade; }
+.read-inputs .upload-help { max-width: 260px; text-align: center; }
+.read-inputs .ocr-controls { align-items: center; flex-wrap: wrap; }
+.read-inputs .image-workspace {
+  margin-top: 6px;
+  max-height: 260px;
+  overflow: auto;
+}
+.read-inputs .image-preview-frame {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.read-inputs #imagePreview {
+  display: block;
+  width: auto;
+  height: auto;
+  max-height: 145px;
+  max-width: 100%;
+  margin: 0 auto;
+  object-fit: contain;
+}
+.read-inputs .image-choice-actions {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px;
+}
+.read-inputs .image-choice-actions button { padding: 8px 10px; font-size: 12px; border-radius: 999px; }
+.read-inputs .crop-controls .actions { gap: 6px; }
+.read-inputs .crop-controls button { font-size: 12px; padding: 8px 12px; }
+.read-inputs .recognize-row button { padding: 11px 17px; }
+.paste-card textarea { margin-top: 5px; font-size: 16px; height: 103px; min-height: 103px; }
+.paste-card > button { margin-top: 11px; }
+.reader-card { position: relative; z-index: 1; padding: 23px; }
+.reader-card .section-heading { min-width: 0; gap: 10px; flex-wrap: wrap; }
+.reader-card .speech-controls { margin-left: auto; flex-wrap: wrap; }
+.reader-card .reader { font-size: 22px; }
+.reader-card .editable-text, .reader-card .reader {
+  min-height: 280px;
+  max-height: 60vh;
+  overflow: auto;
+  font-size: 22px;
+  line-height: 1.9;
+}
+.day-toolbar { position: relative; z-index: 1; width: 100%; min-width: 0; justify-content: space-between; }
+.day-toolbar button { flex-shrink: 0; }
+.vocab-row { min-width: 0; }
+.vocab-row-main {
+  min-width: 0;
+  grid-template-columns: auto minmax(140px, 1fr) minmax(190px, 1.4fr) 75px auto;
+}
+.day-words-list .vocab-row-main {
+  grid-template-columns: minmax(170px, 1fr) minmax(220px, 1.6fr) 75px auto;
+}
+.vocab-context { min-width: 0; overflow-wrap: anywhere; }
+.vocab-term { min-width: 0; }
+.vocab-hebrew { font-size: 27px; overflow-wrap: anywhere; }
+.vocab-meaning { font-size: 14px; }
+.vocab-row-actions { flex-shrink: 0; }
+.study-header, .vocab-toolbar, .calendar-layout { position: relative; z-index: 1; }
+@media (min-width: 1600px) {
+  .workspace-main.app-shell { width: min(1170px, calc(100% - 90px)); max-width: 1170px; }
+}
+@media (max-width: 1200px) {
+  .workspace-layout { grid-template-columns: 230px minmax(0, 1fr); }
+  .workspace-sidebar { width: 230px; padding: 22px 19px; }
+  .sidebar-illustration { margin-inline:-19px; }
+  .workspace-main.app-shell { width: calc(100% - 42px); }
+  .read-heading .reading-still-life { right: 0; width: 290px; }
+  .read-inputs { width: calc(100% - 250px); }
+  .read-inputs > .card { padding: 15px; }
+}
+@media (max-width: 1040px) {
+  .read-heading .reading-still-life { opacity: .34; }
+  .read-inputs { width:100%; }
+  .read-inputs > .card { min-height: 270px; }
+  .page-heading-text { max-width: 100%; }
+  .page-heading:not(.read-heading) .reading-still-life { opacity: .22; }
+  .vocab-row-main, .day-words-list .vocab-row-main { grid-template-columns: auto minmax(110px,1fr) minmax(160px,1fr) auto; }
+  .day-words-list .vocab-row-main { grid-template-columns: minmax(100px,1fr) minmax(130px,1fr) auto; }
+}
+@media (max-width: 920px) {
+  .read-heading .reading-still-life { display:none; }
+  .read-inputs { width:100%; }
+  .read-inputs > .card { min-height:260px; }
+}
+@media (max-width: 700px) {
+  .workspace-layout { display:block; }
+  .workspace-sidebar { width:100%; height:auto; position:sticky; padding:9px 10px; display:flex; flex-direction:row; overflow-x:auto; }
+  .brand-block { margin:0; flex:0 0 auto; gap:4px; }
+  .brand-block img { width:38px; height:43px; }
+  .brand-block span { font-size:13px; }
+  .workspace-sidebar .sidebar-link { padding:8px 7px; font-size:12px; gap:5px; }
+  .sidebar-link .nav-icon { width:16px; height:18px; }
+  .sidebar-link .nav-icon svg { width:16px; height:16px; }
+  .workspace-main.app-shell { width: calc(100% - 28px); padding:70px 0 40px; }
+  .workspace-topbar { top:12px; right:8px; }
+  .read-inputs { grid-template-columns: 1fr; }
+  .page-heading { min-height: 100px; }
+  .page-heading:not(.read-heading) .reading-still-life { display:none; }
+  .page-heading-text { gap:8px; }
+  .page-heading h1 { font-size:31px; line-height:1.15; }
+  .page-heading h1[lang="he"] { font-size:40px; }
+  .page-heading p { font-size:14px; }
+  .sprig { width:22px; flex-basis:22px; height:32px; }
+  .sprig svg { width:22px; height:31px; }
+  .reader-card .editable-text, .reader-card .reader { font-size:18px; }
+  .vocab-row-main, .day-words-list .vocab-row-main { display:flex; flex-wrap:wrap; }
+  .vocab-row-main .vocab-context { order:4; flex: 1 0 100%; }
+  .day-toolbar { flex-wrap:wrap; }
+}
