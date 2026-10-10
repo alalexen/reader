@@ -16,7 +16,7 @@ export function createReviewController({ elements, speak }) {
     const card = queue[index];
     elements.reviewSession.classList.toggle("hidden", !card);
     elements.reviewEmpty.classList.toggle("hidden", Boolean(card));
-    elements.reviewCount.textContent = String(queue.length);
+    elements.reviewCount.textContent = String(Math.max(0, queue.length - index));
     elements.reviewProgress.textContent = card
       ? `Card ${index + 1} of ${queue.length}`
       : answered ? `Reviewed ${answered} card${answered === 1 ? "" : "s"} this session.` : "";
@@ -46,6 +46,7 @@ export function createReviewController({ elements, speak }) {
   }
 
   async function refresh() {
+    if (busy) return;
     busy = true;
     setStatus("Loading review cards...");
     try {
@@ -56,6 +57,9 @@ export function createReviewController({ elements, speak }) {
       render();
     } catch (error) {
       console.error("Could not load review queue:", error);
+      queue = [];
+      index = 0;
+      render();
       setStatus("Could not load reviews. Check the PostgreSQL connection and retry.");
     } finally {
       busy = false;
