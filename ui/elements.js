@@ -1,3 +1,4 @@
+/** Look up a required DOM node and fail immediately for a broken HTML/JS contract. */
 function requiredElement(selector) {
   const element = document.querySelector(selector);
 
@@ -93,6 +94,8 @@ export const elements = {
   studyTranslations: requiredElement("#studyTranslations"),
   studyRatingButtons: requiredElement("#studyRatingButtons"),
   sessionTimer: requiredElement("#sessionTimer"),
+  themeToggle: requiredElement("#themeToggle"),
+  appearanceInputs: [...document.querySelectorAll('input[name="appearance"]')],
   openSettingsButton: requiredElement("#openSettingsButton"),
   closeSettingsButton: requiredElement("#closeSettingsButton"),
   settingsBackdrop: requiredElement("#settingsBackdrop"),
