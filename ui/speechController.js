@@ -7,7 +7,9 @@ import {
   stopSpeech,
 } from "../services/speechService.js";
 
+/** Coordinates voice selection and speech controls. */
 export function createSpeechController({ elements, state }) {
+  /** Inserts an available voice into an HTML select. */
   function appendSelectOption(select, value, label) {
     const option = document.createElement("option");
     option.value = value;
@@ -15,6 +17,7 @@ export function createSpeechController({ elements, state }) {
     select.append(option);
   }
 
+  /** Loads available voices and restores the user's selection. */
   async function initializeVoiceSelector() {
     const browserVoices = getHebrewVoices();
     const googleVoices = await getGoogleTtsVoices();
@@ -69,6 +72,7 @@ export function createSpeechController({ elements, state }) {
       : defaultSystemVoice?.voiceURI || availableValues[0] || "";
   }
 
+  /** Speaks Hebrew using the selected voice and playback speed. */
   async function speak(text) {
     return speakHebrew(
       text,
@@ -77,6 +81,7 @@ export function createSpeechController({ elements, state }) {
     );
   }
 
+  /** Refreshes the voice list when the browser registry changes. */
   function watchVoiceChanges() {
     onVoicesChanged(initializeVoiceSelector);
   }
