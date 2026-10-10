@@ -4,7 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const baseUrl = "http://127.0.0.1:8765";
-const output = ".visual-check";
+const output = "ui-preview";
 await mkdir(output, { recursive: true });
 
 const date = new Date();
