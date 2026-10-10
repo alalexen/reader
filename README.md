@@ -144,11 +144,14 @@ OCR providers, or Study workflow.
 - Alternatively, open **Settings → Appearance → Light / Dark**, then save.
 - The selected theme is stored with the existing browser settings and restored
   before the page is painted. No account or new backend API is needed.
-- Dark artwork is cropped from the approved design into two high-density,
-  transparent WebP illustrations. The original warm light design and the gothic
-  dark design use the **same DOM, sidebar width, main column, and timer position**.
-  The castle illustration is positioned without stretching, and books have no labels.
-  There is no dark-only header or redundant rabbit next to the brand.
+- Approved gothic artwork is preserved as **two high-density WebP images with
+  soft alpha-faded edges** (`assets/dark-sidebar-seamless.webp` and
+  `assets/dark-castle-seamless.webp`). They blend into the same `#090e13`
+  background on both sides; this removes rectangular picture boundaries without
+  flattening functional buttons and inputs into a screenshot. The original light
+  and dark designs use the **same DOM, sidebar width, main column and timer position**.
+  The castle retains its proportions, and the books are unlettered. There is no
+  dark-only header or extra rabbit icon beside the brand.
 - The sidebar skeleton rabbit has no trailing blood effect.
 - The former “Read. Understand. Remember.” tagline is intentionally omitted.
 
@@ -165,7 +168,8 @@ node --test tests/*.mjs
 ```
 
 GitHub Actions also checks frontend syntax, equal layout and timer coordinates
-in both themes, high-resolution asset decoding, theme preference persistence,
+in both themes, high-resolution asset decoding, transparent image corners,
+a unified sidebar/page background, theme preference persistence,
 real Chromium navigation at desktop/mobile widths, answer reveal and rating,
 selected word controls, settings, and layout screenshots for both themes.
 A final smoke test with a real local PostgreSQL database is required before
