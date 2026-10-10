@@ -600,3 +600,38 @@ html, body { width: 100%; overflow-x: clip; }
   #studyView .study-header { margin-top: 0; margin-bottom: 15px; }
   #studyView .study-card { min-height: 0; }
 }
+
+
+/* High-resolution assets: preserve alpha edges, never simulate paper tiles. */
+.brand-block img {
+  mix-blend-mode: normal;
+  background: transparent;
+  image-rendering: auto;
+}
+.sidebar-illustration {
+  background: transparent;
+}
+.sidebar-illustration img {
+  object-fit: cover;
+  object-position: center bottom;
+  background: transparent;
+  image-rendering: auto;
+}
+.reading-still-life {
+  image-rendering: auto;
+  background: transparent;
+}
+.read-heading .reading-still-life {
+  border-radius: 0;
+  mask-image:
+    linear-gradient(to right, transparent, #000 19%, #000 98%, transparent),
+    linear-gradient(to bottom, transparent, #000 8%, #000 85%, transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 19%, #000 98%, transparent),
+    linear-gradient(to bottom, transparent, #000 8%, #000 85%, transparent);
+  -webkit-mask-composite: source-in;
+}
+@media (max-width: 700px) {
+  .sidebar-illustration { display: none; }
+}
