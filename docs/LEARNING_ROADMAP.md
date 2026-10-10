@@ -187,7 +187,8 @@ Demo seed никогда не содержит личные данные пол�
 - [x] existing/custom `DATABASE_URL` is respected without touching that PostgreSQL service
 - [x] bootstrap safety tests
 - [x] создать локальную PostgreSQL database и применить migration на машине разработчика
-- [ ] перенести существующие browser flashcards в PostgreSQL в пункте 1
+- [x] реализован безопасный импорт browser flashcards в PostgreSQL (ветка feature/postgres-flashcards; требуется локальная проверка) 
+- [ ] проверить миграцию на существующих карточках и объединить ветку в main
 
 ## Acceptance criteria
 
