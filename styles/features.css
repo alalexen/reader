@@ -1,26 +1,4 @@
-/* Wonderland hero artwork */
-.hero-activity-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 1rem;
-  width: min(610px, 100%);
-  margin-top: 1.4rem;
-}
 
-.hero-activity-row .monster-walk-track {
-  flex: 1 1 auto;
-  width: auto;
-  min-width: 0;
-  margin-top: 0;
-}
-
-.walking-rabbit {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-  object-position: center bottom;
-  filter: drop-shadow(0 8px 8px rgba(22, 9, 9, 0.2));
-}
 
 .session-timer {
   flex: 0 0 auto;
@@ -52,15 +30,6 @@
 }
 
 @media (max-width: 720px) {
-  .hero-activity-row {
-    align-items: center;
-    gap: 0.7rem;
-  }
-
-  .walking-rabbit {
-    width: 62px;
-    height: 62px;
-  }
 
   .session-timer {
     min-width: 100px;
@@ -73,82 +42,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .walking-rabbit {
-    animation: none;
-    left: calc(50% - 36px);
-  }
 }
 
 
-
-
-/* Compact single-column hero. */
-.hero-card {
-  display: block;
-  min-height: 0;
-  padding: 1.55rem 2rem 1.35rem;
-}
-
-.hero-copy {
-  width: 100%;
-}
-
-.hero h1 {
-  max-width: none;
-  margin: 0.08rem 0 0.45rem;
-  white-space: nowrap;
-  font-size: clamp(2.6rem, 7vw, 4.9rem);
-  line-height: 0.92;
-}
-
-.hero-activity-row {
-  width: min(700px, 100%);
-  margin-top: 0.9rem;
-}
-
-.monster-walk-track {
-  height: 68px;
-}
-
-.walking-rabbit {
-  width: 66px;
-  height: 66px;
-}
-
-@keyframes monster-walk {
-  0% {
-    left: 0;
-    transform: scaleX(1) translateY(0) rotate(-2deg);
-  }
-
-  8% {
-    transform: scaleX(1) translateY(-3px) rotate(2deg);
-  }
-
-  46% {
-    left: calc(100% - 66px);
-    transform: scaleX(1) translateY(0) rotate(-2deg);
-  }
-
-  50% {
-    left: calc(100% - 66px);
-    transform: scaleX(-1) translateY(0) rotate(2deg);
-  }
-
-  58% {
-    transform: scaleX(-1) translateY(-3px) rotate(-2deg);
-  }
-
-  96% {
-    left: 0;
-    transform: scaleX(-1) translateY(0) rotate(2deg);
-  }
-
-  100% {
-    left: 0;
-    transform: scaleX(1) translateY(0) rotate(-2deg);
-  }
-}
 
 /* Image cropping before OCR. */
 .image-workspace {
@@ -227,26 +123,6 @@
 }
 
 @media (max-width: 720px) {
-  .hero-card {
-    padding: 1.2rem 1.35rem 1.05rem;
-  }
-
-  .hero h1 {
-    font-size: clamp(2.05rem, 11vw, 3.6rem);
-  }
-
-  .hero-activity-row {
-    margin-top: 0.65rem;
-  }
-
-  .monster-walk-track {
-    height: 62px;
-  }
-
-  .walking-rabbit {
-    width: 60px;
-    height: 60px;
-  }
 }
 
 
@@ -305,29 +181,6 @@
 
 .selected-sentence::after {
   content: close-quote;
-}
-
-.settings-gear {
-  position: absolute;
-  z-index: 6;
-  top: 1rem;
-  right: 1rem;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f1;
-  font-size: 1.25rem;
-  box-shadow: none;
-}
-
-.settings-gear:hover:not(:disabled) {
-  transform: rotate(18deg);
-  box-shadow: none;
 }
 
 .settings-backdrop {
