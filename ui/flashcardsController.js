@@ -17,6 +17,8 @@ export function createFlashcardsController({
   reader,
   speak,
 }) {
+  let initialized = false;
+
   function createFlashcardElement(card) {
     const article = document.createElement("article");
     article.className = "saved-flashcard";
@@ -116,6 +118,11 @@ export function createFlashcardsController({
   }
 
   async function rememberActiveWord() {
+    if (!initialized) {
+      elements.flashcardsStatus.textContent =
+        "Flashcards are not connected to PostgreSQL. Please restart the server and reload.";
+      return;
+    }
     const data = state.activeWordData;
 
     if (!data?.word) {
@@ -183,7 +190,9 @@ export function createFlashcardsController({
   async function initialize() {
     try {
       state.flashcards = await initializeFlashcards();
+      initialized = true;
       renderFlashcards();
+      elements.flashcardsStatus.textContent = "";
     } catch (error) {
       console.error("Flashcard migration/loading failed:", error);
       elements.flashcardsStatus.textContent =
