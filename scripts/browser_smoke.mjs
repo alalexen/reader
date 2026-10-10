@@ -211,60 +211,45 @@ try {
 
     await page.reload({ waitUntil: "domcontentloaded" });
     assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-    // Decorative assets use real high-density WebP sources, not upscaled UI captures.
-    const artwork = await Promise.all(
-      ["dark-sidebar-seamless.webp", "dark-castle-seamless.webp"].map(
-        (name) => page.evaluate(async (file) => {
-          const img = new Image();
-          img.src = "/assets/" + file;
-          await img.decode();
-          return { name: file, width: img.naturalWidth, height: img.naturalHeight };
-        }, name),
-      ),
-    );
-    assert.ok(artwork[0].width >= 1000 && artwork[0].height >= 2000);
-    assert.ok(artwork[1].width >= 1800 && artwork[1].height >= 1300);
+    // A single scene owns both illustrations; no sidebar/header cutout remains.
     await page.locator("#navRead").click();
-    const darkArtwork = await page.locator(".read-heading").evaluate((heading) =>
-      getComputedStyle(heading, "::after").backgroundImage);
-    if (width > 920) assert.match(darkArtwork, /dark-castle-seamless/);
-    // Both transparent images must blend into one uniform base color.
-    const seamless = await page.evaluate(async () => {
-      const root = getComputedStyle(document.documentElement);
-      const body = getComputedStyle(document.body);
+    const scene = await page.evaluate(async () => {
+      const layout = getComputedStyle(document.querySelector(".workspace-layout"));
       const sidebar = getComputedStyle(document.querySelector(".workspace-sidebar"));
-      const corners = [];
-      for (const source of ["dark-sidebar-seamless.webp", "dark-castle-seamless.webp"]) {
-        const image = new Image();
-        image.src = "/assets/" + source;
-        await image.decode();
-        const canvas = document.createElement("canvas");
-        canvas.width = 48;
-        canvas.height = 48;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        ctx.drawImage(image, 0, 0, 48, 48);
-        const pixels = ctx.getImageData(0, 0, 48, 48).data;
-        const sample = (x, y) => pixels[(y * 48 + x) * 4 + 3];
-        corners.push({
-          source, topLeft: sample(0, 0), topRight: sample(47, 0),
-          bottomLeft: sample(0, 47), bottomRight: sample(47, 47),
-        });
+      const readHeading = getComputedStyle(document.querySelector(".read-heading"), "::after");
+      const source = window.innerWidth > 920
+        ? (window.innerWidth / window.innerHeight <= 1.5
+          ? "dark-scene-laptop.webp" : "dark-scene-wide.webp")
+        : null;
+      let image = null;
+      if (source) {
+        const element = new Image();
+        element.src = "/assets/" + source;
+        await element.decode();
+        image = { width: element.naturalWidth, height: element.naturalHeight };
       }
       return {
-        cssColor: root.getPropertyValue("--dark-scene-base").trim(),
-        bodyColor: body.backgroundColor,
+        image,
+        source,
+        background: layout.backgroundImage,
+        sidebarBackground: sidebar.backgroundImage,
         sidebarColor: sidebar.backgroundColor,
-        corners,
+        readDecorContent: readHeading.content,
       };
     });
-    assert.equal(seamless.cssColor, "#090e13");
-    assert.equal(seamless.bodyColor, seamless.sidebarColor,
-      "Different body/sidebar colors produce visible rectangular seams");
-    for (const entry of seamless.corners) {
-      for (const key of ["topLeft", "topRight", "bottomLeft", "bottomRight"]) {
-        assert.ok(entry[key] < 30, `Artwork has an opaque corner: ${JSON.stringify(entry)}`);
-      }
+    if (width > 920) {
+      assert.match(scene.background, /dark-scene-(wide|laptop)\\.webp/);
+      assert.ok(scene.image.width >= width * 1.8,
+        `Unified scene lacks high-density source pixels: ${JSON.stringify(scene)}`);
+      assert.ok(scene.image.height >= 1800);
+    } else {
+      assert.equal(scene.background, "none", "Avoid desktop illustrations on narrow screens");
     }
+    assert.equal(scene.sidebarBackground, "none", "Sidebar must not draw a second image");
+    assert.equal(scene.sidebarColor, "rgba(0, 0, 0, 0)",
+      "Sidebar must reveal the continuous background rather than an opaque rectangle");
+    assert.equal(scene.readDecorContent, "none",
+      "Read heading must not draw its own independent castle layer");
 
     // Modal appearance setting must also update the global theme and remain in sync.
     await page.locator("#openSettingsButton").click();
