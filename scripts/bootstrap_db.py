@@ -45,6 +45,7 @@ def run(
     capture_output: bool = False,
     env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    """Run a subprocess inside the project and translate failures into actionable messages."""
     try:
         return subprocess.run(
             args,
@@ -64,6 +65,7 @@ def run(
 
 
 def postgres_major(binary: Path) -> str | None:
+    """Read a PostgreSQL binary's major version."""
     result = run([str(binary), "--version"], check=False, capture_output=True)
     match = re.search(r"(\d+)(?:\.\d+)?", result.stdout or "")
     return match.group(1) if match else None
@@ -119,6 +121,7 @@ def find_postgres_bin_dir(expected_major: str | None = None) -> Path:
 
 
 def load_database_url() -> str | None:
+    """Resolve an explicit database URL before considering a managed cluster."""
     value = os.environ.get("DATABASE_URL", "").strip()
     if value:
         return value
@@ -158,6 +161,7 @@ def database_url_matches_managed(
     database_url: str | None,
     config: dict | None,
 ) -> bool:
+    """Verify that the stored managed cluster matches the configured database."""
     port = local_managed_port(database_url)
     if port is None:
         return False
@@ -167,6 +171,7 @@ def database_url_matches_managed(
 
 
 def read_managed_config() -> dict | None:
+    """Load the managed cluster connection metadata."""
     if not MANAGED_CONFIG.exists():
         return None
     try:
@@ -182,6 +187,7 @@ def read_managed_config() -> dict | None:
 
 
 def write_managed_config(port: int) -> None:
+    """Persist connection details for the private database cluster."""
     APP_HOME.mkdir(parents=True, exist_ok=True)
     MANAGED_CONFIG.write_text(
         json.dumps(
@@ -225,6 +231,7 @@ def write_env(database_url: str) -> None:
 
 
 def port_is_free(port: int) -> bool:
+    """Check whether a local TCP port can be used safely."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
@@ -235,6 +242,7 @@ def port_is_free(port: int) -> bool:
 
 
 def choose_free_port() -> int:
+    """Find an available port reserved for the private PostgreSQL instance."""
     for port in range(DEFAULT_PORT, DEFAULT_PORT + PORT_SCAN_LIMIT):
         if port_is_free(port):
             return port
@@ -245,6 +253,7 @@ def choose_free_port() -> int:
 
 
 def cluster_is_running(pg_ctl: Path) -> bool:
+    """Check whether the private PostgreSQL cluster is already running."""
     result = run(
         [str(pg_ctl), "status", "-D", str(DATA_DIR)],
         check=False,
@@ -254,6 +263,7 @@ def cluster_is_running(pg_ctl: Path) -> bool:
 
 
 def initialize_cluster(bin_dir: Path) -> None:
+    """Initialize only this application's isolated PostgreSQL data directory."""
     if (DATA_DIR / "PG_VERSION").exists():
         return
 
@@ -280,6 +290,7 @@ def initialize_cluster(bin_dir: Path) -> None:
 
 
 def start_cluster(bin_dir: Path, port: int) -> None:
+    """Launch the private database instance with its chosen port."""
     pg_ctl = bin_dir / "pg_ctl"
 
     if cluster_is_running(pg_ctl):
@@ -311,6 +322,7 @@ def start_cluster(bin_dir: Path, port: int) -> None:
 
 
 def database_exists(bin_dir: Path, port: int) -> bool:
+    """Check whether the Reader database has already been created."""
     psql = bin_dir / "psql"
     result = run(
         [
@@ -337,6 +349,7 @@ def database_exists(bin_dir: Path, port: int) -> bool:
 
 
 def ensure_database(bin_dir: Path, port: int) -> None:
+    """Create the application's database only when it is missing."""
     if database_exists(bin_dir, port):
         return
 
@@ -354,6 +367,7 @@ def ensure_database(bin_dir: Path, port: int) -> None:
 
 
 def apply_migrations(database_url: str) -> None:
+    """Bring the managed database schema up to date."""
     print("Applying database migrations ...")
     env = os.environ.copy()
     env["DATABASE_URL"] = database_url
@@ -361,6 +375,7 @@ def apply_migrations(database_url: str) -> None:
 
 
 def seed_demo(database_url: str) -> None:
+    """Populate demo records only when explicitly requested."""
     print("Adding optional demo data ...")
     env = os.environ.copy()
     env["DATABASE_URL"] = database_url
@@ -425,6 +440,7 @@ def bootstrap_managed_database(*, demo: bool = False) -> str:
 
 
 def main() -> None:
+    """Parse CLI options and perform safe bootstrap operations."""
     parser = argparse.ArgumentParser(
         description="Prepare Hebrew Reader's private PostgreSQL database."
     )
