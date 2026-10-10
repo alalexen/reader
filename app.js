@@ -41,6 +41,7 @@ const flashcards = createFlashcardsController({
   state,
   reader,
   speak: speech.speak,
+  onCardsChanged: () => review.refresh(),
 });
 
 const review = createReviewController({
