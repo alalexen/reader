@@ -16,6 +16,7 @@ export function createFlashcardsController({
   state,
   reader,
   speak,
+  onCardsChanged = () => {},
 }) {
   let initialized = false;
 
@@ -50,6 +51,7 @@ export function createFlashcardsController({
       try {
         state.flashcards = await removeFlashcard(card.id);
         renderFlashcards();
+        onCardsChanged();
       } catch (error) {
         console.error("Could not delete flashcard:", error);
         elements.flashcardsStatus.textContent = "Could not delete the card. Try again.";
@@ -156,6 +158,7 @@ export function createFlashcardsController({
       });
 
       renderFlashcards();
+      onCardsChanged();
       elements.translationStatus.textContent = "";
       elements.flashcardsStatus.textContent = `Saved ${data.word}.`;
     } catch (error) {
