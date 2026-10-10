@@ -364,105 +364,55 @@ html[data-theme="dark"] .workspace-topbar .session-timer time { color: #f3ebe6; 
 html[data-theme="dark"] .workspace-topbar .session-timer-label { color: #b6a5a3; }
 html[data-theme="dark"] .session-timer .clock-symbol { color: #e34854; }
 
-/* Approved illustrations are decorative layers, not a separate layout or header. */
-html[data-theme="dark"] .workspace-sidebar::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: min(64vh, 650px);
-  pointer-events: none;
-  background: url("../assets/dark-sidebar-seamless.webp") center bottom / 100% auto no-repeat;
-  z-index: 0;
-}
 html[data-theme="dark"] .brand-block,
 html[data-theme="dark"] .sidebar-navigation {
   position: relative;
   z-index: 1;
 }
 html[data-theme="dark"] .sidebar-footer { display: none; }
-html[data-theme="dark"] .read-heading .reading-still-life { display: none; }
-html[data-theme="dark"] .read-heading::after {
-  content: "";
-  position: absolute;
-  width: min(590px, 53vw);
-  height: 458px;
-  top: -48px;
-  right: -35px;
-  pointer-events: none;
-  z-index: 0;
-  background: url("../assets/dark-castle-seamless.webp") center center / contain no-repeat;
-}
-html[data-theme="dark"] .page-heading:not(.read-heading) .reading-still-life {
-  display: none;
-}
-html[data-theme="dark"] .page-heading:not(.read-heading)::after {
-  content: "";
-  position: absolute;
-  top: -20px;
-  right: -10px;
-  width: 275px;
-  height: 160px;
-  pointer-events: none;
-  opacity: .45;
-  background: url("../assets/dark-castle-seamless.webp") center / cover no-repeat;
-  mask-image: linear-gradient(to right, transparent, #000 40%);
-}
 
-/* Asset placement changes with the same responsive breakpoints as the light UI. */
-@media (max-width: 1200px) {
-  html[data-theme="dark"] .read-heading::after {
-    width: 470px;
-    right: 0;
-    opacity: .82;
-  }
-}
-@media (max-width: 1040px) {
-  html[data-theme="dark"] .read-heading::after { opacity: .35; }
-}
-@media (max-width: 920px) {
-  html[data-theme="dark"] .read-heading::after { display: none; }
-}
-@media (max-width: 700px) {
-  html[data-theme="dark"] .workspace-sidebar::after { display: none; }
-  html[data-theme="dark"] .brand-block { min-height: 43px; }
-  html[data-theme="dark"] .page-heading:not(.read-heading)::after { display: none; }
-}
 
 /*
- * Seamless dark artwork.
- * The sidebar and reader decorations share one uniform underlay color.
- * Artwork alpha is feathered within its high-density WebP assets; no box,
- * rectangle, or CSS opacity transition is needed to conceal the boundaries.
- * Layout geometry is inherited unchanged from the light theme.
+ * A single continuous decorative image avoids seams between app columns.
+ * Only artwork is baked in; labels, timers, controls, and vocabulary stay HTML.
+ * Keep all dimensions and offsets in editorial.css shared by both themes.
  */
 html[data-theme="dark"] {
   --dark-scene-base: #090e13;
   --bg: var(--dark-scene-base);
   --bg-soft: var(--dark-scene-base);
 }
-html[data-theme="dark"],
-html[data-theme="dark"] body,
-html[data-theme="dark"] .workspace-layout,
+html[data-theme="dark"] body {
+  background: var(--dark-scene-base);
+}
+html[data-theme="dark"] .workspace-layout {
+  background: var(--dark-scene-base) url("../assets/dark-scene-wide.webp")
+    center top / 100% auto no-repeat;
+}
+/* A transparent sidebar reveals the SAME background as the reader area. */
 html[data-theme="dark"] .workspace-sidebar {
-  background-color: var(--dark-scene-base);
+  background: transparent;
+  box-shadow: none;
 }
-html[data-theme="dark"] .workspace-sidebar {
-  background-image: none;
-}
-html[data-theme="dark"] .workspace-sidebar::after {
-  background-image: url("../assets/dark-sidebar-seamless.webp");
-  background-size: 100% auto;
-  background-position: center bottom;
-  background-repeat: no-repeat;
-}
-html[data-theme="dark"] .read-heading::after {
-  background-image: url("../assets/dark-castle-seamless.webp");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
+html[data-theme="dark"] .workspace-sidebar::after,
+html[data-theme="dark"] .read-heading::after,
 html[data-theme="dark"] .page-heading:not(.read-heading)::after {
-  background-image: url("../assets/dark-castle-seamless.webp");
+  content: none;
+  display: none;
+}
+/* Do not render the light-theme art as an extra layer. */
+html[data-theme="dark"] .reading-still-life,
+html[data-theme="dark"] .sidebar-illustration {
+  display: none;
+}
+/* The narrower composition is independently laid out, never distorted. */
+@media (max-aspect-ratio: 3/2) and (min-width: 921px) {
+  html[data-theme="dark"] .workspace-layout {
+    background-image: url("../assets/dark-scene-laptop.webp");
+  }
+}
+@media (max-width: 920px) {
+  html[data-theme="dark"] .workspace-layout {
+    background-image: none;
+  }
 }
