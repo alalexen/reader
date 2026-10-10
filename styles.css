@@ -1,5 +1,6 @@
-@import url("./styles/core.css?v=editorial-4");
-@import url("./styles/theme.css?v=editorial-4");
-@import url("./styles/features.css?v=editorial-4");
+@import url("./styles/core.css?v=dark-quality-1");
+@import url("./styles/theme.css?v=dark-quality-1");
+@import url("./styles/features.css?v=dark-quality-1");
 
-@import url("./styles/editorial.css?v=editorial-4");
+@import url("./styles/editorial.css?v=dark-quality-1");
+@import url("./styles/dark.css?v=dark-quality-1");
