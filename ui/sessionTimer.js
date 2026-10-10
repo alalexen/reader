@@ -1,6 +1,8 @@
+/** Starts a session clock and returns its interval identifier for cleanup. */
 export function initializeSessionTimer(element) {
   const startedAt = Date.now();
 
+  /** Formats elapsed seconds as a stable HH:MM:SS value and time duration. */
   const updateTimer = () => {
     const elapsedSeconds = Math.max(
       0,
