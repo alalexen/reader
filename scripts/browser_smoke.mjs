@@ -77,7 +77,12 @@ try {
       }));
       assert.ok(dimensions.document <= dimensions.viewport + 2,
         `${width}px ${view}: page overflows horizontally (${dimensions.document}px)`);
-      if (width === 1448) assert.ok(Math.abs(dimensions.sidebar - 270) < 2);
+      if (width === 1448) {
+        const expectedSidebar = await page.locator("html").getAttribute("data-theme") === "dark"
+          ? 235 : 270;
+        assert.ok(Math.abs(dimensions.sidebar - expectedSidebar) < 2,
+          `${view}: expected ${expectedSidebar}px sidebar, got ${dimensions.sidebar}px`);
+      }
       if (width > 700) {
         assert.ok(dimensions.main.x >= dimensions.sidebar,
           `${width}px ${view}: main is hidden behind sidebar`);
