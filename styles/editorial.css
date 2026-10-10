@@ -25,7 +25,6 @@ body::before { content: none; }
   border-right: 1px solid #ecdfce; z-index: 11; overflow-y: auto;
 }
 .brand-block { display: flex; align-items: center; gap: 12px; margin: 0 0 39px; color: #52291c; }
-.brand-block img { object-fit: contain; width: 68px; height: 68px; }
 .brand-block span { font: 600 25px/1.04 Georgia, "Iowan Old Style", serif; letter-spacing: -.03em; }
 .sidebar-navigation { display: grid; gap: 8px; }
 .workspace-sidebar .sidebar-link {
@@ -254,7 +253,6 @@ button:focus-visible, .sidebar-link:focus-visible { outline: 3px solid #a66a48; 
   .workspace-sidebar { position: sticky; height: auto; padding: 9px 12px 8px; display: flex; flex-direction: row;
     align-items: center; gap: 6px; border-right: 0; border-bottom: 1px solid #eaddcd; overflow: auto; }
   .brand-block { margin: 0; flex: 0 0 auto; gap: 3px; }
-  .brand-block img { width: 37px; height: 37px; }
   .brand-block span { font: 600 12px/1.1 Georgia,serif; }
   .sidebar-navigation { display: flex; gap: 2px; }
   .workspace-sidebar .sidebar-link { width: auto; font-size: 12px; gap: 4px; padding: 8px; white-space: nowrap; }
@@ -303,8 +301,7 @@ html, body { width: 100%; overflow-x: clip; }
   overflow-x: hidden;
   flex-shrink: 0;
 }
-.brand-block { margin-bottom: 46px; gap: 12px; }
-.brand-block img { width: 72px; height: 84px; object-fit: contain; mix-blend-mode: multiply; }
+.brand-block { margin-bottom: 46px; gap: 0; min-height: 84px; }
 .brand-block span { font-size: 26px; line-height: 1.04; }
 .sidebar-navigation { gap: 11px; }
 .workspace-sidebar .sidebar-link {
@@ -491,8 +488,7 @@ html, body { width: 100%; overflow-x: clip; }
 @media (max-width: 700px) {
   .workspace-layout { display:block; }
   .workspace-sidebar { width:100%; height:auto; position:sticky; padding:9px 10px; display:flex; flex-direction:row; overflow-x:auto; }
-  .brand-block { margin:0; flex:0 0 auto; gap:4px; }
-  .brand-block img { width:38px; height:43px; }
+  .brand-block { margin:0; flex:0 0 auto; gap:0; min-height:43px; }
   .brand-block span { font-size:13px; }
   .workspace-sidebar .sidebar-link { padding:8px 7px; font-size:12px; gap:5px; }
   .sidebar-link .nav-icon { width:16px; height:18px; }
@@ -603,11 +599,6 @@ html, body { width: 100%; overflow-x: clip; }
 
 
 /* High-resolution assets: preserve alpha edges, never simulate paper tiles. */
-.brand-block img {
-  mix-blend-mode: normal;
-  background: transparent;
-  image-rendering: auto;
-}
 .sidebar-illustration {
   background: transparent;
 }
