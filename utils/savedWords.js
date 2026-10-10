@@ -1,5 +1,6 @@
 /** All date grouping uses the browser's local calendar, not UTC boundaries. */
 export function localDayKey(value) {
+  if (value === null || value === undefined || value === "") return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   const year = date.getFullYear();
