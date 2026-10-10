@@ -6,6 +6,7 @@ import { createNavigationController } from "./ui/navigationController.js";
 import { createReaderController } from "./ui/readerController.js";
 import { createSettingsController } from "./ui/settingsController.js";
 import { createSpeechController } from "./ui/speechController.js";
+import { createThemeController } from "./ui/themeController.js";
 import { initializeSessionTimer } from "./ui/sessionTimer.js";
 import { createVocabularyController } from "./ui/vocabularyController.js";
 import { createWordSaveController } from "./ui/wordSaveController.js";
@@ -30,7 +31,8 @@ const state = {
 const reader = createReaderController({ elements, translationElements, state });
 const speech = createSpeechController({ elements, state });
 const image = createImageController({ elements, state, reader });
-const settings = createSettingsController({ elements, state });
+const theme = createThemeController({ elements, state });
+const settings = createSettingsController({ elements, state, onThemeChanged: theme.apply });
 
 const navigation = createNavigationController({
   elements,
@@ -51,12 +53,14 @@ const savedWord = createWordSaveController({
   onChanged: () => vocabulary.updateCards(state.flashcards),
 });
 
+/** Resets transient reader and OCR state without touching saved vocabulary. */
 function clearApp() {
   speech.stop();
   image.clear();
   reader.clear();
 }
 
+// Bind existing OCR, speech, navigation, and settings actions in one composition root.
 elements.imageInput.addEventListener("change", image.handleFileSelection);
 elements.useFullImageButton.addEventListener("click", image.useFullImage);
 elements.cropImageButton.addEventListener("click", image.enterCropMode);
@@ -112,6 +116,7 @@ elements.saveSettingsButton.addEventListener("click", settings.save);
   elements.settingsOcrEngine,
   elements.settingsVoiceSelect,
   ...elements.translationLanguageInputs,
+  ...elements.appearanceInputs,
 ].forEach((control) => control.addEventListener("change", settings.updateSaveButton));
 
 elements.ocrEngine.addEventListener("change", () => {
