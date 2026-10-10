@@ -2,6 +2,7 @@ const STORAGE_KEY = "hebrewReaderFlashcards";
 const MIGRATED_KEY = "hebrewReaderFlashcardsImportedToPostgresV1";
 
 /** Preserve the original browser cards as a backup after migration. */
+/** Reads old localStorage cards without deleting the migration backup. */
 export function loadLegacyFlashcards() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
@@ -10,6 +11,7 @@ export function loadLegacyFlashcards() {
   return cards.map(({ example, ...card }) => card);
 }
 
+/** Performs a JSON flashcard API request and surfaces HTTP errors. */
 async function request(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -24,6 +26,7 @@ async function request(path, options = {}) {
 }
 
 /** Retry unfinished imports, but never re-import after a confirmed migration. */
+/** Imports legacy words once before reading database-backed cards. */
 export async function initializeFlashcards() {
   if (localStorage.getItem(MIGRATED_KEY) !== "true") {
     const legacy = loadLegacyFlashcards();
@@ -37,6 +40,7 @@ export async function initializeFlashcards() {
   return request("/api/flashcards");
 }
 
+/** Stores or updates one card through the PostgreSQL API. */
 export async function saveFlashcard(card) {
   return request("/api/flashcards", {
     method: "POST",
@@ -44,6 +48,7 @@ export async function saveFlashcard(card) {
   });
 }
 
+/** Deletes a card then fetches the updated collection. */
 export async function removeFlashcard(id) {
   await request(`/api/flashcards/${encodeURIComponent(id)}`, { method: "DELETE" });
   return request("/api/flashcards");
