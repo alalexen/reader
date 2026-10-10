@@ -144,9 +144,12 @@ OCR providers, or Study workflow.
 - Alternatively, open **Settings → Appearance → Light / Dark**, then save.
 - The selected theme is stored with the existing browser settings and restored
   before the page is painted. No account or new backend API is needed.
-- Gothic artwork is decorative; visible controls are real accessible HTML
-  elements. There is no static screenshot masquerading as an interface.
-- The right-side running skeleton rabbit has no trailing blood effect.
+- Dark artwork is cropped from the approved design into two high-density,
+  transparent WebP illustrations. The original warm light design and the gothic
+  dark design use the **same DOM, sidebar width, main column, and timer position**.
+  The castle illustration is positioned without stretching, and books have no labels.
+  There is no dark-only header or redundant rabbit next to the brand.
+- The sidebar skeleton rabbit has no trailing blood effect.
 - The former “Read. Understand. Remember.” tagline is intentionally omitted.
 
 Implementation lives in `ui/themeController.js` and `styles/dark.css`,
@@ -161,7 +164,8 @@ python -m unittest discover -s tests -v
 node --test tests/*.mjs
 ```
 
-GitHub Actions also checks frontend syntax, theme preference persistence,
+GitHub Actions also checks frontend syntax, equal layout and timer coordinates
+in both themes, high-resolution asset decoding, theme preference persistence,
 real Chromium navigation at desktop/mobile widths, answer reveal and rating,
 selected word controls, settings, and layout screenshots for both themes.
 A final smoke test with a real local PostgreSQL database is required before
