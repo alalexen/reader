@@ -404,7 +404,6 @@ reader/
 │   ├── features.css
 │   └── editorial.css        # Sidebar, word list, planner, study styling
 ├── assets/
-│   ├── rabbit-hq.webp
 │   ├── sidebar-landscape-hq.webp
 │   └── still-life-hq.webp
 ├── ui/
