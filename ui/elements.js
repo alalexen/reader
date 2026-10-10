@@ -70,6 +70,7 @@ export const elements = {
   calendarActiveDays: requiredElement("#calendarActiveDays"),
   calendarPeak: requiredElement("#calendarPeak"),
   dayWordsTitle: requiredElement("#dayWordsTitle"),
+  dayToolbarDate: requiredElement("#dayToolbarDate"),
   dayWordsSubtitle: requiredElement("#dayWordsSubtitle"),
   dayWordsList: requiredElement("#dayWordsList"),
   dayBack: requiredElement("#dayBack"),
