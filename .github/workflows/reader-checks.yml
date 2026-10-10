@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feature/postgres-flashcards
+      - feature/dark-mode-quality
 
 jobs:
   tests:
