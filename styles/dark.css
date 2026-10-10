@@ -347,7 +347,7 @@ html[data-theme="dark"] .workspace-sidebar {
   border-right-color: #30373b;
   background: #0a1015;
 }
-html[data-theme="dark"] .brand-block { color: #f2e5dd; }
+html[data-theme="dark"] .brand-block { color: #f2e5dd; min-height: 84px; }
 html[data-theme="dark"] .brand-block img { display: none; }
 html[data-theme="dark"] .workspace-sidebar .sidebar-link {
   color: #dad7d4;
@@ -426,5 +426,6 @@ html[data-theme="dark"] .page-heading:not(.read-heading)::after {
 }
 @media (max-width: 700px) {
   html[data-theme="dark"] .workspace-sidebar::after { display: none; }
+  html[data-theme="dark"] .brand-block { min-height: 43px; }
   html[data-theme="dark"] .page-heading:not(.read-heading)::after { display: none; }
 }
