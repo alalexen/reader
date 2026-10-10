@@ -5,6 +5,12 @@ from http.server import SimpleHTTPRequestHandler
 from urllib.parse import urlparse
 
 from .database import check_database_connection
+from .flashcards import (
+    delete_flashcard,
+    import_flashcards,
+    list_flashcards,
+    save_flashcard,
+)
 from .google_cloud import (
     GOOGLE_HEBREW_VOICES,
     get_google_translate_client,
@@ -76,6 +82,14 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
 
+        if path == "/api/flashcards":
+            try:
+                self.send_json(200, list_flashcards())
+            except Exception as error:
+                print(f"Flashcards list failed: {error}")
+                self.send_json(503, {"error": "Flashcards database is unavailable."})
+            return
+
         if path == "/api/database/status":
             try:
                 self.send_json(200, check_database_connection())
@@ -144,6 +158,22 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         path = urlparse(self.path).path
 
+        if path in {"/api/flashcards", "/api/flashcards/import"}:
+            try:
+                payload = self.read_json_payload()
+                cards = (
+                    import_flashcards(payload)
+                    if path.endswith("/import")
+                    else save_flashcard(payload)
+                )
+                self.send_json(200, cards)
+            except (ValueError, TypeError, json.JSONDecodeError) as error:
+                self.send_json(400, {"error": str(error)})
+            except Exception as error:
+                print(f"Flashcards save failed: {error}")
+                self.send_json(503, {"error": "Flashcards database is unavailable."})
+            return
+
         if path == "/api/tts":
             self.handle_tts()
             return
@@ -161,6 +191,23 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
             return
 
         self.send_error(404)
+
+    def do_DELETE(self):
+        path = urlparse(self.path).path
+        if not path.startswith("/api/flashcards/"):
+            self.send_error(404)
+            return
+        try:
+            identifier = path.removeprefix("/api/flashcards/")
+            if not identifier.isdecimal():
+                raise ValueError("Invalid card ID.")
+            deleted = delete_flashcard(int(identifier))
+            self.send_json(200 if deleted else 404, {"deleted": deleted})
+        except ValueError as error:
+            self.send_json(400, {"error": str(error)})
+        except Exception as error:
+            print(f"Flashcards delete failed: {error}")
+            self.send_json(503, {"error": "Flashcards database is unavailable."})
 
     def handle_tts(self):
         try:
