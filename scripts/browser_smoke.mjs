@@ -238,7 +238,7 @@ try {
       };
     });
     if (width > 920) {
-      assert.match(scene.background, /dark-scene-(wide|laptop)\\.webp/);
+      assert.match(scene.background, /dark-scene-(wide|laptop)[.]webp/);
       assert.ok(scene.image.width >= width * 1.8,
         `Unified scene lacks high-density source pixels: ${JSON.stringify(scene)}`);
       assert.ok(scene.image.height >= 1800);
