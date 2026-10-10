@@ -78,8 +78,7 @@ try {
       assert.ok(dimensions.document <= dimensions.viewport + 2,
         `${width}px ${view}: page overflows horizontally (${dimensions.document}px)`);
       if (width === 1448) {
-        const expectedSidebar = await page.locator("html").getAttribute("data-theme") === "dark"
-          ? 235 : 270;
+        const expectedSidebar = 270;
         assert.ok(Math.abs(dimensions.sidebar - expectedSidebar) < 2,
           `${view}: expected ${expectedSidebar}px sidebar, got ${dimensions.sidebar}px`);
       }
@@ -154,8 +153,30 @@ try {
     await page.locator("#studyDayButton").click();
     await page.locator("#studyView:not(.hidden)").waitFor();
     await check("Study", "study.png");
-    // Verify that appearance is a real persisted preference on every screen.
+    // Theme changes only appearance. The layout and timer must not jump.
+    const sharedGeometry = async () => page.evaluate(() => {
+      const bounds = (selector) => {
+        const element = document.querySelector(selector);
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      };
+      return {
+        timer: bounds(".workspace-topbar"),
+        sessionTimer: bounds(".session-timer"),
+        sidebar: bounds(".workspace-sidebar"),
+        main: bounds(".workspace-main"),
+      };
+    });
+    const beforeTheme = await sharedGeometry();
     await page.locator("#themeToggle").click();
+    const afterTheme = await sharedGeometry();
+    for (const key of Object.keys(beforeTheme)) {
+      for (const field of ["x", "y", "width", "height"]) {
+        assert.ok(Math.abs(beforeTheme[key][field] - afterTheme[key][field]) < 1.1,
+          `${width}px ${key}.${field} moved when switching themes: ${beforeTheme[key][field]} → ${afterTheme[key][field]}`);
+      }
+    }
+    assert.equal(await page.locator(".dark-masthead").count(), 0);
     assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
     assert.equal(await page.locator("#themeToggle").getAttribute("aria-pressed"), "true");
     const darkSurface = await page.locator("#studyCard").evaluate((element) =>
@@ -190,13 +211,23 @@ try {
 
     await page.reload({ waitUntil: "domcontentloaded" });
     assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-    const [masthead, sidebarArt, logoArt] = await Promise.all(
-      ["dark-masthead.webp", "dark-sidebar.webp", "dark-skeleton-logo.webp"].map(
-        (name) => page.evaluate(async (file) =>
-          (await fetch("/assets/" + file)).ok, name),
+    // Decorative assets use real high-density WebP sources, not upscaled UI captures.
+    const artwork = await Promise.all(
+      ["dark-sidebar-approved.webp", "dark-castle-still-life-approved.webp"].map(
+        (name) => page.evaluate(async (file) => {
+          const img = new Image();
+          img.src = "/assets/" + file;
+          await img.decode();
+          return { name: file, width: img.naturalWidth, height: img.naturalHeight };
+        }, name),
       ),
     );
-    assert.ok(masthead && sidebarArt && logoArt, "Dark theme assets must be available.");
+    assert.ok(artwork[0].width >= 1000 && artwork[0].height >= 2000);
+    assert.ok(artwork[1].width >= 1200 && artwork[1].height >= 900);
+    await page.locator("#navRead").click();
+    const darkArtwork = await page.locator(".read-heading").evaluate((heading) =>
+      getComputedStyle(heading, "::after").backgroundImage);
+    if (width > 920) assert.match(darkArtwork, /dark-castle-still-life-approved/);
 
     // Modal appearance setting must also update the global theme and remain in sync.
     await page.locator("#openSettingsButton").click();
