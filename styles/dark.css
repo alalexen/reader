@@ -373,7 +373,7 @@ html[data-theme="dark"] .workspace-sidebar::after {
   right: 0;
   height: min(64vh, 650px);
   pointer-events: none;
-  background: url("../assets/dark-sidebar-approved.webp") center bottom / 100% auto no-repeat;
+  background: url("../assets/dark-sidebar-seamless.webp") center bottom / 100% auto no-repeat;
   z-index: 0;
 }
 html[data-theme="dark"] .brand-block,
@@ -392,7 +392,7 @@ html[data-theme="dark"] .read-heading::after {
   right: -35px;
   pointer-events: none;
   z-index: 0;
-  background: url("../assets/dark-castle-still-life-approved.webp?v=2") center center / contain no-repeat;
+  background: url("../assets/dark-castle-seamless.webp") center center / contain no-repeat;
 }
 html[data-theme="dark"] .page-heading:not(.read-heading) .reading-still-life {
   display: none;
@@ -406,7 +406,7 @@ html[data-theme="dark"] .page-heading:not(.read-heading)::after {
   height: 160px;
   pointer-events: none;
   opacity: .45;
-  background: url("../assets/dark-castle-still-life-approved.webp?v=2") center / cover no-repeat;
+  background: url("../assets/dark-castle-seamless.webp") center / cover no-repeat;
   mask-image: linear-gradient(to right, transparent, #000 40%);
 }
 
@@ -428,4 +428,41 @@ html[data-theme="dark"] .page-heading:not(.read-heading)::after {
   html[data-theme="dark"] .workspace-sidebar::after { display: none; }
   html[data-theme="dark"] .brand-block { min-height: 43px; }
   html[data-theme="dark"] .page-heading:not(.read-heading)::after { display: none; }
+}
+
+/*
+ * Seamless dark artwork.
+ * The sidebar and reader decorations share one uniform underlay color.
+ * Artwork alpha is feathered within its high-density WebP assets; no box,
+ * rectangle, or CSS opacity transition is needed to conceal the boundaries.
+ * Layout geometry is inherited unchanged from the light theme.
+ */
+html[data-theme="dark"] {
+  --dark-scene-base: #090e13;
+  --bg: var(--dark-scene-base);
+  --bg-soft: var(--dark-scene-base);
+}
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+html[data-theme="dark"] .workspace-layout,
+html[data-theme="dark"] .workspace-sidebar {
+  background-color: var(--dark-scene-base);
+}
+html[data-theme="dark"] .workspace-sidebar {
+  background-image: none;
+}
+html[data-theme="dark"] .workspace-sidebar::after {
+  background-image: url("../assets/dark-sidebar-seamless.webp");
+  background-size: 100% auto;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+html[data-theme="dark"] .read-heading::after {
+  background-image: url("../assets/dark-castle-seamless.webp");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+html[data-theme="dark"] .page-heading:not(.read-heading)::after {
+  background-image: url("../assets/dark-castle-seamless.webp");
 }
