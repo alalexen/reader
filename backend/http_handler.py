@@ -10,7 +10,6 @@ from .flashcards import (
     import_flashcards,
     list_flashcards,
     save_flashcard,
-    due_flashcards,
     rate_flashcard,
 )
 from .google_cloud import (
@@ -83,14 +82,6 @@ class HebrewReaderHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
-
-        if path == "/api/review/due":
-            try:
-                self.send_json(200, due_flashcards())
-            except Exception as error:
-                print(f"Review queue failed: {error}")
-                self.send_json(503, {"error": "Review database is unavailable."})
-            return
 
         if path == "/api/flashcards":
             try:
