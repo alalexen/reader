@@ -392,7 +392,7 @@ html[data-theme="dark"] .read-heading::after {
   right: -35px;
   pointer-events: none;
   z-index: 0;
-  background: url("../assets/dark-castle-still-life-approved.webp") center center / contain no-repeat;
+  background: url("../assets/dark-castle-still-life-approved.webp?v=2") center center / contain no-repeat;
 }
 html[data-theme="dark"] .page-heading:not(.read-heading) .reading-still-life {
   display: none;
@@ -406,7 +406,7 @@ html[data-theme="dark"] .page-heading:not(.read-heading)::after {
   height: 160px;
   pointer-events: none;
   opacity: .45;
-  background: url("../assets/dark-castle-still-life-approved.webp") center / cover no-repeat;
+  background: url("../assets/dark-castle-still-life-approved.webp?v=2") center / cover no-repeat;
   mask-image: linear-gradient(to right, transparent, #000 40%);
 }
 
