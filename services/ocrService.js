@@ -1,5 +1,6 @@
 import { preprocessImageForOcr } from "./imageProcessingService.js";
 
+/** Submits an image to the configured Google Vision backend. */
 async function recognizeWithGoogleVision(image, onProgress) {
   onProgress("Trying Google Vision OCR", 0.1);
 
@@ -19,6 +20,7 @@ async function recognizeWithGoogleVision(image, onProgress) {
   return (payload.text || "").trim();
 }
 
+/** Runs local Hebrew OCR and reports progress. */
 async function recognizeWithTesseract(image, onProgress) {
   if (!window.Tesseract) {
     throw new Error("Tesseract.js is not available.");
@@ -51,6 +53,7 @@ async function recognizeWithTesseract(image, onProgress) {
  * Runs the selected OCR engine. Google Vision falls back to local Tesseract.js
  * if the cloud request is unavailable.
  */
+/** Routes OCR to the selected provider and returns normalized results. */
 export async function recognizeHebrewText(
   image,
   provider = "tesseract",
