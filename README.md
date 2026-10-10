@@ -66,7 +66,7 @@ python scripts/run_hebrew_reader.py --demo
 
 The demo seed creates one short Hebrew text plus a few words, encounters, and starter cards. It is idempotent, and it refuses to seed an already-used database that contains learning data.
 
-The PostgreSQL layer is the foundation for Library, Review/SRS and progress. The current visible flashcard screen still reads its existing browser `localStorage` until the SRS migration step is implemented, so seeded database cards are not shown in that old list yet.
+The flashcard PostgreSQL migration is implemented in `feature/postgres-flashcards` and requires local verification before merging into `main`. On first load, it imports existing browser cards in one transaction. The original `localStorage` data is preserved as a backup; new edits use the API. Seeded database cards appear after this feature branch is running.
 
 ### Later starts
 
@@ -144,7 +144,7 @@ The application can run without Google Cloud credentials.
 | Voice | Hebrew voice exposed by the browser / operating system | The app automatically prefers an available Hebrew voice. Voice quality and availability depend on the machine and browser. |
 | Translation | Google NMT is selected in Settings; if the local Google backend is unavailable, the app falls back to MyMemory | The fallback keeps translation usable without credentials, but results can be less consistent than Google Cloud Translation. |
 | Word structure | Local HebPipe segmentation | This is an automatic possible decomposition, not a definitive linguistic analysis. |
-| Flashcards | Browser localStorage (temporary during the current MVP) | Existing cards remain there until the Review/SRS migration step moves learning data into PostgreSQL. |
+| Flashcards | PostgreSQL API (feature branch, pending verification) | Existing localStorage cards are imported once and retained as a backup. |
 
 ### Using the default voice
 
@@ -305,7 +305,7 @@ When a Google WaveNet voice is selected, long text is split into smaller chunks 
 
 ## Local data and privacy
 
-PostgreSQL is the persistent store for the new learning-data model: texts, words, encounters, review cards/history and study sessions. The current MVP flashcard UI still uses browser `localStorage` until the SRS migration is implemented; this avoids losing existing cards during the transition.
+PostgreSQL is the persistent store for the new learning-data model: texts, words, encounters, review cards/history and study sessions. On the flashcard migration branch, the UI reads and writes cards through PostgreSQL. Original browser `localStorage` cards remain untouched as a backup after a confirmed import.
 
 Small UI/preferences data can remain in browser `localStorage`.
 
