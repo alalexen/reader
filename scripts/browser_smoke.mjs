@@ -71,7 +71,7 @@ try {
         sidebar: document.querySelector(".workspace-sidebar").getBoundingClientRect().width,
         main: document.querySelector(".workspace-main").getBoundingClientRect().toJSON(),
         heading: document.querySelector('[data-page]:not(.hidden) .page-heading h1')?.getBoundingClientRect().toJSON(),
-        image: [...document.querySelectorAll('[data-page]:not(.hidden) img')].map((img) => ({
+        image: [...document.querySelectorAll('[data-page]:not(.hidden) img[src]')].map((img) => ({
           src: img.getAttribute("src"), width: img.naturalWidth, ready: img.complete,
         })),
       }));
