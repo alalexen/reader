@@ -30,3 +30,17 @@ jobs:
           node --check app.js
       - name: Run frontend and DOM contract tests
         run: node --test tests/*.mjs
+
+      - name: Install Chromium browser testing tools
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+      - name: Verify responsive layout and page navigation
+        run: node tests/browser_smoke.mjs
+      - name: Preserve visual review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-ui-preview
+          path: .visual-check/
+          if-no-files-found: ignore
