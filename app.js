@@ -1,4 +1,4 @@
-import { loadFlashcards } from "./services/flashcardsService.js";
+import { initializeFlashcards } from "./services/flashcardsService.js";
 import {
   loadSettings,
   saveSettings,
@@ -24,7 +24,7 @@ const state = {
   readerMode: "edit",
   isTextWorkspaceExpanded: false,
   settings: loadSettings(),
-  flashcards: loadFlashcards(),
+  flashcards: [],
 };
 
 const reader = createReaderController({
@@ -171,5 +171,6 @@ settings.applyTranslationLanguageVisibility();
 speech.initializeVoiceSelector();
 initializeSessionTimer(elements.sessionTimer);
 flashcards.renderFlashcards();
+flashcards.initialize().catch((error) => console.error("Flashcards initialization failed:", error));
 reader.setReaderMode("edit");
 reader.updateTextWorkspaceControls();
