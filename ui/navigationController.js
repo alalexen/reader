@@ -23,7 +23,7 @@ export function createNavigationController({ elements, onLeaveRead }) {
       saved: "Saved Words", calendar: "Word Calendar",
       day: "Words by Date", study: "Study Saved Words",
     })[view] + " · Hebrew Reader");
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   elements.navRead.addEventListener("click", () => show("read"));
